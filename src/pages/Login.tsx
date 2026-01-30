@@ -60,7 +60,7 @@ const Login = () => {
                     <Input
                       id="worker-email"
                       type="email"
-                      placeholder="john@example.com"
+                      placeholder="******@example.com"
                       value={workerCredentials.email}
                       onChange={(e) => setWorkerCredentials(prev => ({ ...prev, email: e.target.value }))}
                       required
@@ -91,7 +91,7 @@ const Login = () => {
                     <Input
                       id="employer-email"
                       type="email"
-                      placeholder="jane@company.com"
+                      placeholder="******@company.com"
                       value={employerCredentials.email}
                       onChange={(e) => setEmployerCredentials(prev => ({ ...prev, email: e.target.value }))}
                       required

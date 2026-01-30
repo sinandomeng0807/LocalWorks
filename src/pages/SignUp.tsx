@@ -176,26 +176,12 @@ const SignUp = () => {
                       id="worker-email"
                       name="email"
                       type="email"
-                      placeholder="john@example.com"
+                      placeholder="******@example.com"
                       value={workerForm.email}
                       onChange={handleWorkerChange}
                       required
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="worker-phone">Phone Number</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="worker-phone"
-                        name="phone"
-                        type="tel"
-                        placeholder="+1 234 567 8900"
-                        value={workerForm.phone}
-                        onChange={handleWorkerChange}
-                        required
-                        className="flex-1"
-                      />
                       <Button
                         type="button"
                         variant="outline"
@@ -206,6 +192,21 @@ const SignUp = () => {
                         <Send className="w-4 h-4" />
                         {workerOtpSent ? "Sent" : "Send OTP"}
                       </Button>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="worker-phone">Phone Number</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="worker-phone"
+                        name="phone"
+                        type="tel"
+                        placeholder="+63 234 567 8900"
+                        value={workerForm.phone}
+                        onChange={handleWorkerChange}
+                        required
+                        className="flex-1"
+                      />
+                    
                     </div>
                   </div>
 
@@ -360,26 +361,11 @@ const SignUp = () => {
                       id="employer-email"
                       name="email"
                       type="email"
-                      placeholder="jane@company.com"
+                      placeholder="******@company.com"
                       value={employerForm.email}
                       onChange={handleEmployerChange}
                       required
                     />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="employer-phone">Phone Number</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="employer-phone"
-                        name="phone"
-                        type="tel"
-                        placeholder="+1 234 567 8900"
-                        value={employerForm.phone}
-                        onChange={handleEmployerChange}
-                        required
-                        className="flex-1"
-                      />
                       <Button
                         type="button"
                         variant="outline"
@@ -390,6 +376,23 @@ const SignUp = () => {
                         <Send className="w-4 h-4" />
                         {employerOtpSent ? "Sent" : "Send OTP"}
                       </Button>
+                  
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="employer-phone">Phone Number</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="employer-phone"
+                        name="phone"
+                        type="tel"
+                        placeholder="+63 234 567 8900"
+                        value={employerForm.phone}
+                        onChange={handleEmployerChange}
+                        required
+                        className="flex-1"
+                      />
+                      
                     </div>
                   </div>
 
