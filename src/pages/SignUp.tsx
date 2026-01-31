@@ -41,12 +41,12 @@ const SignUp = () => {
   const [employerOtp, setEmployerOtp] = useState("");
 
   const handleSendWorkerOtp = () => {
-    if (workerForm.phone) {
-      console.log("Sending OTP to:", workerForm.phone);
+    if (workerForm.email) {
+      console.log("Sending OTP to:", workerForm.email);
       setWorkerOtpSent(true);
       alert("OTP sent! (Frontend only - no actual OTP sent)");
     } else {
-      alert("Please enter your phone number first");
+      alert("Please enter your email first");
     }
   };
 
