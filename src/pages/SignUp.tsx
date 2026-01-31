@@ -51,12 +51,12 @@ const SignUp = () => {
   };
 
   const handleSendEmployerOtp = () => {
-    if (employerForm.phone) {
-      console.log("Sending OTP to:", employerForm.phone);
+    if (employerForm.email) {
+      console.log("Sending OTP to:", employerForm.email);
       setEmployerOtpSent(true);
       alert("OTP sent! (Frontend only - no actual OTP sent)");
     } else {
-      alert("Please enter your phone number first");
+      alert("Please enter your email first");
     }
   };
 
