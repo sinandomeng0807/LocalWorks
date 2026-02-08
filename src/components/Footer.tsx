@@ -1,4 +1,5 @@
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from "lucide-react";
+import logo from "@/assets/logo.avif";
 
 const Footer = () => {
   const quickLinks = [
@@ -28,8 +29,8 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">L</span>
+              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center p-1 overflow-hidden">
+                <img src={logo} alt="LocalWorks" className="h-full w-full object-cover rounded-full" />
               </div>
               <span className="text-xl font-bold">LocalWorks</span>
             </div>

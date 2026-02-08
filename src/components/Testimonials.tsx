@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Star, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useReviewsStore, type Review } from "@/lib/reviewsStore";
 
-const testimonials = [
+const defaultTestimonials = [
   {
-    id: 1,
+    id: "default-1",
     name: "Juan dela Cruz",
     role: "Carpenter",
     avatar: "JD",
@@ -12,7 +13,7 @@ const testimonials = [
     text: "LocalWorks changed my life! I used to wait at the kanto for work, now I get job offers directly on my phone. I've tripled my income in just 3 months.",
   },
   {
-    id: 2,
+    id: "default-2",
     name: "Maria Santos",
     role: "Homeowner",
     avatar: "MS",
@@ -20,7 +21,7 @@ const testimonials = [
     text: "Finding reliable workers was always a challenge. With LocalWorks, I found a skilled electrician within hours. The quality of work was excellent!",
   },
   {
-    id: 3,
+    id: "default-3",
     name: "Pedro Reyes",
     role: "Plumber",
     avatar: "PR",
@@ -28,7 +29,7 @@ const testimonials = [
     text: "The platform is so easy to use. Even my lola could navigate it! I love how it connects me with clients right in my barangay.",
   },
   {
-    id: 4,
+    id: "default-4",
     name: "Ana Garcia",
     role: "Business Owner",
     avatar: "AG",
@@ -38,15 +39,20 @@ const testimonials = [
 ];
 
 const Testimonials = () => {
+  const userReviews = useReviewsStore((s) => s.reviews);
+  const allTestimonials = [...userReviews, ...defaultTestimonials];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const nextTestimonial = () => {
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+    setCurrentIndex((prev) => (prev + 1) % allTestimonials.length);
   };
 
   const prevTestimonial = () => {
-    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    setCurrentIndex((prev) => (prev - 1 + allTestimonials.length) % allTestimonials.length);
   };
+
+  const current = allTestimonials[currentIndex] || allTestimonials[0];
+  if (!current) return null;
 
   return (
     <section className="py-20 bg-background">
@@ -71,28 +77,28 @@ const Testimonials = () => {
             <div className="relative z-10 text-center">
               {/* Avatar */}
               <div className="w-20 h-20 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">
-                {testimonials[currentIndex].avatar}
+                {current.avatar}
               </div>
               
               {/* Rating */}
               <div className="flex items-center justify-center gap-1 mb-6">
-                {[...Array(testimonials[currentIndex].rating)].map((_, i) => (
+                {[...Array(current.rating)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-primary text-primary" />
                 ))}
               </div>
               
               {/* Quote */}
               <blockquote className="text-lg md:text-xl text-foreground mb-6 leading-relaxed">
-                "{testimonials[currentIndex].text}"
+                "{current.text}"
               </blockquote>
               
               {/* Author */}
               <div>
                 <p className="font-semibold text-foreground">
-                  {testimonials[currentIndex].name}
+                  {current.name}
                 </p>
                 <p className="text-muted-foreground">
-                  {testimonials[currentIndex].role}
+                  {current.role}
                 </p>
               </div>
             </div>
@@ -111,7 +117,7 @@ const Testimonials = () => {
               
               {/* Dots */}
               <div className="flex items-center gap-2">
-                {testimonials.map((_, index) => (
+                {allTestimonials.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentIndex(index)}

@@ -3,11 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ScrollToTop } from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 import WorkerDashboard from "./pages/WorkerDashboard";
 import EmployerDashboard from "./pages/EmployerDashboard";
+import FindJobs from "./pages/FindJobs";
+import FindWorkers from "./pages/FindWorkers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,10 +21,13 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/find-jobs" element={<FindJobs />} />
+          <Route path="/find-workers" element={<FindWorkers />} />
           <Route path="/worker-dashboard" element={<WorkerDashboard />} />
           <Route path="/employer-dashboard" element={<EmployerDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

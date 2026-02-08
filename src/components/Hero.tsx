@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Briefcase, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -30,17 +31,22 @@ const Hero = () => {
           
           {/* Dual CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="gap-2 text-lg px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
-              <Briefcase className="w-5 h-5" />
-              I'm Looking for Work
+            <Button asChild size="lg" className="gap-2 text-lg px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all">
+              <Link to="/find-jobs">
+                <Briefcase className="w-5 h-5" />
+                I'm Looking for Work
+              </Link>
             </Button>
             <Button 
+              asChild
               size="lg" 
               variant="outline" 
               className="gap-2 text-lg px-8 py-6 rounded-xl border-2 hover:bg-primary hover:text-primary-foreground transition-all"
             >
-              <Users className="w-5 h-5" />
-              I Need a Worker
+              <Link to="/find-workers">
+                <Users className="w-5 h-5" />
+                I Need a Worker
+              </Link>
             </Button>
           </div>
           
