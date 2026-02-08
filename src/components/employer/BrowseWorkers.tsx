@@ -182,10 +182,7 @@ const BrowseWorkers = () => {
                   <Mail className="w-4 h-4" />
                   Contact
                 </Button>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Phone className="w-4 h-4" />
-                  Call
-                </Button>
+               
               </div>
             </CardContent>
           </Card>

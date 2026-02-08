@@ -172,7 +172,7 @@ const WorkerApplications = () => {
       <div>
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <Clock className="w-5 h-5 text-yellow-500" />
-          Pending Applications ({pendingApplications.length})
+          Pending Applicants ({pendingApplications.length})
         </h2>
         {pendingApplications.length === 0 ? (
           <Card className="p-8 text-center">
@@ -262,7 +262,7 @@ const WorkerApplications = () => {
       {/* Processed Applications */}
       {processedApplications.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Previous Applications</h2>
+          <h2 className="text-xl font-semibold mb-4">Previous Applicants</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {processedApplications.map((application) => (
               <Card key={application.id} className="opacity-75">

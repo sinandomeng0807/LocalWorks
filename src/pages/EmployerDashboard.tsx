@@ -37,6 +37,7 @@ const EmployerDashboard = () => {
               <Users className="w-4 h-4" />
               Applications
             </TabsTrigger>
+            
             <TabsTrigger value="browse" className="gap-2">
               <Search className="w-4 h-4" />
               Browse Workers

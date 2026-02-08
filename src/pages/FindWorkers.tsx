@@ -176,6 +176,7 @@ const FindWorkers = () => {
                     <SelectItem value="Plumbing">Plumbing</SelectItem>
                     <SelectItem value="Carpentry">Carpentry</SelectItem>
                     <SelectItem value="Welding">Welding</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
