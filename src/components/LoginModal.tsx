@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import axios from "axios";
 
 interface LoginModalProps {
   open: boolean;
@@ -27,15 +28,29 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
   const [showWorkerPassword, setShowWorkerPassword] = useState(false);
   const [showEmployerPassword, setShowEmployerPassword] = useState(false);
 
+  const logWorker = async () => {
+    await axios.post("http://localhost:8920/api/auth/login", {
+      ...workerCredentials, role: "worker"
+    })
+      .then(function (response) {
+        alert(response.data.message)
+        navigate("/worker-dashboard");
+      })
+      .catch(function (error: any) {
+        if (error.response) {
+          alert(error.response.data.message)
+        } else if (error.request) {
+          console.error(error.request)
+        } else {
+          console.error(error)
+        }
+      })
+  }
+
   const handleWorkerLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    logWorker()
     console.log("Worker login:", workerCredentials);
-    onOpenChange(false);
-    if (onSuccess) {
-      onSuccess();
-    } else {
-      navigate("/worker-dashboard");
-    }
   };
 
   const handleEmployerLogin = (e: React.FormEvent) => {

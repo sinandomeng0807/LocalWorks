@@ -17,42 +17,33 @@ import { Search, MapPin, DollarSign, Clock, Building2, Filter, CheckCircle, Eye 
 import { toast } from "sonner";
 import JobDetailsModal from "./JobDetailsModal";
 import { useJobsStore, Job } from "@/lib/jobsStore";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+axios.defaults.withCredentials = true;
 
 const JobListings = () => {
   const jobs = useJobsStore((state) => state.jobs);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>(jobs);
   const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedJob, setSelectedJob] = useState(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [confirmApplyOpen, setConfirmApplyOpen] = useState(false);
-  const [jobToApply, setJobToApply] = useState<Job | null>(null);
+  const [jobToApply, setJobToApply] = useState(null);
 
-  // Update filtered jobs when store changes
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = jobs.filter(
-        (job) =>
-          job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      setFilteredJobs(filtered);
-    } else {
-      setFilteredJobs(jobs);
-    }
-  }, [jobs, searchTerm]);
+  const Jobs = async () => {
+    const { data } = await axios.get("http://localhost:8920/api/pro/viewJobs", { withCredentials: true })
+    return data
+  }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const filtered = jobs.filter(
-      (job) =>
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-    setFilteredJobs(filtered);
-  };
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['job'],
+    queryFn: Jobs
+  })
+
+  if (error) return <div>Error: {error.message}</div>
+  if (isLoading) return <div>Loading...</div>
+
+  const AllJobs = data.jobs
 
   const handleViewDetails = (job: Job) => {
     setSelectedJob(job);
@@ -76,7 +67,7 @@ const JobListings = () => {
     if (jobToApply) {
       setAppliedJobs([...appliedJobs, jobToApply.id]);
       toast.success(`Application submitted for ${jobToApply.title}!`, {
-        description: `Your application to ${jobToApply.company} has been sent.`,
+        description: `Your application to ${jobToApply.company.title} has been sent.`,
       });
     }
     setConfirmApplyOpen(false);
@@ -90,7 +81,7 @@ const JobListings = () => {
         <h2 className="text-2xl font-bold mb-2">Find Your Next Job</h2>
         <p className="text-muted-foreground mb-6">Browse available job openings in your area</p>
         
-        <form onSubmit={handleSearch} className="flex gap-2 max-w-2xl">
+        <form className="flex gap-2 max-w-2xl">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
@@ -110,22 +101,22 @@ const JobListings = () => {
 
       {/* Results Count */}
       <p className="text-sm text-muted-foreground mb-4">
-        Showing {filteredJobs.length} job{filteredJobs.length !== 1 ? "s" : ""}
+        Showing {AllJobs.length} job{AllJobs.length !== 1 ? "s" : ""}
       </p>
 
       {/* Job Listings */}
       <div className="grid gap-4">
-        {filteredJobs.map((job) => {
-          const isApplied = appliedJobs.includes(job.id);
+        {AllJobs.map((job: any) => {
+          const isApplied = appliedJobs.includes(job._id);
           return (
-            <Card key={job.id} className="hover:shadow-md transition-shadow">
+            <Card key={job._id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-xl mb-1">{job.title}</CardTitle>
                     <CardDescription className="flex items-center gap-2 text-base">
                       <Building2 className="w-4 h-4" />
-                      {job.company}
+                      {job.company.title}
                     </CardDescription>
                   </div>
                   <Badge variant={job.type === "Full-time" ? "default" : "secondary"}>
@@ -139,7 +130,7 @@ const JobListings = () => {
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                   <span className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
-                    {job.location}
+                    {job.location.name}
                   </span>
                   <span className="flex items-center gap-1">
                     {job.salary}
@@ -151,7 +142,7 @@ const JobListings = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {job.tags.map((tag) => (
+                  {job.tags.map((tag: any) => (
                     <Badge key={tag} variant="outline">
                       {tag}
                     </Badge>
@@ -182,10 +173,10 @@ const JobListings = () => {
         })}
       </div>
 
-      {filteredJobs.length === 0 && (
+      {AllJobs.length === 0 && (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">No jobs found matching your search.</p>
-          <Button variant="link" onClick={() => { setSearchTerm(""); setFilteredJobs(jobs); }}>
+          <Button variant="link" onClick={() => { setSearchTerm(""); }}>
             Clear search
           </Button>
         </div>
@@ -206,7 +197,7 @@ const JobListings = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Application</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to apply for <strong>{jobToApply?.title}</strong> at <strong>{jobToApply?.company}</strong>?
+              Are you sure you want to apply for <strong>{jobToApply?.title}</strong> at <strong>{jobToApply?.company.title}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 
 interface Application {
-  id: number;
+  id: string;
+  worker: string;
   jobTitle: string;
   company: string;
   location: string;

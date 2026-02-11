@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import PhoneInput from "./PhoneInput";
 import FileUpload from "./FileUpload";
 import OTPVerification from "./OTPVerification";
+import axios from "axios"
+axios.defaults.withCredentials = true;
 
 interface WorkerSignUpFormProps {
   onClose: () => void;
@@ -22,16 +24,16 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
     name: "",
     email: "",
     password: "",
-    phone: "",
+    phoneNumber: "",
     skills: "",
   });
   
   const [files, setFiles] = useState<{
-    photo: File | null;
-    resume: File | null;
+    photo: File | "";
+    resume: File | "";
   }>({
-    photo: null,
-    resume: null,
+    photo: "",
+    resume: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,6 +52,28 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
     }
   };
 
+  const submit = async () => {
+    await axios.post("http://localhost:8920/api/auth/register", {
+      ...formData, phoneNumber: `+63${formData.phoneNumber}`, files: {
+        photo: files.photo,
+        resume: files.resume
+      }
+    })
+      .then((response) => {
+        alert(response.data.message)
+        navigate("/worker-dashboard");
+      })
+      .catch((error) => {
+        if (error.response) {
+          alert(error.response.data.message)
+        } else if (error.request) {
+          alert(error.request)
+        } else {
+          alert("Error: " + error.message)
+        }
+      })
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -58,9 +82,9 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
       return;
     }
 
+    submit()
     console.log("Worker signup:", { ...formData, files });
-    onClose();
-    navigate("/worker-dashboard");
+    
   };
 
   return (
@@ -154,8 +178,8 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
 
       {/* Phone Number */}
       <PhoneInput
-        value={formData.phone}
-        onChange={(value) => setFormData({ ...formData, phone: value })}
+        value={formData.phoneNumber}
+        onChange={(value) => setFormData({ ...formData, phoneNumber: value })}
       />
 
       {/* Skills */}

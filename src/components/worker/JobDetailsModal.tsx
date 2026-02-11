@@ -19,15 +19,27 @@ import {
 } from "lucide-react";
 
 interface Job {
-  id: number;
+  id: string;
   title: string;
-  company: string;
-  location: string;
+  company: {
+    title: string
+  };
+  location: {
+    name: string
+  };
   salary: string;
   type: string;
   posted: string;
   description: string;
   tags: string[];
+  requirements: string[];
+  benefits: string[];
+  schedule: string;
+  startDate: string;
+  positions: Number;
+  applyBefore: string;
+  email: string;
+  phone: string;
 }
 
 interface JobDetailsModalProps {
@@ -40,23 +52,7 @@ interface JobDetailsModalProps {
 
 // Mock extended job data
 const getExtendedJobDetails = (job: Job) => ({
-  ...job,
-  requirements: [
-    "Minimum 1 year of relevant experience",
-    "Valid government-issued ID",
-    "Physically fit and able to perform job duties",
-    "Reliable and punctual",
-  ],
-  benefits: [
-    "Competitive hourly rate",
-    "Weekly pay schedule",
-    "Safety equipment provided",
-    "Opportunity for overtime",
-  ],
-  schedule: "Monday to Friday, 8:00 AM - 5:00 PM",
-  startDate: "Immediate",
-  positions: 3,
-  applicationDeadline: "February 15, 2026",
+  ...job
 });
 
 const JobDetailsModal = ({
@@ -84,7 +80,7 @@ const JobDetailsModal = ({
               <h2 className="text-2xl font-bold">{extendedJob.title}</h2>
               <div className="flex items-center gap-2 text-muted-foreground mt-1">
                 <Building2 className="w-4 h-4" />
-                <span className="text-lg">{extendedJob.company}</span>
+                <span className="text-lg">{extendedJob.company.title}</span>
               </div>
             </div>
             <Badge variant={extendedJob.type === "Full-time" ? "default" : "secondary"}>
@@ -95,7 +91,7 @@ const JobDetailsModal = ({
           <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              {extendedJob.location}
+              {extendedJob.location.name}
             </div>
             <div className="flex items-center gap-1">
               <DollarSign className="w-4 h-4" />
@@ -178,7 +174,7 @@ const JobDetailsModal = ({
             <Calendar className="w-4 h-4 text-muted-foreground" />
             <div>
               <p className="text-muted-foreground">Apply Before</p>
-              <p className="font-medium">{extendedJob.applicationDeadline}</p>
+              <p className="font-medium">{extendedJob.applyBefore}</p>
             </div>
           </div>
         </div>
