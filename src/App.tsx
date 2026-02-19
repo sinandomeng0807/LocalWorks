@@ -12,6 +12,7 @@ import EmployerDashboard from "./pages/EmployerDashboard";
 import FindJobs from "./pages/FindJobs";
 import FindWorkers from "./pages/FindWorkers";
 import NotFound from "./pages/NotFound";
+import Images from "./pages/Images";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/find-workers" element={<FindWorkers />} />
           <Route path="/worker-dashboard" element={<WorkerDashboard />} />
           <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+          <Route path="/images" element={<Images />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
