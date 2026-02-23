@@ -29,7 +29,7 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
   const [showEmployerPassword, setShowEmployerPassword] = useState(false);
 
   const logWorker = async () => {
-    await axios.post("http://localhost:8920/api/auth/login", {
+    await axios.post("http://localhost:8920/api/auth/worker/login", {
       ...workerCredentials, role: "worker"
     })
       .then(function (response) {

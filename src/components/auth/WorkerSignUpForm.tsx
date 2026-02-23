@@ -53,7 +53,7 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
   };
 
   const submit = async () => {
-    await axios.post("http://localhost:8920/api/auth/register", {
+    await axios.post("http://localhost:8920/api/auth/worker/register", {
       ...formData, phoneNumber: `+63${formData.phoneNumber}`, files: {
         photo: files.photo,
         resume: files.resume
