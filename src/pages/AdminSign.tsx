@@ -58,6 +58,10 @@ const AdminSign = () => {
         setLoginMessage(response.data.message)
         setModalLoginBackground("modal-background")
         setModalLoginModalCenter("modal-center")
+        // Auto-redirect to admin dashboard after successful login
+        setTimeout(() => {
+          navigate("/admin-dashboard")
+        }, 1500)
       })
       .catch(function (error: any) {
         if (error.response) {

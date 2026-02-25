@@ -1,8 +1,15 @@
-const Job = (value: any) => {
+interface JobProps {
+  title: string;
+  number: number;
+}
+
+const Job = ({ title, number }: JobProps) => {
   return (
     <div className="job-box-container">
-      <h2>{value.title}</h2>
-      <b>{value.number}</b>
+      <div className="job-info">
+        <h3 className="job-title">{title}</h3>
+        <div className="job-number">{number}</div>
+      </div>
     </div>
   )
 }
