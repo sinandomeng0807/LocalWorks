@@ -22,6 +22,9 @@ import { Badge } from "@/components/ui/badge";
 import { X, Plus, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { useJobsStore } from "@/lib/jobsStore";
+import axios from "axios";
+
+axios.defaults.withCredentials = true
 
 interface PostJobModalProps {
   open: boolean;
@@ -38,7 +41,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
     title: "",
     location: "",
     salary: "",
-    type: "Full-time",
+    type: "Choose Type",
     description: "",
     requirements: requirements.split("\n"),
     benefits: benefits.split("\n"),
@@ -49,6 +52,41 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
   
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+
+  const PostJob = async () => {
+    await axios.post("http://localhost:8920/api/pro/createJob", { ...formData, tags }, {
+      withCredentials: true
+    })
+      .then(function (response: any) {
+        const { message } = response.data
+
+        // Reset form
+        setFormData({
+          title: "",
+          location: "",
+          salary: "",
+          type: "Full-time",
+          description: "",
+          requirements: formData.requirements,
+          benefits: formData.benefits,
+          schedule: "",
+          contactEmail: "",
+          contactPhone: "",
+        });
+        setTags([]);
+        onOpenChange(false);
+
+        toast.success(message, {
+          description: "Workers can now view and apply to your job posting.",
+        });
+      })
+      .catch(function (error: any) {
+        if (error.response) {
+          const { message } = error.response.data
+          toast.error(message)
+        }
+      })
+  }
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -91,25 +129,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
       contactPhone: formData.contactPhone,
     });
 
-    toast.success("Job posted successfully!", {
-      description: "Workers can now view and apply to your job posting.",
-    });
-
-    // Reset form
-    setFormData({
-      title: "",
-      location: "",
-      salary: "",
-      type: "Full-time",
-      description: "",
-      requirements: formData.requirements,
-      benefits: formData.benefits,
-      schedule: "",
-      contactEmail: "",
-      contactPhone: "",
-    });
-    setTags([]);
-    onOpenChange(false);
+    PostJob()
   };
 
   return (
