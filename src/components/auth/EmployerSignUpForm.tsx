@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import PhoneInput from "./PhoneInput";
 import FileUpload from "./FileUpload";
 import OTPVerification from "./OTPVerification";
+import axios from "axios";
 
 interface EmployerSignUpFormProps {
   onClose: () => void;
@@ -31,6 +32,25 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
   }>({
     permit: null,
   });
+
+  const Register = async () => {
+    await axios.post("http://localhost:8920/api/auth/employer/register", {
+      company: formData.companyName,
+      email: formData.email,
+      password: formData.password,
+      phone: `+63${formData.phone}`,
+      industry: formData.industry
+    })
+      .then(function (response: any) {
+        alert(response.data.message)
+        navigate("/employer-dashboard");
+      })
+      .catch(function (error: any) {
+        if (error.response) {
+          alert(error.response.data.message)
+        }
+      })
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -57,8 +77,7 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
     }
 
     console.log("Employer signup:", { ...formData, files });
-    onClose();
-    navigate("/employer-dashboard");
+    Register();
   };
 
   return (
