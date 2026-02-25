@@ -30,6 +30,9 @@ interface PostJobModalProps {
 
 const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
   const addJob = useJobsStore((state) => state.addJob);
+
+  const [requirements, setRequirements] = useState("")
+  const [benefits, setBenefits] = useState("")
   
   const [formData, setFormData] = useState({
     title: "",
@@ -37,8 +40,8 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
     salary: "",
     type: "Full-time",
     description: "",
-    requirements: "",
-    benefits: "",
+    requirements: requirements.split("\n"),
+    benefits: benefits.split("\n"),
     schedule: "",
     contactEmail: "",
     contactPhone: "",
@@ -81,8 +84,8 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
       type: formData.type,
       description: formData.description,
       tags: tags.length > 0 ? tags : ["New Posting"],
-      requirements: formData.requirements.split("\n").filter(Boolean),
-      benefits: formData.benefits.split("\n").filter(Boolean),
+      requirements: formData.requirements,
+      benefits: formData.benefits,
       schedule: formData.schedule,
       contactEmail: formData.contactEmail,
       contactPhone: formData.contactPhone,
@@ -99,8 +102,8 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
       salary: "",
       type: "Full-time",
       description: "",
-      requirements: "",
-      benefits: "",
+      requirements: formData.requirements,
+      benefits: formData.benefits,
       schedule: "",
       contactEmail: "",
       contactPhone: "",
@@ -243,7 +246,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                 placeholder="Must be 18 years or older&#10;Valid ID required&#10;Physical fitness"
                 rows={3}
                 value={formData.requirements}
-                onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, requirements: e.target.value.split("\n") })}
               />
             </div>
 
@@ -254,7 +257,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                 placeholder="Health insurance&#10;Paid time off&#10;Training provided"
                 rows={3}
                 value={formData.benefits}
-                onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, benefits: e.target.value.split("\n") })}
               />
             </div>
 
