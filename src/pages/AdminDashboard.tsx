@@ -2,7 +2,11 @@ import Job from "@/components/admin/Job";
 import Navbar from "@/components/admin/Navbar";
 import { useState } from "react";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+import { RechartsDevtools } from '@recharts/devtools';
 axios.defaults.withCredentials = true
+
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, ResponsiveContainer, Pie, LabelList } from 'recharts';
 
 const AdminDashboard = () => {
   const [postedJobs, setPosted] = useState(0)
@@ -33,23 +37,54 @@ const AdminDashboard = () => {
     backgroundColor: "#157634"
   }
 
-  const data = {
-    marginLeft: "200px"
+  const dashboard_data = {
+    marginLeft: "226px"
   }
 
-  const jobStatus = async () => {
-    const totalJobs = await axios.get("http://localhost:8920/api/admin/totalJobs", { withCredentials: true })
-    const pendingJobs = await axios.get("http://localhost:8920/api/admin/pendingJobs", { withCredentials: true })
-    const acceptedJobs = await axios.get("http://localhost:8920/api/admin/accepted/jobs", { withCredentials: true })
-    const declinedJobs = await axios.get("http://localhost:8920/api/admin/declined/jobs", { withCredentials: true })
-
-    setPosted(totalJobs.data.jobs)
-    setPending(pendingJobs.data.pending)
-    setAcceptedJobs(acceptedJobs.data.accepted)
-    setDeclined(declinedJobs.data.declined)
+  const AdminDashboard = async () => {
+    const { data } = await axios.get("http://localhost:8920/api/admin/dashboard", { withCredentials: true })
+    return data
   }
 
-  jobStatus()
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: AdminDashboard
+  })
+
+  if (error) return <div>Error: {error.message}</div>
+  if (isLoading) return <div>Loading...</div>
+
+  console.log(data)
+
+  // Sample data for the chart
+  const workers_data = [
+    { name: 'Workers', value: data.workers },
+    { name: 'Pending', value: data.pendingWorkers },
+    { name: 'Verified', value: data.verified },
+    { name: 'Declined', value: data.declinedWorkers }
+  ];
+
+  const application_data = [
+    { name: "Pending Review", application: data.pendingApplication, fill: "#8a1f1f" },
+    { name: "Interview Scheduled", application: data.interviewScheduledApplication, fill: "#8e7a20" },
+    { name: "Accepted", application: data.acceptedApplication, fill: "#6c8422" },
+    { name: "Not Selected", application: data.notSelectedApplication, fill: "#663737" }
+  ]
+
+  const barStyle = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center"
+  }
+
+  const grid = {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr"
+  }
+
+  const h1_header = {
+    marginBottom: "25px"
+  }
 
 
   return (
@@ -60,13 +95,49 @@ const AdminDashboard = () => {
         dashboard={dashboard}
       />
 
-      <div className="dashboard-data" style={data}>
-        <h1>Welcome Back, Admin!</h1>
+      <div className="dashboard-data" style={dashboard_data}>
+        <h1 style={h1_header}>Welcome Back, Admin!</h1>
         <div className="card-dashboard-admin">
-          <Job title={"Total Job Posted"} number={postedJobs} />
-          <Job title={"Pending Jobs"} number={pendingJobs} />
-          <Job title={"Posted Job Accepted"} number={acceptedJobs} />
-          <Job title={"Accepted Job Declined"} number={declinedJobs} />
+          <Job title={"Total Jobs"} number={data.jobs} />
+          <Job title={"Total Jobs Pending"} number={data.pending} />
+          <Job title={"Jobs Accepted"} number={data.accepted} />
+          <Job title={"Accepted Jobs Declined"} number={data.declined} />
+        </div>
+        <div className="visuals" style={grid}>
+          <div className="bar" style={barStyle}>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={workers_data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="labels">
+              <p>Total Workers: <b>{data.workers}</b></p>
+              <p>Pending Workers: <b>{data.pendingWorkers}</b></p>
+              <p>Verified Workers: <b>{data.verified}</b></p>
+              <p>Declined Workers: <b>{data.declinedWorkers}</b></p>
+            </div>
+          </div>
+          <div className="chart_second" style={dashboard_data}>
+            <div className="visual">
+              <PieChart width="100%" height={400}>
+                <Pie data={application_data} nameKey="name" dataKey="application" fill="#626262" label />
+                <LabelList dataKey={"name"} position={"right"} fontSize={"25px"} />
+                <Tooltip />
+                <RechartsDevtools />
+              </PieChart>
+            </div>
+              <div className="labels">
+                <p>Pending Review: <b>{data.pendingApplication}</b></p>
+                <p>Interview Scheduled: <b>{data.interviewScheduledApplication}</b></p>
+                <p>Accepted: <b>{data.acceptedApplications}</b></p>
+                <p>Not Selected: <b>{data.notSelectedApplication}</b></p>
+              </div>
+          </div>
         </div>
       </div>
     </div>
