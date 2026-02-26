@@ -68,7 +68,7 @@ const AdminDashboard = () => {
   const application_data = [
     { name: "Pending Review", application: data?.pendingApplication || 0, fill: "#FF6B6B" },
     { name: "Interview Scheduled", application: data?.interviewScheduledApplication || 0, fill: "#FFA500" },
-    { name: "Accepted", application: data?.acceptedApplications || 0, fill: "#4CAF50" },
+    { name: "Accepted", application: data?.acceptedApplication || 0, fill: "#4CAF50" },
     { name: "Not Selected", application: data?.notSelectedApplication || 0, fill: "#9E9E9E" }
   ]
 
@@ -180,7 +180,7 @@ const AdminDashboard = () => {
             <div className="chart-legend">
               <p><strong>Pending Review:</strong> {data?.pendingApplication || 0}</p>
               <p><strong>Interview Scheduled:</strong> {data?.interviewScheduledApplication || 0}</p>
-              <p><strong>Accepted:</strong> {data?.acceptedApplications || 0}</p>
+              <p><strong>Accepted:</strong> {data?.acceptedApplication || 0}</p>
               <p><strong>Not Selected:</strong> {data?.notSelectedApplication || 0}</p>
             </div>
           </div>
