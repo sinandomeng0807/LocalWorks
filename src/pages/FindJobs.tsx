@@ -27,6 +27,8 @@ import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
 import SignUpModal from "@/components/SignUpModal";
 import AuthPromptModal from "@/components/AuthPromptModal";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 const FindJobs = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,68 +42,25 @@ const FindJobs = () => {
   const [confirmApplyOpen, setConfirmApplyOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
 
-  const jobs = [
-    {
-      id: 1,
-      title: "Construction Worker",
-      company: "BuildRight Construction",
-      location: "Quezon City",
-      type: "Full-time",
-      salary: "₱18,000 - ₱25,000/mo",
-      posted: "2 days ago",
-      description: "Looking for experienced construction workers for a commercial building project.",
-      skills: ["Construction", "Heavy Lifting", "Teamwork"],
-    },
-    {
-      id: 2,
-      title: "Electrician",
-      company: "PowerFlow Electric",
-      location: "Makati City",
-      type: "Contract",
-      salary: "₱800 - ₱1,200/day",
-      posted: "1 day ago",
-      description: "Need licensed electricians for residential wiring projects.",
-      skills: ["Electrical Work", "Wiring", "Safety Compliance"],
-    },
-    {
-      id: 3,
-      title: "Plumber",
-      company: "AquaFix Services",
-      location: "Pasig City",
-      type: "Part-time",
-      salary: "₱600 - ₱900/day",
-      posted: "3 days ago",
-      description: "Seeking skilled plumbers for maintenance and repair work.",
-      skills: ["Plumbing", "Pipe Fitting", "Problem Solving"],
-    },
-    {
-      id: 4,
-      title: "Carpenter",
-      company: "WoodCraft PH",
-      location: "Mandaluyong",
-      type: "Full-time",
-      salary: "₱20,000 - ₱28,000/mo",
-      posted: "5 days ago",
-      description: "Experienced carpenter needed for furniture and fixture installation.",
-      skills: ["Carpentry", "Woodworking", "Blueprint Reading"],
-    },
-    {
-      id: 5,
-      title: "Welder",
-      company: "MetalWorks Inc.",
-      location: "Taguig City",
-      type: "Contract",
-      salary: "₱900 - ₱1,500/day",
-      posted: "1 week ago",
-      description: "Certified welders needed for industrial fabrication projects.",
-      skills: ["Welding", "Metal Fabrication", "Safety"],
-    },
-  ];
+  const findJobs = async () => {
+    const result = await axios.get("http://localhost:8920/api/auth/jobs")
+    return result.data
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['findJobs'],
+    queryFn: findJobs
+  })
+
+  if (error) return <div>Error: {error.message}</div>
+  if (isLoading) return <div>Loading...</div>
+
+  const jobs = data.jobs
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+      job.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesLocation = !location || job.location.toLowerCase().includes(location.toLowerCase());
     const matchesType = !jobType || jobType === "all" || job.type === jobType;
     return matchesSearch && matchesLocation && matchesType;
@@ -120,7 +79,7 @@ const FindJobs = () => {
   const handleConfirmApply = () => {
     if (selectedJobId) {
       setAppliedJobs([...appliedJobs, selectedJobId]);
-      const job = jobs.find(j => j.id === selectedJobId);
+      const job = jobs.find(j => j._id === selectedJobId);
       toast.success(`Application submitted for ${job?.title}!`, {
         description: `Your application to ${job?.company} has been sent.`,
       });
@@ -169,7 +128,7 @@ const FindJobs = () => {
     }
   };
 
-  const selectedJob = jobs.find(j => j.id === selectedJobId);
+  const selectedJob = jobs.find(j => j._id === selectedJobId);
 
   return (
     <div className="min-h-screen bg-background">
@@ -215,7 +174,7 @@ const FindJobs = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="Full-time">Full-time</SelectItem>
+                    <SelectItem value="Full-Time">Full-time</SelectItem>
                     <SelectItem value="Part-time">Part-time</SelectItem>
                     <SelectItem value="Contract">Contract</SelectItem>
                   </SelectContent>
@@ -235,9 +194,9 @@ const FindJobs = () => {
 
           <div className="grid gap-4">
             {filteredJobs.map((job) => {
-              const isApplied = appliedJobs.includes(job.id);
+              const isApplied = appliedJobs.includes(job._id);
               return (
-                <Card key={job.id} className="hover:shadow-lg transition-shadow">
+                <Card key={job._id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-2">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                       <div>
@@ -253,7 +212,7 @@ const FindJobs = () => {
                           Applied
                         </Button>
                       ) : (
-                        <Button onClick={() => handleApplyClick(job.id)}>Apply Now</Button>
+                        <Button onClick={() => handleApplyClick(job._id)}>Apply Now</Button>
                       )}
                     </div>
                   </CardHeader>
@@ -277,9 +236,9 @@ const FindJobs = () => {
                     
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex flex-wrap gap-2">
-                        {job.skills.map((skill) => (
-                          <Badge key={skill} variant="secondary">
-                            {skill}
+                        {job.tags.map((tag) => (
+                          <Badge key={tag} variant="secondary">
+                            {tag}
                           </Badge>
                         ))}
                       </div>
