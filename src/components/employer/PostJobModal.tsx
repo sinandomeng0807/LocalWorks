@@ -41,7 +41,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
     title: "",
     location: "",
     salary: "",
-    type: "Choose Type",
+    type: "Full-Time",
     description: "",
     requirements: requirements.split("\n"),
     benefits: benefits.split("\n"),
@@ -65,7 +65,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
           title: "",
           location: "",
           salary: "",
-          type: "Full-time",
+          type: "Full-Time",
           description: "",
           requirements: formData.requirements,
           benefits: formData.benefits,
@@ -173,8 +173,8 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Full-time">Full-time</SelectItem>
-                    <SelectItem value="Part-time">Part-time</SelectItem>
+                    <SelectItem value="Full-Time">Full-time</SelectItem>
+                    <SelectItem value="Part-Time">Part-time</SelectItem>
                     <SelectItem value="Contract">Contract</SelectItem>
                     <SelectItem value="Temporary">Temporary</SelectItem>
                   </SelectContent>

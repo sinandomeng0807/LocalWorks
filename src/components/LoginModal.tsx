@@ -47,21 +47,29 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
       })
   }
 
+  const logEmployer = async () => {
+    await axios.post("http://localhost:8920/api/auth/employer/login", {
+      ...employerCredentials, role: "employer"
+    })
+      .then(function (response) {
+        alert(response.data.message)
+        navigate("/employer-dashboard")
+      })
+      .catch(function (error: any) {
+        if (error.response) {
+          alert(error.response.data.message)
+        }
+      })
+  }
+
   const handleWorkerLogin = (e: React.FormEvent) => {
     e.preventDefault();
     logWorker()
-    console.log("Worker login:", workerCredentials);
   };
 
   const handleEmployerLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Employer login:", employerCredentials);
-    onOpenChange(false);
-    if (onSuccess) {
-      onSuccess();
-    } else {
-      navigate("/employer-dashboard");
-    }
+    logEmployer()
   };
 
   return (
