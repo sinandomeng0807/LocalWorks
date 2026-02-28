@@ -7,6 +7,15 @@ import { useNavigate } from "react-router-dom";
 import PhoneInput from "./PhoneInput";
 import FileUpload from "./FileUpload";
 import OTPVerification from "./OTPVerification";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { X, Plus } from "lucide-react";
 import axios from "axios"
 axios.defaults.withCredentials = true;
 
@@ -25,7 +34,8 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
     email: "",
     password: "",
     phoneNumber: "",
-    skills: "",
+    skills: [],
+    skillCategory: ""
   });
   
   const [files, setFiles] = useState<{
@@ -35,6 +45,27 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
     photo: "",
     resume: "",
   });
+
+  const [skills, setSkills] = useState<string[]>([]);
+  const [skillInput, setSkillInput] = useState("");
+
+  const handleAddSkill = () => {
+    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
+      setSkills([...skills, skillInput.trim()]);
+      setSkillInput("");
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSkills(skills.filter((skill) => skill !== skillToRemove));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddSkill();
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -182,6 +213,24 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
         onChange={(value) => setFormData({ ...formData, phoneNumber: value })}
       />
 
+      <div className="space-y-2">
+                <Label htmlFor="skillCategory">Skill Category</Label>
+                <Select
+                  value={formData.skillCategory}
+                  onValueChange={(value) => setFormData({ ...formData, skillCategory: value })}
+                >
+                  <SelectTrigger id="type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Full-Time">Full-time</SelectItem>
+                    <SelectItem value="Part-Time">Part-time</SelectItem>
+                    <SelectItem value="Contract">Contract</SelectItem>
+                    <SelectItem value="Temporary">Temporary</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
       {/* Skills */}
       <div className="space-y-2">
         <Label htmlFor="worker-skills">Skills</Label>
@@ -196,18 +245,41 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
         />
       </div>
 
-      {/* CV/Resume Upload */}
-      <FileUpload
-        label="CV / Resume"
-        accept=".pdf,.doc,.docx"
-        onChange={(file) => setFiles({ ...files, resume: file })}
-        helpText="Upload your CV or resume (PDF, DOC, DOCX)"
-        type="document"
-      />
+      <div className="space-y-2">
+          <Label htmlFor="skills">Add Skills</Label>
+          <div className="flex gap-2">
+            <Input
+              id="skills"
+              placeholder="e.g., Physical Labor, No Experience Needed"
+              value={skillInput}
+              onChange={(e) => setSkillInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <Button type="button" variant="outline" size="icon" onClick={handleAddSkill}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          {skills.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {skills.map((tag) => (
+                <Badge key={tag} variant="secondary" className="gap-1">
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSkill(tag)}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
 
-      <Button type="submit" className="w-full" size="lg" disabled={!isEmailVerified}>
-        Sign Up as Worker
-      </Button>
+        <Button type="submit" className="w-full" size="lg" disabled={!isEmailVerified}>
+          Sign Up as Worker
+        </Button>
     </form>
   );
 };
