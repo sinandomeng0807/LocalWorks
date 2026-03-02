@@ -65,9 +65,9 @@ const JobListings = () => {
 
   const handleConfirmApply = () => {
     if (jobToApply) {
-      setAppliedJobs([...appliedJobs, jobToApply.id]);
+      setAppliedJobs([...appliedJobs, jobToApply._id]);
       toast.success(`Application submitted for ${jobToApply.title}!`, {
-        description: `Your application to ${jobToApply.company.title} has been sent.`,
+        description: `Your application to ${jobToApply.company} has been sent.`,
       });
     }
     setConfirmApplyOpen(false);
@@ -116,7 +116,7 @@ const JobListings = () => {
                     <CardTitle className="text-xl mb-1">{job.title}</CardTitle>
                     <CardDescription className="flex items-center gap-2 text-base">
                       <Building2 className="w-4 h-4" />
-                      {job.company.title}
+                      {job.company}
                     </CardDescription>
                   </div>
                   <Badge variant={job.type === "Full-time" ? "default" : "secondary"}>
@@ -130,7 +130,7 @@ const JobListings = () => {
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                   <span className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
-                    {job.location.name}
+                    {job.location}
                   </span>
                   <span className="flex items-center gap-1">
                     {job.salary}
@@ -197,7 +197,7 @@ const JobListings = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Application</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to apply for <strong>{jobToApply?.title}</strong> at <strong>{jobToApply?.company.title}</strong>?
+              Are you sure you want to apply for <strong>{jobToApply?.title}</strong> at <strong>{jobToApply?.company}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
