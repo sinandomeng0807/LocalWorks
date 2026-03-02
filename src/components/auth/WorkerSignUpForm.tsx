@@ -90,7 +90,7 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
         photo: files.photo,
         resume: files.resume
       }
-    })
+    }, { withCredentials: true })
       .then((response) => {
         alert(response.data.message)
         navigate("/worker-dashboard");
@@ -236,7 +236,7 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
                   <SelectTrigger id="type">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent defaultValue={"Choose a Skill Category"}>
                     {data.map((skill: any) => <SelectItem value={skill._id}>{skill.title}</SelectItem>)}
                   </SelectContent>
                 </Select>
