@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import Images from "./pages/Images";
 import AdminSign from "./pages/AdminSign";
 import AdminDashboard from "./pages/AdminDashboard";
+import PostedJobs from "./pages/PostedJobs";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/images" element={<Images />} />
           <Route path="/admin" element={<AdminSign />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/posted-jobs" element={<PostedJobs />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

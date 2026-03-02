@@ -1,7 +1,9 @@
 import Job from "@/components/admin/Job";
 import Navbar from "@/components/admin/Navbar";
+import TopNav from "@/components/admin/TopNav";
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { RechartsDevtools } from '@recharts/devtools';
 axios.defaults.withCredentials = true
@@ -9,6 +11,7 @@ axios.defaults.withCredentials = true
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, ResponsiveContainer, Pie, LabelList, Cell } from 'recharts';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [postedJobs, setPosted] = useState(0)
   const [pendingJobs, setPending] = useState(0)
   const [acceptedJobs, setAcceptedJobs] = useState(0)
@@ -104,6 +107,7 @@ const AdminDashboard = () => {
       />
 
       <div className="dashboard-data" style={dashboard_data}>
+        <TopNav />
         <h1 style={h1_header}>Welcome Back, Admin!</h1>
         <p style={{ marginBottom: "20px", color: "#666" }}>Here's what happening with your reports today</p>
         
@@ -190,7 +194,12 @@ const AdminDashboard = () => {
         <div className="dashboard-section">
           <div className="section-header">
             <h2>Posted Jobs</h2>
-            <a href="#" className="view-all-link">View all</a>
+            <button
+              className="view-all-link text-blue-600 underline"
+              onClick={() => navigate('/admin/posted-jobs')}
+            >
+              View all
+            </button>
           </div>
           <table className="dashboard-table">
             <thead>
