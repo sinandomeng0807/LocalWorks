@@ -118,7 +118,7 @@ const JobListings = () => {
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-xl mb-1">{job.title}</CardTitle>
+                    <CardTitle className="text-xl mb-1">{job.info.title}</CardTitle>
                     <CardDescription className="flex items-center gap-2 text-base">
                       <Building2 className="w-4 h-4" />
                       {job.info.company}
@@ -163,7 +163,7 @@ const JobListings = () => {
                     <Eye className="w-4 h-4" />
                     View Details
                   </Button>
-                  {isApplied ? (
+                  {job.IsApplied ? (
                     <Button disabled className="gap-2">
                       <CheckCircle className="w-4 h-4" />
                       Applied
@@ -202,7 +202,7 @@ const JobListings = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Application</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to apply for <strong>{jobToApply?.title}</strong> at <strong>{jobToApply?.company}</strong>?
+              Are you sure you want to apply for <strong>{jobToApply?.info.title}</strong> at <strong>{jobToApply?.company}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
