@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import PhoneInput from "./PhoneInput";
 import FileUpload from "./FileUpload";
 import OTPVerification from "./OTPVerification";
+import { useQuery } from "@tanstack/react-query";
 import {
   Select,
   SelectContent,
@@ -85,7 +86,7 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
 
   const submit = async () => {
     await axios.post("http://localhost:8920/api/auth/worker/register", {
-      ...formData, phoneNumber: `+63${formData.phoneNumber}`, files: {
+      ...formData, skills, phoneNumber: `+63${formData.phoneNumber}`, files: {
         photo: files.photo,
         resume: files.resume
       }
@@ -104,6 +105,19 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
         }
       })
   }
+
+  const ViewSkills = async () => {
+    const { data } = await axios.get("http://localhost:8920/api/auth/ViewSkills")
+    return data.skills
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['ViewSkills'],
+    queryFn: ViewSkills
+  })
+
+  if (error) return <div>Error: {error.message}</div>
+  if (isLoading) return <div>Loading...</div>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,27 +237,12 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Full-Time">Full-time</SelectItem>
-                    <SelectItem value="Part-Time">Part-time</SelectItem>
-                    <SelectItem value="Contract">Contract</SelectItem>
-                    <SelectItem value="Temporary">Temporary</SelectItem>
+                    {data.map((skill: any) => <SelectItem value={skill._id}>{skill.title}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
 
-      {/* Skills */}
-      <div className="space-y-2">
-        <Label htmlFor="worker-skills">Skills</Label>
-        <Input
-          id="worker-skills"
-          name="skills"
-          type="text"
-          placeholder="e.g., Carpentry, Plumbing, Electrical"
-          value={formData.skills}
-          onChange={handleChange}
-          required
-        />
-      </div>
+
 
       <div className="space-y-2">
           <Label htmlFor="skills">Add Skills</Label>
