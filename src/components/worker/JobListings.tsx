@@ -114,40 +114,40 @@ const JobListings = () => {
         {AllJobs.map((job: any) => {
           const isApplied = appliedJobs.includes(job._id);
           return (
-            <Card key={job._id} className="hover:shadow-md transition-shadow">
+            <Card key={job.info._id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-xl mb-1">{job.title}</CardTitle>
                     <CardDescription className="flex items-center gap-2 text-base">
                       <Building2 className="w-4 h-4" />
-                      {job.company}
+                      {job.info.company}
                     </CardDescription>
                   </div>
-                  <Badge variant={job.type === "Full-time" ? "default" : "secondary"}>
-                    {job.type}
+                  <Badge variant={job.info.type === "Full-Time" ? "default" : "secondary"}>
+                    {job.info.type}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-4">{job.description}</p>
+                <p className="text-muted-foreground mb-4">{job.info.description}</p>
                 
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                   <span className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
-                    {job.location}
+                    {job.info.location}
                   </span>
                   <span className="flex items-center gap-1">
-                    {job.salary}
+                    {job.info.salary}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    {job.posted}
+                    {job.info.posted}
                   </span>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {job.tags.map((tag: any) => (
+                  {job.info.tags.map((tag: any) => (
                     <Badge key={tag} variant="outline">
                       {tag}
                     </Badge>
