@@ -64,15 +64,15 @@ const JobListings = () => {
   };
 
   const addApplication = async (jobToApply: any) => {
-    await axios.post("http://localhost:8920/api/pro/createApplication", { job: jobToApply._id })
+    await axios.post("http://localhost:8920/api/pro/createApplication", { job: jobToApply.info._id })
   }
 
   const handleConfirmApply = () => {
     if (jobToApply) {
-      setAppliedJobs([...appliedJobs, jobToApply._id]);
+      setAppliedJobs([...appliedJobs, jobToApply.info._id]);
       addApplication(jobToApply)
-      toast.success(`Application submitted for ${jobToApply.title}!`, {
-        description: `Your application to ${jobToApply.company} has been sent.`,
+      toast.success(`Application submitted for ${jobToApply.info.title}!`, {
+        description: `Your application to ${jobToApply.info.company} has been sent.`,
       });
     }
     setConfirmApplyOpen(false);
@@ -112,7 +112,7 @@ const JobListings = () => {
       {/* Job Listings */}
       <div className="grid gap-4">
         {AllJobs.map((job: any) => {
-          const isApplied = appliedJobs.includes(job._id);
+          const isApplied = appliedJobs.includes(job.info._id);
           return (
             <Card key={job.info._id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
@@ -192,7 +192,6 @@ const JobListings = () => {
         open={detailsModalOpen}
         onOpenChange={setDetailsModalOpen}
         job={selectedJob}
-        isApplied={selectedJob ? appliedJobs.includes(selectedJob.id) : false}
         onApply={handleApplyFromModal}
       />
 
@@ -202,7 +201,7 @@ const JobListings = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Application</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to apply for <strong>{jobToApply?.info.title}</strong> at <strong>{jobToApply?.company}</strong>?
+              Are you sure you want to apply for <strong>{jobToApply?.info.title}</strong> at <strong>{jobToApply?.info.company}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
