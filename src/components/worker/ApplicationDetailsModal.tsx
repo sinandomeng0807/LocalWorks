@@ -21,13 +21,19 @@ import {
 interface Application {
   id: string;
   worker: string;
-  jobTitle: string;
-  company: string;
-  location: string;
-  appliedDate: string;
+  job: {
+    title: string;
+    company: string;
+    location: string;
+    appliedDate: string;
+    description: string;
+    email: string;
+    phone: string;
+    salary: string;
+  }
   status: string;
-  salary: string;
   interviewDate?: string;
+  createdAt: string;
 }
 
 interface ApplicationDetailsModalProps {
@@ -39,7 +45,7 @@ interface ApplicationDetailsModalProps {
 
 const getStatusInfo = (status: string) => {
   switch (status) {
-    case "pending":
+    case "Pending Review":
       return { 
         label: "Pending Review", 
         icon: <Clock className="w-5 h-5" />,
@@ -48,7 +54,7 @@ const getStatusInfo = (status: string) => {
         borderColor: "border-yellow-200 dark:border-yellow-800",
         description: "Your application is being reviewed by the employer. You'll be notified once they make a decision."
       };
-    case "interview":
+    case "Interview Scheduled":
       return { 
         label: "Interview Scheduled", 
         icon: <Calendar className="w-5 h-5" />,
@@ -57,7 +63,7 @@ const getStatusInfo = (status: string) => {
         borderColor: "border-blue-200 dark:border-blue-800",
         description: "Congratulations! The employer wants to interview you. Check the interview details below."
       };
-    case "accepted":
+    case "Accepted":
       return { 
         label: "Accepted", 
         icon: <CheckCircle className="w-5 h-5" />,
@@ -66,7 +72,7 @@ const getStatusInfo = (status: string) => {
         borderColor: "border-green-200 dark:border-green-800",
         description: "Great news! Your application has been accepted. The employer will contact you with next steps."
       };
-    case "rejected":
+    case "Not Selected":
       return { 
         label: "Not Selected", 
         icon: <XCircle className="w-5 h-5" />,
@@ -93,12 +99,12 @@ const getExtendedApplicationDetails = (application: Application) => ({
   jobType: "Full-time",
   jobDescription: "Looking for dedicated professionals to join our team. This role requires attention to detail and strong work ethic.",
   timeline: [
-    { date: application.appliedDate, event: "Application Submitted", completed: true },
+    { date: application.createdAt, event: "Application Submitted", completed: true },
     { date: "In Progress", event: "Application Review", completed: application.status !== "pending" },
-    { date: application.interviewDate || "Pending", event: "Interview", completed: application.status === "accepted" || application.status === "rejected" },
-    { date: "Pending", event: "Final Decision", completed: application.status === "accepted" || application.status === "rejected" },
+    { date: application.interviewDate || "Pending Review", event: "Interview Scheduled", completed: application.status === "Accepted" || application.status === "Not Selected" },
+    { date: "Pending", event: "Final Decision", completed: application.status === "Accepted" || application.status === "Not Selected" },
   ],
-  contactEmail: "hr@" + application.company.toLowerCase().replace(/\s+/g, "") + ".com",
+  contactEmail: "hr@" + application.job.company.toLowerCase().replace(/\s+/g, "") + ".com",
   contactPhone: "+63 912 345 6789",
 });
 
@@ -122,22 +128,22 @@ const ApplicationDetailsModal = ({
 
         {/* Header */}
         <div>
-          <h2 className="text-2xl font-bold">{extendedApp.jobTitle}</h2>
+          <h2 className="text-2xl font-bold">{extendedApp.job.title}</h2>
           <div className="flex items-center gap-2 text-muted-foreground mt-1">
             <Building2 className="w-4 h-4" />
-            <span className="text-lg">{extendedApp.company}</span>
+            <span className="text-lg">{extendedApp.job.company}</span>
           </div>
           <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              {extendedApp.location}
+              {extendedApp.job.location}
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
-              Applied: {extendedApp.appliedDate}
+              Applied: {extendedApp.createdAt}
             </div>
             <span className="font-medium text-foreground">
-              {extendedApp.salary}
+              {extendedApp.job.salary}
             </span>
           </div>
         </div>
@@ -196,7 +202,7 @@ const ApplicationDetailsModal = ({
         {/* Job Description */}
         <div>
           <h3 className="font-semibold mb-2">Job Description</h3>
-          <p className="text-sm text-muted-foreground">{extendedApp.jobDescription}</p>
+          <p className="text-sm text-muted-foreground">{extendedApp.job.description}</p>
         </div>
 
         <Separator />
@@ -207,11 +213,11 @@ const ApplicationDetailsModal = ({
           <div className="space-y-2 text-sm">
             <p>
               <span className="text-muted-foreground">Email:</span>{" "}
-              <span className="font-medium">{extendedApp.contactEmail}</span>
+              <span className="font-medium">{extendedApp.job.email}</span>
             </p>
             <p>
               <span className="text-muted-foreground">Phone:</span>{" "}
-              <span className="font-medium">{extendedApp.contactPhone}</span>
+              <span className="font-medium">{extendedApp.job.phone}</span>
             </p>
           </div>
         </div>
