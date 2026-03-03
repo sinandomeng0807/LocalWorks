@@ -15,6 +15,8 @@ import {
 import { Building2, MapPin, Calendar, Clock, Eye } from "lucide-react";
 import { toast } from "sonner";
 import ApplicationDetailsModal from "./ApplicationDetailsModal";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 interface Application {
   id: number;
@@ -69,13 +71,13 @@ const initialApplications: Application[] = [
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "pending":
+    case "Pending Review":
       return <Badge variant="secondary">Pending Review</Badge>;
-    case "interview":
+    case "Interview Scheduled":
       return <Badge className="bg-blue-500 hover:bg-blue-600">Interview Scheduled</Badge>;
-    case "accepted":
+    case "Accepted":
       return <Badge className="bg-green-500 hover:bg-green-600">Accepted</Badge>;
-    case "rejected":
+    case "Not Selected":
       return <Badge variant="destructive">Not Selected</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
@@ -87,7 +89,7 @@ const MyApplications = () => {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
-  const [applicationToWithdraw, setApplicationToWithdraw] = useState<Application | null>(null);
+  const [applicationToWithdraw, setApplicationToWithdraw] = useState(null);
 
   const handleViewDetails = (application: Application) => {
     setSelectedApplication(application);
@@ -102,14 +104,29 @@ const MyApplications = () => {
 
   const handleConfirmWithdraw = () => {
     if (applicationToWithdraw) {
-      setApplications(prev => prev.filter(app => app.id !== applicationToWithdraw.id));
+      setApplications(prev => prev.filter(app => app.id !== applicationToWithdraw._id));
       toast.success("Application withdrawn", {
-        description: `Your application to ${applicationToWithdraw.company} has been withdrawn.`,
+        description: `Your application to ${applicationToWithdraw.job.company} has been withdrawn.`,
       });
     }
     setWithdrawDialogOpen(false);
     setApplicationToWithdraw(null);
   };
+
+  const Applications = async () => {
+    const { data } = await axios.get("http://localhost:8920/api/pro/viewApplications", { withCredentials: true })
+    return data
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['ViewApplications'],
+    queryFn: Applications
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  const ViewApplications = data.Applications
 
   return (
     <div>
@@ -119,15 +136,15 @@ const MyApplications = () => {
       </div>
 
       <div className="grid gap-4">
-        {applications.map((application) => (
-          <Card key={application.id}>
+        {ViewApplications.map((application) => (
+          <Card key={application._id}>
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle className="text-xl mb-1">{application.jobTitle}</CardTitle>
+                  <CardTitle className="text-xl mb-1">{application.job.title}</CardTitle>
                   <CardDescription className="flex items-center gap-2 text-base">
                     <Building2 className="w-4 h-4" />
-                    {application.company}
+                    {application.job.company}
                   </CardDescription>
                 </div>
                 {getStatusBadge(application.status)}
@@ -137,18 +154,18 @@ const MyApplications = () => {
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
-                  {application.location}
+                  {application.job.location}
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  Applied: {application.appliedDate}
+                  Applied: {application.createdAt}
                 </span>
                 <span className="font-medium text-foreground">
-                  {application.salary}
+                  {application.job.salary}
                 </span>
               </div>
 
-              {application.status === "interview" && application.interviewDate && (
+              {application.status === "Interview Scheduled" && application.interviewDate && (
                 <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
                   <p className="text-sm flex items-center gap-2 text-blue-700 dark:text-blue-300">
                     <Clock className="w-4 h-4" />
@@ -167,7 +184,7 @@ const MyApplications = () => {
                   <Eye className="w-4 h-4" />
                   View Details
                 </Button>
-                {application.status === "pending" && (
+                {application.status === "Pending Review" && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -204,7 +221,7 @@ const MyApplications = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Withdraw Application</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to withdraw your application for <strong>{applicationToWithdraw?.jobTitle}</strong> at <strong>{applicationToWithdraw?.company}</strong>? This action cannot be undone.
+              Are you sure you want to withdraw your application for <strong>{applicationToWithdraw?.job.title}</strong> at <strong>{applicationToWithdraw?.job.company}</strong>? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

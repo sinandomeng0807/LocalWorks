@@ -38,7 +38,7 @@ interface Job {
     email: string;
     phone: string;
   },
-  isApplied: boolean
+  IsApplied: boolean
 }
 
 interface JobDetailsModalProps {
@@ -192,7 +192,7 @@ const JobDetailsModal = ({
 
         {/* Apply Button */}
         <div className="pt-4">
-          {extendedJob.isApplied ? (
+          {extendedJob.IsApplied ? (
             <Button disabled className="w-full gap-2">
               <CheckCircle className="w-4 h-4" />
               Already Applied
