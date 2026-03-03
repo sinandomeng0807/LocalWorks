@@ -45,6 +45,8 @@ const JobListings = () => {
 
   const AllJobs = data.jobs
 
+  if (!AllJobs.length) return <div>{data.message}</div>
+
   const handleViewDetails = (job: Job) => {
     setSelectedJob(job);
     setDetailsModalOpen(true);

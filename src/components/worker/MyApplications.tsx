@@ -102,12 +102,28 @@ const MyApplications = () => {
     setDetailsModalOpen(false);
   };
 
+  const WithdrawApplication = async (id: any) => {
+    await axios.put("http://localhost:8920/api/pro/withdrawApplication", {
+      _id: id
+    }, { withCredentials: true })
+      .then(function (response) {
+        if (response.data) {
+          setApplications(prev => prev.filter(app => app.id !== applicationToWithdraw._id));
+          toast.success("Application withdrawn", {
+            description: `Your application to ${applicationToWithdraw.job.company} has been withdrawn.`,
+          });
+        }
+      })
+      .catch(function (error) {
+        if (error.response) {
+          toast.error(error.response.data.message)
+        }
+      })
+  }
+
   const handleConfirmWithdraw = () => {
     if (applicationToWithdraw) {
-      setApplications(prev => prev.filter(app => app.id !== applicationToWithdraw._id));
-      toast.success("Application withdrawn", {
-        description: `Your application to ${applicationToWithdraw.job.company} has been withdrawn.`,
-      });
+      WithdrawApplication(applicationToWithdraw._id)
     }
     setWithdrawDialogOpen(false);
     setApplicationToWithdraw(null);
@@ -127,6 +143,8 @@ const MyApplications = () => {
   if (error) return <div>Error: {error.message}</div>
 
   const ViewApplications = data.Applications
+
+  if (!ViewApplications.length) return <div>{data.message}</div>
 
   return (
     <div>
