@@ -2,13 +2,17 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/admin/Navbar";
 import TopNav from "@/components/admin/TopNav";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+
+axios.defaults.withCredentials = true
 
 interface Job {
-  id: number;
-  category: string;
-  summary: string;
+  _id: number;
+  title: string;
+  description: string;
   status: string;
-  date: string; // could be iso string
+  createdAt: string; // could be iso string
 }
 
 const PostedJobs = () => {
@@ -18,56 +22,23 @@ const PostedJobs = () => {
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [sortOrder, setSortOrder] = useState("Newest");
 
-  const jobs: Job[] = [
-    {
-      id: 1,
-      category: "Janitor",
-      summary: "With Experience , college grad, 18 y/o and above",
-      status: "PENDING",
-      date: "2026-02-08",
-    },
-    {
-      id: 2,
-      category: "Janitor",
-      summary: "With Experience , college grad, 18 y/o and above",
-      status: "PENDING",
-      date: "2026-02-07",
-    },
-    {
-      id: 3,
-      category: "Janitor",
-      summary: "With Experience , college grad, 18 y/o and above",
-      status: "DECLINED",
-      date: "2026-02-06",
-    },
-    {
-      id: 4,
-      category: "Janitor",
-      summary: "With Experience , college grad, 18 y/o and above",
-      status: "PENDING",
-      date: "2026-02-05",
-    },
-    {
-      id: 5,
-      category: "Janitor",
-      summary: "With Experience , college grad, 18 y/o and above",
-      status: "ACCEPTED",
-      date: "2026-02-04",
-    },
-    {
-      id: 6,
-      category: "Janitor",
-      summary: "With Experience , college grad, 18 y/o and above",
-      status: "ONGOING",
-      date: "2026-02-03",
-    },
-  ];
+  const Jobs = async () => {
+    const { data } = await axios.get("http://localhost:8920/api/admin/jobs/" + sortOrder, {
+      withCredentials: true
+    })
+    return data
+  }
 
-  // derive categories
-  const categories = useMemo(() => {
-    const set = new Set<string>(jobs.map((j) => j.category));
-    return ["All Categories", ...Array.from(set)];
-  }, [jobs]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['Jobs'],
+    queryFn: Jobs
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  const { jobs } = data
+
 
   const statusClasses = {
     PENDING: "bg-yellow-100 text-yellow-800",
@@ -76,27 +47,11 @@ const PostedJobs = () => {
     ONGOING: "bg-blue-100 text-blue-800",
   };
 
-  const filteredJobs = useMemo(() => {
-    let result = jobs;
-    if (categoryFilter !== "All Categories") {
-      result = result.filter((j) => j.category === categoryFilter);
-    }
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(
-        (j) =>
-          j.category.toLowerCase().includes(term) ||
-          j.summary.toLowerCase().includes(term)
-      );
-    }
-    result = result.sort((a, b) => {
-      if (sortOrder === "Newest") {
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-      }
-      return new Date(a.date).getTime() - new Date(b.date).getTime();
-    });
-    return result;
-  }, [jobs, categoryFilter, searchTerm, sortOrder]);
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    job.description.toLowerCase().includes(searchTerm.toLowerCase())
+    return matchesSearch
+  })
 
   const navbar = {
     backgroundColor: "#EC6A13",
@@ -139,17 +94,7 @@ const PostedJobs = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <select
-            className="border rounded px-3 py-2 mt-2 md:mt-0 w-full md:w-1/4"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+
           <select
             className="border rounded px-3 py-2 mt-2 md:mt-0 w-full md:w-1/4"
             value={sortOrder}
@@ -181,9 +126,9 @@ const PostedJobs = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredJobs.map((job) => (
-                <tr key={job.id} className="hover:bg-gray-100">
-                  <td className="px-6 py-4 whitespace-nowrap">{job.category}</td>
-                  <td className="px-6 py-4 whitespace-normal max-w-xs">{job.summary}</td>
+                <tr key={job._id} className="hover:bg-gray-100">
+                  <td className="px-6 py-4 whitespace-nowrap">{job.title}</td>
+                  <td className="px-6 py-4 whitespace-normal max-w-xs">{job.description}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[job.status as keyof typeof statusClasses] || "bg-gray-100 text-gray-800"}`}
@@ -217,18 +162,18 @@ const PostedJobs = () => {
         <div className="md:hidden space-y-4">
           {filteredJobs.map((job) => (
             <div
-              key={job.id}
+              key={job._id}
               className="p-4 border rounded bg-white shadow-sm"
             >
               <div className="flex justify-between items-center">
-                <span className="font-semibold">{job.category}</span>
+                <span className="font-semibold">{job.title}</span>
                 <span
                   className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[job.status as keyof typeof statusClasses] || "bg-gray-100 text-gray-800"}`}
                 >
                   {job.status}
                 </span>
               </div>
-              <p className="mt-2 text-sm">{job.summary}</p>
+              <p className="mt-2 text-sm">{job.description}</p>
               <div className="mt-3 flex space-x-2">
                 <button className="bg-green-500 text-white px-2 py-1 rounded text-xs">
                   accept
