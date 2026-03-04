@@ -23,13 +23,13 @@ const PostedJobs = () => {
   const [sortOrder, setSortOrder] = useState("Newest");
 
   const Jobs = async () => {
-    const { data } = await axios.get("http://localhost:8920/api/admin/jobs/" + sortOrder, {
+    const { data } = await axios.get("http://localhost:8920/api/admin/jobs", {
       withCredentials: true
     })
     return data
   }
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['Jobs'],
     queryFn: Jobs
   })
@@ -52,6 +52,21 @@ const PostedJobs = () => {
     job.description.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesSearch
   })
+
+  const updateStatus = async (job, status) => {
+    await axios.put("http://localhost:8920/api/admin/updateJob/" + job, {
+      newStatus: status
+    })
+      .then(function (response) {
+        navigate("/admin/posted-jobs", { replace: true })
+        refetch()
+      })
+      .catch(function (error) {
+        if (error.response) {
+          alert(error.response.data.message)
+        }
+      })
+  }
 
   const navbar = {
     backgroundColor: "#EC6A13",
@@ -137,10 +152,10 @@ const PostedJobs = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap flex space-x-2">
-                    <button className="bg-green-500 text-white px-2 py-1 rounded text-xs">
+                    <button className="bg-green-500 text-white px-2 py-1 rounded text-xs" onClick={() => updateStatus(job._id, "ACCEPTED")}>
                       Accept
                     </button>
-                    <button className="bg-red-500 text-white px-2 py-1 rounded text-xs">
+                    <button className="bg-red-500 text-white px-2 py-1 rounded text-xs" onClick={() => updateStatus(job._id, "DECLINED")}>
                       Decline
                     </button>
                     <button
