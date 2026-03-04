@@ -29,7 +29,7 @@ const PostedJobs = () => {
     return data
   }
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['Jobs'],
     queryFn: Jobs
   })
@@ -59,7 +59,6 @@ const PostedJobs = () => {
     })
       .then(function (response) {
         navigate("/admin/posted-jobs", { replace: true })
-        refetch()
       })
       .catch(function (error) {
         if (error.response) {
