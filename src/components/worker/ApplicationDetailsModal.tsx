@@ -100,9 +100,9 @@ const getExtendedApplicationDetails = (application: Application) => ({
   jobDescription: "Looking for dedicated professionals to join our team. This role requires attention to detail and strong work ethic.",
   timeline: [
     { date: application.createdAt, event: "Application Submitted", completed: true },
-    { date: "In Progress", event: "Application Review", completed: application.status !== "pending" },
-    { date: application.interviewDate || "Pending Review", event: "Interview Scheduled", completed: application.status === "Accepted" || application.status === "Not Selected" },
-    { date: "Pending", event: "Final Decision", completed: application.status === "Accepted" || application.status === "Not Selected" },
+    { date: "In Progress", event: "Application Review", completed: application.status !== "Pending Review" },
+    { date: application.interviewDate || "N/A", event: "Interview Scheduled", completed: application.status === "Accepted" || application.status === "Not Selected" },
+    { date: application.status === "Accepted" || application.status === "Not Selected" ? application.status : "Pending", event: "Final Decision", completed: application.status === "Accepted" || application.status === "Not Selected" },
   ],
   contactEmail: "hr@" + application.job.company.toLowerCase().replace(/\s+/g, "") + ".com",
   contactPhone: "+63 912 345 6789",
