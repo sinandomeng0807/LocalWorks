@@ -59,6 +59,7 @@ const getStatusBadge = (status: string) => {
 };
 
 const WorkerApplications = () => {
+  const [DateInput, NewDateInput] = useState("")
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -117,6 +118,12 @@ const WorkerApplications = () => {
   };
 
   const UpdateApplicationStatus = async (_id, status, timeline) => {
+    if (status === "Interview Scheduled" && timeline === "Interview") {
+      await axios.put("http://localhost:8920/api/pro/date", { _id, interviewDate: DateInput }, {
+        withCredentials: true
+      }).catch((error) => { if (error.response) { alert(error.response.data.message) } })
+    }
+
     await axios.put("http://localhost:8920/api/pro/update/application", { _id, status, timeline }, {
       withCredentials: true
     })
@@ -139,19 +146,32 @@ const WorkerApplications = () => {
           description: `They will be notified about the ${application.job.title} position.`,
         });
       } else if (type === "scheduled an interview") {
-        UpdateApplicationStatus(application._id, "Interview Scheduled", "Interview")
-        toast.success(`${application.worker.name} has been scheduled an interview!`, {
-          description: `They will be notified about the ${application.job.title} interview schedule.`,
-        });
+        if (DateInput === "") {
+          toast.info(`Date has no input`, {
+            description: "Please enter the date for the interview schedule.",
+          });
+        } else {
+
+          UpdateApplicationStatus(application._id, "Interview Scheduled", "Interview")
+          toast.success(`${application.worker.name} has been scheduled an interview!`, {
+            description: `They will be notified about the ${application.job.title} interview schedule.`,
+          });
+        }
+        
       } else {
         UpdateApplicationStatus(application._id, "Not Selected", "Final Decision")
         toast.info(`${application.worker.name}'s application has been declined.`, {
           description: "They will be notified of your decision.",
         });
       }
-
-    setConfirmDialog({ open: false, type: "accept", application: null });
   };
+
+  const styleDate = {
+    border: "none",
+    boxShadow: "0.1rem 0.1rem 0.1rem rgba(0, 0, 0, 0.1)",
+    padding: "0.3rem",
+    borderRadius: "15px"
+  }
 
   return (
     <div className="space-y-6">
@@ -413,7 +433,8 @@ const WorkerApplications = () => {
                 </>
               ) : confirmDialog.type === "scheduled an interview" ? (
                 <>
-                  Please set an Interview Date
+                  <label htmlFor="interviewDate">Please set an Interview Date: </label>
+                  <input style={styleDate} type="date" id="interviewDate" onChange={(event) => NewDateInput(event.target.value)} />
                 </>
               ) : (
                 <>
