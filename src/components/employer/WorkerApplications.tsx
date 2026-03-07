@@ -59,6 +59,23 @@ const getStatusBadge = (status: string) => {
 };
 
 const WorkerApplications = () => {
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    type: "accept" | "reject";
+    application: Application | null;
+  }>({
+    open: false,
+    type: "accept",
+    application: null,
+  });
+  const [profileModal, setProfileModal] = useState<{
+    open: boolean;
+    application: Application | null;
+  }>({
+    open: false,
+    application: null,
+  });
   
   const ViewApplications = async () => {
     const { data } = await axios.get("http://localhost:8920/api/pro/viewApplications/employer", { withCredentials: true })
@@ -77,6 +94,40 @@ const WorkerApplications = () => {
 
   const pendingApplications = Applications.filter(app => app.status === "Pending Review");
   const processedApplications = Applications.filter(app => app.status !== "Pending Review");
+
+  
+  const handleViewProfile = (application) => {
+    setProfileModal({ open: true, application });
+  };
+
+  const handleAcceptClick = (application) => {
+    setProfileModal({ open: false, application: null });
+    setConfirmDialog({ open: true, type: "accept", application });
+  };
+
+  const handleRejectClick = (application) => {
+    setProfileModal({ open: false, application: null });
+    setConfirmDialog({ open: true, type: "reject", application });
+  };
+  
+  const handleConfirmAction = () => {
+    if (!confirmDialog.application) return;
+
+    const { type, application } = confirmDialog;
+    const newStatus = type === "accept" ? "accepted" : "rejected";
+
+    if (type === "accept") {
+      toast.success(`${application.worker.name} has been accepted!`, {
+        description: `They will be notified about the ${application.job.title} position.`,
+      });
+    } else {
+      toast.info(`${application.worker.name}'s application has been declined.`, {
+        description: "They will be notified of your decision.",
+      });
+    }
+
+    setConfirmDialog({ open: false, type: "accept", application: null });
+  };
 
   return (
     <div className="space-y-6">
@@ -141,6 +192,7 @@ const WorkerApplications = () => {
                       variant="secondary"
                       size="sm"
                       className="gap-2"
+                      onClick={() => handleViewProfile(application)}
                     >
                       <Eye className="w-4 h-4" />
                       View Profile
@@ -148,6 +200,7 @@ const WorkerApplications = () => {
                     <Button 
                       className="flex-1 gap-2" 
                       size="sm"
+                      onClick={() => handleAcceptClick(application)}
                     >
                       <Check className="w-4 h-4" />
                       Accept
@@ -210,14 +263,14 @@ const WorkerApplications = () => {
       )}
 
       {/* Worker Profile Modal */}
-      {/* <WorkerProfileModal
+      <WorkerProfileModal
         open={profileModal.open}
         onOpenChange={(open) => setProfileModal(prev => ({ ...prev, open }))}
         worker={profileModal.application}
         onAccept={() => profileModal.application && handleAcceptClick(profileModal.application)}
         onReject={() => profileModal.application && handleRejectClick(profileModal.application)}
-        showActions={profileModal.application?.status === "pending"}
-      /> */}
+        showActions={profileModal.application?.status === "Pending Review"}
+      />
 
       {/* Confirmation Dialog */}
       {/* <AlertDialog 

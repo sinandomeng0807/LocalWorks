@@ -82,10 +82,10 @@ const WorkerProfileModal = ({
   onAccept,
   onReject,
   showActions = true,
-}: WorkerProfileModalProps) => {
+}) => {
   if (!worker) return null;
 
-  const extendedWorker = getExtendedProfile(worker);
+  const extendedWorker = worker;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -97,26 +97,26 @@ const WorkerProfileModal = ({
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row items-start gap-4">
           <Avatar className="w-20 h-20">
-            <AvatarImage src={extendedWorker.avatar} />
+            <AvatarImage src={extendedWorker.worker.photo} />
             <AvatarFallback className="bg-primary/10 text-primary text-2xl">
-              {getInitials(extendedWorker.name)}
+              {getInitials(extendedWorker.worker.name)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <h2 className="text-2xl font-bold">{extendedWorker.name}</h2>
-            <p className="text-lg text-muted-foreground">{extendedWorker.title}</p>
+            <h2 className="text-2xl font-bold">{extendedWorker.worker.name}</h2>
+            <p className="text-lg text-muted-foreground">{extendedWorker.job.title}</p>
             <div className="flex flex-wrap items-center gap-3 mt-2">
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-medium">{extendedWorker.rating}</span>
+                <span className="font-medium">{extendedWorker.worker.rating}</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
-                <span>{extendedWorker.location}</span>
+                <span>{extendedWorker.job.location}</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Briefcase className="w-4 h-4" />
-                <span>{extendedWorker.experience}</span>
+                <span>{extendedWorker.worker.yearsOfExperience}</span>
               </div>
             </div>
           </div>
@@ -125,9 +125,9 @@ const WorkerProfileModal = ({
         {/* Applied For Badge */}
         <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
           <p className="text-sm text-muted-foreground">Applied for</p>
-          <p className="font-semibold text-primary">{extendedWorker.appliedFor}</p>
+          <p className="font-semibold text-primary">{extendedWorker.job.title}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Applied {extendedWorker.appliedDate}
+            Applied {extendedWorker.createdAt}
           </p>
         </div>
 
@@ -142,11 +142,11 @@ const WorkerProfileModal = ({
           <div className="grid gap-2 text-sm">
             <div className="flex items-center gap-2">
               <Mail className="w-4 h-4 text-muted-foreground" />
-              <span>{extendedWorker.email}</span>
+              <span>{extendedWorker.worker.email}</span>
             </div>
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-muted-foreground" />
-              <span>{extendedWorker.phone}</span>
+              <span>{extendedWorker.worker.phoneNumber}</span>
             </div>
           </div>
         </div>
@@ -159,7 +159,7 @@ const WorkerProfileModal = ({
             <FileText className="w-4 h-4" />
             About
           </h3>
-          <p className="text-sm text-muted-foreground">{extendedWorker.bio}</p>
+          <p className="text-sm text-muted-foreground">{extendedWorker.about_me}</p>
         </div>
 
         <Separator />
@@ -168,7 +168,7 @@ const WorkerProfileModal = ({
         <div>
           <h3 className="font-semibold mb-3">Skills</h3>
           <div className="flex flex-wrap gap-2">
-            {extendedWorker.skills.map((skill) => (
+            {extendedWorker.worker.skills.map((skill) => (
               <Badge key={skill} variant="secondary">
                 {skill}
               </Badge>
@@ -185,7 +185,7 @@ const WorkerProfileModal = ({
             Certifications
           </h3>
           <ul className="space-y-1">
-            {extendedWorker.certifications?.map((cert) => (
+            {extendedWorker.worker.certifications?.map((cert) => (
               <li key={cert} className="text-sm flex items-center gap-2">
                 <Check className="w-3 h-3 text-green-500" />
                 {cert}
@@ -203,7 +203,7 @@ const WorkerProfileModal = ({
             Work History
           </h3>
           <div className="space-y-3">
-            {extendedWorker.previousJobs?.map((job, index) => (
+            {extendedWorker.worker.previousJobs?.map((job, index) => (
               <div key={index} className="text-sm">
                 <p className="font-medium">{job.title}</p>
                 <p className="text-muted-foreground">
@@ -220,12 +220,12 @@ const WorkerProfileModal = ({
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm">
-            <strong>Availability:</strong> {extendedWorker.availability}
+            <strong>Availability:</strong> {extendedWorker.worker.availability}
           </span>
         </div>
 
         {/* Action Buttons */}
-        {showActions && worker.status === "pending" && (
+        {showActions && worker.status === "Pending Review" && (
           <>
             <Separator />
             <div className="flex gap-3">
