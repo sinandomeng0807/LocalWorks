@@ -209,6 +209,7 @@ const WorkerApplications = () => {
                       variant="outline" 
                       size="sm" 
                       className="flex-1 gap-2"
+                      onClick={() => handleRejectClick(application)}
                     >
                       <X className="w-4 h-4" />
                       Reject
@@ -273,7 +274,7 @@ const WorkerApplications = () => {
       />
 
       {/* Confirmation Dialog */}
-      {/* <AlertDialog 
+      <AlertDialog 
         open={confirmDialog.open} 
         onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}
       >
@@ -285,11 +286,11 @@ const WorkerApplications = () => {
             <AlertDialogDescription>
               {confirmDialog.type === "accept" ? (
                 <>
-                  Are you sure you want to accept <strong>{confirmDialog.application?.name}</strong> for the <strong>{confirmDialog.application?.appliedFor}</strong> position?
+                  Are you sure you want to accept <strong>{confirmDialog.application?.worker.name}</strong> for the <strong>{confirmDialog.application?.job.title}</strong> position?
                 </>
               ) : (
                 <>
-                  Are you sure you want to reject <strong>{confirmDialog.application?.name}</strong>'s application for the <strong>{confirmDialog.application?.appliedFor}</strong> position?
+                  Are you sure you want to reject <strong>{confirmDialog.application?.worker.name}</strong>'s application for the <strong>{confirmDialog.application?.job.title}</strong> position?
                 </>
               )}
             </AlertDialogDescription>
@@ -304,7 +305,7 @@ const WorkerApplications = () => {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog> */}
+      </AlertDialog>
     </div>
   );
 };
