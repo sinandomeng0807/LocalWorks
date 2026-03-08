@@ -5,6 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, MapPin, Star, Briefcase, Filter, Mail, Phone } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+
+axios.defaults.withCredentials = true
 
 const mockWorkers = [
   {
@@ -91,14 +95,30 @@ const getInitials = (name: string) => {
 
 const BrowseWorkers = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredWorkers, setFilteredWorkers] = useState(mockWorkers);
+  const [filteredWorkers, setFilteredWorkers] = useState([]);
+
+  const BrowseWorkersAx = async () => {
+    const { data } = await axios.get("http://localhost:8920/api/pro/viewWorkers", { withCredentials: true })
+    return data
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['BrowseWorkersAx'],
+    queryFn: BrowseWorkersAx
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  if (!data.Workers.length) return <div>No Workers</div>
+  const { Workers } = data
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const filtered = mockWorkers.filter(
+    const filtered = data.Workers.filter(
       (worker) =>
         worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        worker.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        worker.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
         worker.skills.some((skill) => skill.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredWorkers(filtered);
@@ -128,24 +148,24 @@ const BrowseWorkers = () => {
 
       {/* Results Count */}
       <p className="text-sm text-muted-foreground mb-4">
-        Showing {filteredWorkers.length} worker{filteredWorkers.length !== 1 ? "s" : ""}
+        Showing {Workers.length} worker{Workers.length !== 1 ? "s" : ""}
       </p>
 
       {/* Worker Listings */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredWorkers.map((worker) => (
-          <Card key={worker.id} className="hover:shadow-md transition-shadow">
+        {Workers.map((worker) => (
+          <Card key={worker._id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2">
               <div className="flex items-start gap-4">
                 <Avatar className="w-16 h-16">
-                  <AvatarImage src={worker.avatar} />
+                  <AvatarImage src={worker.photo} />
                   <AvatarFallback className="bg-primary/10 text-primary text-lg">
                     {getInitials(worker.name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <CardTitle className="text-lg">{worker.name}</CardTitle>
-                  <CardDescription className="text-base">{worker.title}</CardDescription>
+                  <CardDescription className="text-base">{worker.jobTitle}</CardDescription>
                   <div className="flex items-center gap-1 mt-1">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                     <span className="text-sm font-medium">{worker.rating}</span>
@@ -157,11 +177,11 @@ const BrowseWorkers = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <MapPin className="w-4 h-4" />
-                  {worker.location}
+                  {worker.location.name}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Briefcase className="w-4 h-4" />
-                  {worker.experience} experience
+                  {worker.yearsOfExperience} experience
                 </div>
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary">{worker.availability}</Badge>
@@ -189,10 +209,10 @@ const BrowseWorkers = () => {
         ))}
       </div>
 
-      {filteredWorkers.length === 0 && (
+      {Workers.length === 0 && (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">No workers found matching your search.</p>
-          <Button variant="link" onClick={() => { setSearchTerm(""); setFilteredWorkers(mockWorkers); }}>
+          <Button variant="link" onClick={() => { setSearchTerm(""); setFilteredWorkers(data.Workers); }}>
             Clear search
           </Button>
         </div>
