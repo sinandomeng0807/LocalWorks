@@ -5,9 +5,17 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PhoneInput from "./PhoneInput";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import FileUpload from "./FileUpload";
 import OTPVerification from "./OTPVerification";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 interface EmployerSignUpFormProps {
   onClose: () => void;
@@ -52,6 +60,19 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
       })
   }
 
+  const dropdownCompanies = async () => {
+    const { data } = await axios.get("http://localhost:8920/api/auth/dropdown")
+    return data
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dropdownCompanies'],
+    queryFn: dropdownCompanies
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     // Reset verification if email changes
@@ -85,15 +106,17 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
       {/* Company Name */}
       <div className="space-y-2">
         <Label htmlFor="company-name">Company/Business Name</Label>
-        <Input
-          id="company-name"
-          name="companyName"
-          type="text"
-          placeholder="ABC Construction"
-          value={formData.companyName}
-          onChange={handleChange}
-          required
-        />
+                        <Select
+                          value={formData.companyName}
+                          onValueChange={(value) => setFormData({ ...formData, companyName: value })}
+                        >
+                          <SelectTrigger id="company-name">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent defaultValue={"Choose a Skill Category"}>
+                            {!data.Companies.length ? "N/A" : data.Companies.map((skill: any) => <SelectItem value={skill._id}>{skill.title}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
       </div>
 
       {/* Email with OTP */}
@@ -169,15 +192,17 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
       {/* Industry */}
       <div className="space-y-2">
         <Label htmlFor="employer-industry">Industry</Label>
-        <Input
-          id="employer-industry"
-          name="industry"
-          type="text"
-          placeholder="e.g., Construction, Manufacturing"
-          value={formData.industry}
-          onChange={handleChange}
-          required
-        />
+                        <Select
+                          value={formData.industry}
+                          onValueChange={(value) => setFormData({ ...formData, industry: value })}
+                        >
+                          <SelectTrigger id="company-name">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent defaultValue={"Choose a Skill Category"}>
+                            {!data.Industries.length ? "N/A" : data.Industries.map((skill: any) => <SelectItem value={skill._id}>{skill.title}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
       </div>
 
       {/* Business Permit Upload */}
