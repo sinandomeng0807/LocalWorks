@@ -99,6 +99,7 @@ const BrowseWorkers = () => {
 
   const BrowseWorkersAx = async () => {
     const { data } = await axios.get("http://localhost:8920/api/pro/viewWorkers", { withCredentials: true })
+    setFilteredWorkers(data.Workers)
     return data
   }
 
@@ -148,12 +149,12 @@ const BrowseWorkers = () => {
 
       {/* Results Count */}
       <p className="text-sm text-muted-foreground mb-4">
-        Showing {Workers.length} worker{Workers.length !== 1 ? "s" : ""}
+        Showing {filteredWorkers.length} worker{filteredWorkers.length !== 1 ? "s" : ""}
       </p>
 
       {/* Worker Listings */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Workers.map((worker) => (
+        {filteredWorkers.map((worker) => (
           <Card key={worker._id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2">
               <div className="flex items-start gap-4">
@@ -209,7 +210,7 @@ const BrowseWorkers = () => {
         ))}
       </div>
 
-      {Workers.length === 0 && (
+      {filteredWorkers.length === 0 && (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">No workers found matching your search.</p>
           <Button variant="link" onClick={() => { setSearchTerm(""); setFilteredWorkers(data.Workers); }}>
