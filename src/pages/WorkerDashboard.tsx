@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import logo from "@/assets/logo.avif";
+import axios from "axios";
 
 const WorkerDashboard = () => {
   const navigate = useNavigate();
@@ -23,7 +24,8 @@ const WorkerDashboard = () => {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("jobs");
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await axios.post("http://localhost:8920/api/pro/logout", {}, { withCredentials: true })
     navigate("/");
   };
 

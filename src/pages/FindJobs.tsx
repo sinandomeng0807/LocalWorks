@@ -30,6 +30,8 @@ import AuthPromptModal from "@/components/AuthPromptModal";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
+axios.defaults.withCredentials = true
+
 const FindJobs = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [location, setLocation] = useState("");
@@ -45,6 +47,28 @@ const FindJobs = () => {
   const findJobs = async () => {
     const result = await axios.get("http://localhost:8920/api/auth/jobs")
     return result.data
+  }
+
+  const isLogged = async () => {
+    const result = await axios.get("http://localhost:8920/api/pro/isUserLoggedWorker", { withCredentials: true })
+    if (!result.data) {
+      alert(false)
+      setIsLoggedIn(false)
+    } else {
+      alert(true)
+      setIsLoggedIn(true)
+    }
+  }
+
+  isLogged()
+
+  const JobIsApplied = async (_id) => {
+    const result = await axios.get("http://localhost:8920/api/pro/isApplied/" + _id, { withCredentials: true })
+    if (!result) {
+      return false
+    } else {
+      return true
+    }
   }
 
   const { data, isLoading, error } = useQuery({
@@ -194,7 +218,7 @@ const FindJobs = () => {
 
           <div className="grid gap-4">
             {filteredJobs.map((job) => {
-              const isApplied = appliedJobs.includes(job._id);
+              const isApplied = isLoggedIn ? JobIsApplied : false;
               return (
                 <Card key={job._id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-2">
