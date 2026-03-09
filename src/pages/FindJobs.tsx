@@ -52,11 +52,13 @@ const FindJobs = () => {
   const isLogged = async () => {
     const result = await axios.get("http://localhost:8920/api/pro/isUserLoggedWorker", { withCredentials: true })
     if (!result.data) {
-      alert(false)
-      setIsLoggedIn(false)
+      setIsLoggedIn(
+        false
+      )
     } else {
-      alert(true)
-      setIsLoggedIn(true)
+      setIsLoggedIn(
+        true
+      )
     }
   }
 
@@ -100,10 +102,11 @@ const FindJobs = () => {
     }
   };
 
-  const handleConfirmApply = () => {
+  const handleConfirmApply = async () => {
     if (selectedJobId) {
       setAppliedJobs([...appliedJobs, selectedJobId]);
       const job = jobs.find(j => j._id === selectedJobId);
+      await axios.post("http://localhost:8920/api/pro/createApplication", { job: job._id }, { withCredentials: true })
       toast.success(`Application submitted for ${job?.title}!`, {
         description: `Your application to ${job?.company} has been sent.`,
       });
@@ -199,7 +202,7 @@ const FindJobs = () => {
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="Full-Time">Full-time</SelectItem>
-                    <SelectItem value="Part-time">Part-time</SelectItem>
+                    <SelectItem value="Part-Time">Part-time</SelectItem>
                     <SelectItem value="Contract">Contract</SelectItem>
                   </SelectContent>
                 </Select>
