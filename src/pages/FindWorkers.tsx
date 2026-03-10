@@ -17,6 +17,8 @@ import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
 import SignUpModal from "@/components/SignUpModal";
 import AuthPromptModal from "@/components/AuthPromptModal";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 const FindWorkers = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,75 +28,22 @@ const FindWorkers = () => {
   const [loginOpen, setLoginOpen] = useState(false);
   const [signUpOpen, setSignUpOpen] = useState(false);
 
-  const workers = [
-    {
-      id: 1,
-      name: "Juan Dela Cruz",
-      title: "Construction Worker",
-      location: "Quezon City",
-      experience: "5 years",
-      rating: 4.8,
-      reviews: 24,
-      verified: true,
-      availability: "Available",
-      skills: ["Construction", "Heavy Machinery", "Blueprint Reading"],
-      bio: "Experienced construction worker with expertise in commercial and residential projects.",
-    },
-    {
-      id: 2,
-      name: "Pedro Santos",
-      title: "Licensed Electrician",
-      location: "Makati City",
-      experience: "8 years",
-      rating: 4.9,
-      reviews: 42,
-      verified: true,
-      availability: "Available",
-      skills: ["Electrical Work", "Wiring", "Troubleshooting", "Safety"],
-      bio: "Licensed electrician specializing in residential and commercial electrical systems.",
-    },
-    {
-      id: 3,
-      name: "Maria Garcia",
-      title: "Professional Plumber",
-      location: "Pasig City",
-      experience: "6 years",
-      rating: 4.7,
-      reviews: 31,
-      verified: true,
-      availability: "Busy",
-      skills: ["Plumbing", "Pipe Fitting", "Maintenance"],
-      bio: "Skilled plumber offering reliable plumbing services for homes and businesses.",
-    },
-    {
-      id: 4,
-      name: "Roberto Reyes",
-      title: "Master Carpenter",
-      location: "Mandaluyong",
-      experience: "10 years",
-      rating: 5.0,
-      reviews: 56,
-      verified: true,
-      availability: "Available",
-      skills: ["Carpentry", "Furniture Making", "Woodworking", "Cabinet Installation"],
-      bio: "Master carpenter with a decade of experience in custom furniture and installations.",
-    },
-    {
-      id: 5,
-      name: "Antonio Cruz",
-      title: "Certified Welder",
-      location: "Taguig City",
-      experience: "7 years",
-      rating: 4.6,
-      reviews: 18,
-      verified: false,
-      availability: "Available",
-      skills: ["Welding", "Metal Fabrication", "Steel Work"],
-      bio: "Certified welder experienced in industrial and residential welding projects.",
-    },
-  ];
+  const DisplayWorkers = async () => {
+    const result = await axios.get("http://localhost:8920/api/auth/workers")
+    return result.data
+  }
 
-  const filteredWorkers = workers.filter((worker) => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['Workers'],
+    queryFn: DisplayWorkers
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  const { Workers } = data
+
+  const filteredWorkers = Workers.filter((worker) => {
     const matchesSearch = worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       worker.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       worker.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -189,12 +138,12 @@ const FindWorkers = () => {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <p className="text-muted-foreground mb-6">
-            Showing {filteredWorkers.length} workers
+            Showing {Workers.length} workers
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredWorkers.map((worker) => (
-              <Card key={worker.id} className="hover:shadow-lg transition-shadow">
+            {Workers.map((worker) => (
+              <Card key={worker._id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-2">
                   <div className="flex items-start gap-4">
                     <Avatar className="w-16 h-16">
@@ -206,7 +155,7 @@ const FindWorkers = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-lg">{worker.name}</CardTitle>
-                        {worker.verified && (
+                        {worker.status === "accepted" && (
                           <CheckCircle2 className="w-4 h-4 text-primary" />
                         )}
                       </div>
@@ -223,7 +172,7 @@ const FindWorkers = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                    {worker.bio}
+                    {worker.about_me}
                   </p>
                   
                   <div className="flex flex-wrap gap-2 text-sm text-muted-foreground mb-4">
@@ -233,7 +182,7 @@ const FindWorkers = () => {
                     </div>
                     <div className="flex items-center gap-1">
                       <Briefcase className="w-3 h-3" />
-                      {worker.experience}
+                      {worker.yearsOfExperience}
                     </div>
                   </div>
                   

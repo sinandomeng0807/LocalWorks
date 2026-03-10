@@ -11,8 +11,8 @@ export interface Job {
   posted: string;
   description: string;
   tags: string[];
-  requirements?: string[];
-  benefits?: string[];
+  requirements?: string;
+  benefits?: string;
   schedule?: string;
   contactEmail?: string;
   contactPhone?: string;

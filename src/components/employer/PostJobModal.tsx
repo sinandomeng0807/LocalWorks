@@ -23,6 +23,7 @@ import { X, Plus, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { useJobsStore } from "@/lib/jobsStore";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 axios.defaults.withCredentials = true
 
@@ -39,12 +40,12 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
   
   const [formData, setFormData] = useState({
     title: "",
-    location: "",
+    location: "Enter a Location",
     salary: "",
     type: "Full-Time",
     description: "",
-    requirements: requirements.split("\n"),
-    benefits: benefits.split("\n"),
+    requirements: "",
+    benefits: "",
     schedule: "",
     contactEmail: "",
     contactPhone: "",
@@ -54,7 +55,10 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
   const [tagInput, setTagInput] = useState("");
 
   const PostJob = async () => {
-    await axios.post("http://localhost:8920/api/pro/createJob", { ...formData, tags }, {
+    await axios.post("http://localhost:8920/api/pro/createJob", { 
+      ...formData, requirements: formData.requirements.split("\n"),
+      benefits: formData.benefits.split("\n"), tags 
+    }, {
       withCredentials: true
     })
       .then(function (response: any) {
@@ -87,6 +91,21 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
         }
       })
   }
+
+  const DisplayLocations = async () => {
+    const result = await axios.get("http://localhost:8920/api/pro/Locations", { withCredentials: true })
+    return result.data
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['Locations'],
+    queryFn: DisplayLocations
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  const { Locations } = data
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -183,12 +202,17 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
 
               <div className="space-y-2">
                 <Label htmlFor="location">Location *</Label>
-                <Input
-                  id="location"
-                  placeholder="e.g., Downtown, Metro City"
+                <Select
                   value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                />
+                  onValueChange={(value) => setFormData({ ...formData, location: value })}
+                >
+                  <SelectTrigger id="location">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Locations.map((Location) => <SelectItem value={Location._id}>{Location.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -266,7 +290,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                 placeholder="Must be 18 years or older&#10;Valid ID required&#10;Physical fitness"
                 rows={3}
                 value={formData.requirements}
-                onChange={(e) => setFormData({ ...formData, requirements: e.target.value.split("\n") })}
+                onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
               />
             </div>
 
@@ -277,7 +301,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                 placeholder="Health insurance&#10;Paid time off&#10;Training provided"
                 rows={3}
                 value={formData.benefits}
-                onChange={(e) => setFormData({ ...formData, benefits: e.target.value.split("\n") })}
+                onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
               />
             </div>
 
@@ -289,37 +313,6 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                 value={formData.schedule}
                 onChange={(e) => setFormData({ ...formData, schedule: e.target.value })}
               />
-            </div>
-          </div>
-
-          {/* Contact Information */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-              Contact Information
-            </h3>
-            
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="contactEmail">Contact Email</Label>
-                <Input
-                  id="contactEmail"
-                  type="email"
-                  placeholder="hr@company.com"
-                  value={formData.contactEmail}
-                  onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="contactPhone">Contact Phone</Label>
-                <Input
-                  id="contactPhone"
-                  type="tel"
-                  placeholder="+63 912 345 6789"
-                  value={formData.contactPhone}
-                  onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                />
-              </div>
             </div>
           </div>
 
