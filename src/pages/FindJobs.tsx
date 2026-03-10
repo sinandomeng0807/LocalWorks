@@ -64,15 +64,6 @@ const FindJobs = () => {
 
   isLogged()
 
-  const JobIsApplied = async (_id) => {
-    const result = await axios.get("http://localhost:8920/api/pro/isApplied/" + _id, { withCredentials: true })
-    if (!result) {
-      return false
-    } else {
-      return true
-    }
-  }
-
   const { data, isLoading, error } = useQuery({
     queryKey: ['findJobs'],
     queryFn: findJobs
@@ -107,9 +98,18 @@ const FindJobs = () => {
       setAppliedJobs([...appliedJobs, selectedJobId]);
       const job = jobs.find(j => j._id === selectedJobId);
       await axios.post("http://localhost:8920/api/pro/createApplication", { job: job._id }, { withCredentials: true })
-      toast.success(`Application submitted for ${job?.title}!`, {
-        description: `Your application to ${job?.company} has been sent.`,
-      });
+        .then(function (response) {
+          if (response.data) {
+            toast.success(`Application submitted for ${job?.title}!`, {
+              description: `Your application to ${job?.company} has been sent.`,
+            });
+          }
+        })
+        .catch(function (error) {
+          if (error.response) {
+            toast.error(error.response.data.message)
+          }
+        })
     }
     setConfirmApplyOpen(false);
     setSelectedJobId(null);
@@ -221,7 +221,6 @@ const FindJobs = () => {
 
           <div className="grid gap-4">
             {filteredJobs.map((job) => {
-              const isApplied = isLoggedIn ? JobIsApplied : false;
               return (
                 <Card key={job._id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-2">
@@ -233,14 +232,16 @@ const FindJobs = () => {
                           <span>{job.company}</span>
                         </div>
                       </div>
-                      {isApplied ? (
+                      {/* {isApplied ? (
                         <Button variant="outline" disabled className="gap-2">
                           <CheckCircle className="w-4 h-4 text-green-500" />
                           Applied
                         </Button>
                       ) : (
                         <Button onClick={() => handleApplyClick(job._id)}>Apply Now</Button>
-                      )}
+                      )} */}
+
+                      <Button onClick={() => handleApplyClick(job._id)}>Apply Now</Button>
                     </div>
                   </CardHeader>
                   <CardContent>

@@ -67,15 +67,25 @@ const JobListings = () => {
 
   const addApplication = async (jobToApply: any) => {
     await axios.post("http://localhost:8920/api/pro/createApplication", { job: jobToApply.info._id })
+      .then(function (response) {
+        if (response.data) {
+          
+        toast.success(`Application submitted for ${jobToApply.info.title}!`, {
+          description: `Your application to ${jobToApply.info.company} has been sent.`,
+        });
+        }
+      })
+      .catch(function (error) {
+        if (error.response) {
+          toast.error(error.response.data.message)
+        }
+      })
   }
 
   const handleConfirmApply = () => {
     if (jobToApply) {
       setAppliedJobs([...appliedJobs, jobToApply.info._id]);
       addApplication(jobToApply)
-      toast.success(`Application submitted for ${jobToApply.info.title}!`, {
-        description: `Your application to ${jobToApply.info.company} has been sent.`,
-      });
     }
     setConfirmApplyOpen(false);
     setJobToApply(null);
