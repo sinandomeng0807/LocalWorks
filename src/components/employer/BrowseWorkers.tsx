@@ -178,7 +178,7 @@ const BrowseWorkers = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <MapPin className="w-4 h-4" />
-                  {worker.location.name}
+                  {worker.location}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Briefcase className="w-4 h-4" />

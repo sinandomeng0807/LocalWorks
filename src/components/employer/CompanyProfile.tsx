@@ -26,7 +26,7 @@ const CompanyProfile = () => {
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>Error: {error.message}</div>
   
-  const CompanyProfile = data.company
+  const CompanyProfile = data
 
   return (
     <Card>
@@ -36,17 +36,17 @@ const CompanyProfile = () => {
             <Avatar className="w-20 h-20">
               <AvatarImage src={CompanyProfile.logo} />
               <AvatarFallback className="bg-primary/10 text-primary text-2xl">
-                {CompanyProfile.title.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                {CompanyProfile.company.title.split(" ").map(n => n[0]).join("").slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-2xl">{CompanyProfile.title}</CardTitle>
+              <CardTitle className="text-2xl">{CompanyProfile.company.title}</CardTitle>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary">{CompanyProfile.industry.title}</Badge>
+                <Badge variant="secondary">{CompanyProfile.company.industry.title}</Badge>
               </div>
               <div className="flex items-center gap-2 mt-2 text-muted-foreground text-sm">
                 <MapPin className="w-4 h-4" />
-                {CompanyProfile.location.title}
+                {CompanyProfile.company.location.name}
               </div>
             </div>
           </div>
@@ -57,37 +57,37 @@ const CompanyProfile = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-muted-foreground mb-6">{CompanyProfile.description}</p>
+        <p className="text-muted-foreground mb-6">{CompanyProfile.company.description}</p>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="flex items-center gap-2 text-sm">
             <Users className="w-4 h-4 text-muted-foreground" />
-            <span>{CompanyProfile.noOfEmployees} employees</span>
+            <span>{CompanyProfile.company.noOfEmployees} employees</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Briefcase className="w-4 h-4 text-muted-foreground" />
-            <span>{CompanyProfile.openPositions} open positions</span>
+            <span>{CompanyProfile.Jobs} open positions</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Globe className="w-4 h-4 text-muted-foreground" />
-            <span>{CompanyProfile.website}</span>
+            <span>{CompanyProfile.company.website}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Mail className="w-4 h-4 text-muted-foreground" />
-            <span>{CompanyProfile.companyOwner.email}</span>
+            <span>{CompanyProfile.company.companyOwner.email}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Card className="bg-primary/5 border-primary/20">
             <CardContent className="p-4 text-center">
-              <div className="text-3xl font-bold text-primary">{CompanyProfile.openPositions}</div>
+              <div className="text-3xl font-bold text-primary">{CompanyProfile.Jobs}</div>
               <div className="text-sm text-muted-foreground">Open Positions</div>
             </CardContent>
           </Card>
           <Card className="bg-primary/5 border-primary/20">
             <CardContent className="p-4 text-center">
-              <div className="text-3xl font-bold text-primary">{CompanyProfile.totalApplications}</div>
+              <div className="text-3xl font-bold text-primary">{CompanyProfile.TotalApplications}</div>
               <div className="text-sm text-muted-foreground">Total Applications</div>
             </CardContent>
           </Card>
