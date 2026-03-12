@@ -19,6 +19,11 @@ import {
 } from "@/components/ui/select";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+axios.defaults.withCredentials = true
 
 interface EditProfileModalProps {
   open: boolean;
@@ -48,6 +53,49 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
   ]);
   const [newSkill, setNewSkill] = useState("");
 
+  const ViewProfDetails = async () => {
+    const result = await axios.get("http://localhost:8920/api/pro/worker/profile", { withCredentials: true })
+    const { data } = result
+    setSkills(data.WorkerProf.skills)
+    setFormData({
+      name: data.WorkerProf.name,
+      email: data.WorkerProf.email,
+      phone: data.WorkerProf.phoneNumber,
+      location: data.WorkerProf.location,
+      title: data.WorkerProf.skillCategory,
+      experience: data.WorkerProf.yearsOfExperience,
+      bio: data.WorkerProf.about_me,
+      availability: data.WorkerProf.availability,
+      expectedSalary: data.WorkerProf.expected_salary,
+    })
+    return result.data
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['ViewProfDetails'],
+    queryFn: ViewProfDetails
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  const UpdateProf = async () => {
+    await axios.put("http://localhost:8920/api/pro/worker/updateProfile", formData, { withCredentials: true })
+      .then(function (response) {
+        if (response.data) {
+          toast.success(response.data.message, {
+            description: "Your Profile has been successfully updated!"
+          })
+          onOpenChange(false)
+        }
+      })
+      .catch(function (error) {
+        if (error.response) {
+          toast.info(error.response.data.message)
+        }
+      })
+  }
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -67,9 +115,8 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("Profile updated:", { ...formData, skills });
-    onOpenChange(false);
+    
+    UpdateProf()
   };
 
   return (
@@ -90,19 +137,23 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               <Input
                 id="name"
                 name="name"
-                value={formData.name}
+                defaultValue={data.WorkerProf.name}
                 onChange={handleChange}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="title">Job Title</Label>
-              <Input
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="e.g., Construction Worker"
-              />
+                  <Select
+                    defaultValue={data.WorkerProf.skillCategory}
+                    onValueChange={(value) => setFormData({ ...formData, title: value })}
+                  >
+                    <SelectTrigger id="company-name">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent defaultValue={"Choose a Skill Category"}>
+                      {!data.Skills.length ? "N/A" : data.Skills.map((skill: any) => <SelectItem value={skill._id}>{skill.title}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
             </div>
           </div>
 
@@ -114,7 +165,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
                 id="email"
                 name="email"
                 type="email"
-                value={formData.email}
+                defaultValue={data.WorkerProf.email}
                 onChange={handleChange}
               />
             </div>
@@ -123,7 +174,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               <Input
                 id="phone"
                 name="phone"
-                value={formData.phone}
+                defaultValue={data.WorkerProf.phoneNumber}
                 onChange={handleChange}
               />
             </div>
@@ -133,20 +184,24 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="City, State"
-              />
+                  <Select
+                    defaultValue={data.WorkerProf.location}
+                    onValueChange={(value) => setFormData({ ...formData, location: value })}
+                  >
+                    <SelectTrigger id="company-name">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent defaultValue={"Choose a Skill Category"}>
+                      {!data.Locations.length ? "N/A" : data.Locations.map((skill: any) => <SelectItem value={skill._id}>{skill.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="experience">Years of Experience</Label>
               <Input
                 id="experience"
                 name="experience"
-                value={formData.experience}
+                defaultValue={data.WorkerProf.yearsOfExperience}
                 onChange={handleChange}
                 placeholder="e.g., 5 years"
               />
@@ -158,7 +213,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
             <div className="space-y-2">
               <Label>Availability</Label>
               <Select
-                value={formData.availability}
+                defaultValue={data.WorkerProf.availability}
                 onValueChange={(value) =>
                   setFormData({ ...formData, availability: value })
                 }
@@ -167,10 +222,10 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
                   <SelectValue placeholder="Select availability" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="full-time">Full-time</SelectItem>
-                  <SelectItem value="part-time">Part-time</SelectItem>
-                  <SelectItem value="contract">Contract</SelectItem>
-                  <SelectItem value="flexible">Flexible</SelectItem>
+                  <SelectItem value="Full-Time">Full-time</SelectItem>
+                  <SelectItem value="Part-Time">Part-time</SelectItem>
+                  <SelectItem value="Contract">Contract</SelectItem>
+                  <SelectItem value="Flexible">Flexible</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -179,7 +234,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               <Input
                 id="expectedSalary"
                 name="expectedSalary"
-                value={formData.expectedSalary}
+                defaultValue={data.WorkerProf.salary}
                 onChange={handleChange}
                 placeholder="e.g., $20-30/hr"
               />
@@ -192,7 +247,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
             <Textarea
               id="bio"
               name="bio"
-              value={formData.bio}
+              defaultValue={data.WorkerProf.about_me}
               onChange={handleChange}
               rows={4}
               placeholder="Tell employers about yourself, your experience, and what you're looking for..."

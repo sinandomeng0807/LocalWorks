@@ -28,7 +28,7 @@ const WorkerProfile = ({ onEdit }: WorkerProfileProps) => {
   };
 
   const viewProfile = async () => {
-    const { data } = await axios.get("http://localhost:8920/api/pro/viewProfile", {
+    const { data } = await axios.get("http://localhost:8920/api/pro/worker/profile", {
       withCredentials: true
     })
 
@@ -43,7 +43,7 @@ const WorkerProfile = ({ onEdit }: WorkerProfileProps) => {
   if (error) return <div>Error: {error.message}</div>
   if (isLoading) return <div>Loading...</div>
 
-  console.log(data)
+  const { WorkerProf } = data
 
   return (
     <div className="space-y-6">
@@ -54,15 +54,15 @@ const WorkerProfile = ({ onEdit }: WorkerProfileProps) => {
             <Avatar className="w-24 h-24">
               <AvatarImage src="" />
               <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                {data.user.name.split(" ").map(n => n[0]).join("")}
+                {WorkerProf.name.split(" ").map(n => n[0]).join("")}
               </AvatarFallback>
             </Avatar>
             
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div>
-                  <h2 className="text-2xl font-bold">{data.user.name}</h2>
-                  <p className="text-muted-foreground">{data.user.jobTitle}</p>
+                  <h2 className="text-2xl font-bold">{WorkerProf.name}</h2>
+                  <p className="text-muted-foreground">{WorkerProf.jobTitle}</p>
                 </div>
                 <button
                   onClick={onEdit}
@@ -75,19 +75,19 @@ const WorkerProfile = ({ onEdit }: WorkerProfileProps) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail className="w-4 h-4" />
-                  {data.user.email}
+                  {WorkerProf.email}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Phone className="w-4 h-4" />
-                  {data.user.phone}
+                  {WorkerProf.phoneNumber}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <MapPin className="w-4 h-4" />
-                  {data.user.location}
+                  {WorkerProf.location}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Briefcase className="w-4 h-4" />
-                  {data.user.yearsOfExperience}
+                  {WorkerProf.yearsOfExperience}
                 </div>
               </div>
             </div>
@@ -99,25 +99,25 @@ const WorkerProfile = ({ onEdit }: WorkerProfileProps) => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-3xl font-bold text-primary">{data.user.jobs_applied}</p>
+            <p className="text-3xl font-bold text-primary">{data.Applications}</p>
             <p className="text-sm text-muted-foreground">Jobs Applied</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-3xl font-bold text-primary">{data.user.interviews}</p>
+            <p className="text-3xl font-bold text-primary">{data.Interviews}</p>
             <p className="text-sm text-muted-foreground">Interviews</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-3xl font-bold text-primary">{data.user.availability}</p>
+            <p className="text-3xl font-bold text-primary">{WorkerProf.availability}</p>
             <p className="text-sm text-muted-foreground">Availability</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-3xl font-bold text-primary">{data.user.expected_salary}</p>
+            <p className="text-3xl font-bold text-primary">{WorkerProf.expected_salary}</p>
             <p className="text-sm text-muted-foreground">Expected Pay</p>
           </CardContent>
         </Card>
@@ -129,7 +129,7 @@ const WorkerProfile = ({ onEdit }: WorkerProfileProps) => {
           <CardTitle>About</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">{data.user.about_me}</p>
+          <p className="text-muted-foreground">{WorkerProf.about_me}</p>
         </CardContent>
       </Card>
 
@@ -140,7 +140,7 @@ const WorkerProfile = ({ onEdit }: WorkerProfileProps) => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {data.user.skills.map((skill) => (
+            {WorkerProf.skills.map((skill) => (
               <Badge key={skill} variant="secondary">
                 {skill}
               </Badge>
