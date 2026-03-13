@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Star, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useReviewsStore, type Review } from "@/lib/reviewsStore";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 const defaultTestimonials = [
   {
@@ -43,15 +45,28 @@ const Testimonials = () => {
   const allTestimonials = [...userReviews, ...defaultTestimonials];
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const Reviews = async () => {
+    const result = await axios.get("http://localhost:8920/api/auth/rating")
+    return result.data
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['Reviews'],
+    queryFn: Reviews
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
   const nextTestimonial = () => {
-    setCurrentIndex((prev) => (prev + 1) % allTestimonials.length);
+    setCurrentIndex((prev) => (prev + 1) % data.ReviewsDta.length);
   };
 
   const prevTestimonial = () => {
-    setCurrentIndex((prev) => (prev - 1 + allTestimonials.length) % allTestimonials.length);
+    setCurrentIndex((prev) => (prev - 1 + data.ReviewsDta.length) % data.ReviewsDta.length);
   };
 
-  const current = allTestimonials[currentIndex] || allTestimonials[0];
+  const current = data.ReviewsDta[currentIndex] || data.ReviewsDta[0];
   if (!current) return null;
 
   return (
@@ -77,7 +92,7 @@ const Testimonials = () => {
             <div className="relative z-10 text-center">
               {/* Avatar */}
               <div className="w-20 h-20 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">
-                {current.avatar}
+                {current.worker.photo}
               </div>
               
               {/* Rating */}
@@ -89,16 +104,16 @@ const Testimonials = () => {
               
               {/* Quote */}
               <blockquote className="text-lg md:text-xl text-foreground mb-6 leading-relaxed">
-                "{current.text}"
+                "{current.description}"
               </blockquote>
               
               {/* Author */}
               <div>
                 <p className="font-semibold text-foreground">
-                  {current.name}
+                  {current.worker.name}
                 </p>
                 <p className="text-muted-foreground">
-                  {current.role}
+                  {current.worker.skillCategory}
                 </p>
               </div>
             </div>
@@ -117,7 +132,7 @@ const Testimonials = () => {
               
               {/* Dots */}
               <div className="flex items-center gap-2">
-                {allTestimonials.map((_, index) => (
+                {data.ReviewsDta.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentIndex(index)}

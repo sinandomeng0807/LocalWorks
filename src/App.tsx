@@ -16,6 +16,7 @@ import Images from "./pages/Images";
 import AdminSign from "./pages/AdminSign";
 import AdminDashboard from "./pages/AdminDashboard";
 import PostedJobs from "./pages/PostedJobs";
+import EmployerProfile from "./components/employer/EmployerProfile";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/find-workers" element={<FindWorkers />} />
           <Route path="/worker-dashboard" element={<WorkerDashboard />} />
           <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+          <Route path="/employer-profile" element={<EmployerProfile />} />
           <Route path="/images" element={<Images />} />
           <Route path="/admin" element={<AdminSign />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />

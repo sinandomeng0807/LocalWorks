@@ -9,6 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import EditProfileModal from "./EditProfileModal";
+import { useState } from "react"
 
 interface DashboardHeaderProps {
   onViewProfile?: () => void;
@@ -18,10 +20,16 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ onViewProfile, onEditProfile, onWriteReview }: DashboardHeaderProps) => {
   const navigate = useNavigate();
+    
+      const [editProfileOpen, setEditProfileOpen] = useState(false);
 
   const handleLogout = () => {
     navigate("/");
   };
+
+  const EmployerProfilePage = () => {
+    navigate("/employer-profile")
+  }
 
   return (
     <header className="border-b border-border bg-card sticky top-0 z-50">
@@ -46,17 +54,13 @@ const DashboardHeader = ({ onViewProfile, onEditProfile, onWriteReview }: Dashbo
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={onViewProfile} className="cursor-pointer">
+            <DropdownMenuItem onClick={EmployerProfilePage} className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
               View Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onEditProfile} className="cursor-pointer">
+            <DropdownMenuItem onClick={() => setEditProfileOpen(true)} className="cursor-pointer">
               <FileText className="mr-2 h-4 w-4" />
               Edit Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onWriteReview} className="cursor-pointer">
-              <Star className="mr-2 h-4 w-4" />
-              Write a Review
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
@@ -66,6 +70,7 @@ const DashboardHeader = ({ onViewProfile, onEditProfile, onWriteReview }: Dashbo
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      <EditProfileModal open={editProfileOpen} onOpenChange={setEditProfileOpen} />
     </header>
   );
 };

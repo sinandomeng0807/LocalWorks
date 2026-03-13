@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Star } from "lucide-react";
 import { useReviewsStore } from "@/lib/reviewsStore";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 interface WriteReviewModalProps {
   open: boolean;
@@ -28,7 +30,33 @@ const WriteReviewModal = ({
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [text, setText] = useState("");
-  const addReview = useReviewsStore((s) => s.addReview);
+
+  const WorkerProfile = async () => {
+    const result = await axios.get("http://localhost:8920/api/pro/worker/profile", { withCredentials: true })
+    return result.data
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['ViewProfileWorkerProfile'],
+    queryFn: WorkerProfile
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  const Rate = async () => {
+    await axios.post("http://localhost:8920/api/pro/rating", { rating, description: text }, { withCredentials: true })
+      .then(function (response) {
+        if (response.data) {
+          handleSubmit()
+        }
+      })
+      .catch(function (error) {
+        if (error.response) {
+          toast.info(error.response.data.message)
+        }
+      })
+  }
 
   const handleSubmit = () => {
     if (rating === 0) {
@@ -40,19 +68,6 @@ const WriteReviewModal = ({
       return;
     }
 
-    const initials = userName
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-
-    addReview({
-      name: userName,
-      role: userRole,
-      avatar: initials,
-      rating,
-      text: text.trim(),
-    });
 
     toast.success("Thank you for your review!");
     setRating(0);
@@ -132,8 +147,8 @@ const WriteReviewModal = ({
                     .join("")}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">{userName}</p>
-                  <p className="text-xs text-muted-foreground">{userRole}</p>
+                  <p className="text-sm font-semibold">{data.WorkerProf.name}</p>
+                  <p className="text-xs text-muted-foreground">{data.WorkerProf.skillCategory}</p>
                 </div>
               </div>
               <div className="flex gap-0.5">
@@ -148,7 +163,7 @@ const WriteReviewModal = ({
             </div>
           )}
 
-          <Button onClick={handleSubmit} className="w-full">
+          <Button onClick={Rate} className="w-full">
             Submit Review
           </Button>
         </div>

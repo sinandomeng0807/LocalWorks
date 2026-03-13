@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Building2, MapPin, Users, Briefcase, Edit, Globe, Mail, Phone } from "lucide-react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import EditProfileModal from "./EditProfileModal";
+import { useState } from "react";
 
 axios.defaults.withCredentials = true
 
 
 const CompanyProfile = () => {
+  
+    const [editProfileOpen, setEditProfileOpen] = useState(false);
     
   const FetchingCompanyInfo = async () => {
     const { data } = await axios.get("http://localhost:8920/api/pro/company", {
@@ -50,7 +54,7 @@ const CompanyProfile = () => {
               </div>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button onClick={() => setEditProfileOpen(true)} variant="outline" size="sm" className="gap-2">
             <Edit className="w-4 h-4" />
             Edit Profile
           </Button>
@@ -93,6 +97,9 @@ const CompanyProfile = () => {
           </Card>
         </div>
       </CardContent>
+      
+      {/* Edit Profile Modal */}
+      <EditProfileModal open={editProfileOpen} onOpenChange={setEditProfileOpen} />
     </Card>
   );
 };
