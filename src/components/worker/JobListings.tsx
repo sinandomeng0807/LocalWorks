@@ -147,14 +147,14 @@ const JobListings = () => {
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                   <span className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
-                    {job.info.location}
+                    {job.info.location.name}
                   </span>
                   <span className="flex items-center gap-1">
                     {job.info.salary}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    {job.info.posted}
+                    Posted: {job.info.posted.email}
                   </span>
                 </div>
 

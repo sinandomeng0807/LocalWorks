@@ -95,7 +95,7 @@ const WorkerApplications = () => {
 
   const pendingApplications = Applications.filter(app => app.status === "Pending Review");
   const scheduledInterviews = Applications.filter(app => app.status === "Interview Scheduled");
-  const processedApplications = Applications.filter(app => app.status !== "Pending Review" && app.status !== "Interview Scheduled");
+  const processedApplications = Applications.filter(app => app.status !== "Pending Review" && app.status !== "Interview Scheduled" && app.status !== "Withdrawed");
 
   
   const handleViewProfile = (application) => {
@@ -117,13 +117,8 @@ const WorkerApplications = () => {
     setConfirmDialog({ open: true, type: "reject", application });
   };
 
-  const UpdateApplicationStatus = async (_id, status, timeline) => {
-    if (status === "Interview Scheduled" && timeline === "Interview") {
-      await axios.put("http://localhost:8920/api/pro/date", { _id, interviewDate: DateInput }, {
-        withCredentials: true
-      }).catch((error) => { if (error.response) { alert(error.response.data.message) } })
-    }
-
+  const UpdateApplication = async (_id, status, timeline) => {
+    
     await axios.put("http://localhost:8920/api/pro/update/application", { _id, status, timeline }, {
       withCredentials: true
     })
@@ -132,6 +127,18 @@ const WorkerApplications = () => {
           alert(error.response.data.message)
         }
       })
+  }
+
+  const UpdateApplicationStatus = async (_id, status, timeline) => {
+    if (status === "Interview Scheduled" && timeline === "Interview") {
+      await axios.put("http://localhost:8920/api/pro/date", { _id, interviewDate: DateInput }, {
+        withCredentials: true
+      }).catch((error) => { if (error.response) { alert(error.response.data.message) } })
+
+        UpdateApplication(_id, status, timeline)
+    } else {
+      UpdateApplication(_id, status, timeline)
+    }
   }
   
   const handleConfirmAction = () => {
@@ -192,7 +199,7 @@ const WorkerApplications = () => {
                 <CardHeader className="pb-2">
                   <div className="flex items-start gap-4">
                     <Avatar className="w-14 h-14">
-                      <AvatarImage src={application.worker.photo} />
+                      <AvatarImage />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {getInitials(application.worker.name)}
                       </AvatarFallback>

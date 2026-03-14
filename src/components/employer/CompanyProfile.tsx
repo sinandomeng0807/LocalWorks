@@ -7,12 +7,13 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import EditProfileModal from "./EditProfileModal";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 axios.defaults.withCredentials = true
 
 
 const CompanyProfile = () => {
-  
+  const navigate = useNavigate()
     const [editProfileOpen, setEditProfileOpen] = useState(false);
     
   const FetchingCompanyInfo = async () => {
@@ -84,13 +85,13 @@ const CompanyProfile = () => {
 
         <div className="grid grid-cols-2 gap-4">
           <Card className="bg-primary/5 border-primary/20">
-            <CardContent className="p-4 text-center">
+            <CardContent onClick={() => navigate("/open-positions")} className="p-4 text-center">
               <div className="text-3xl font-bold text-primary">{CompanyProfile.Jobs}</div>
               <div className="text-sm text-muted-foreground">Open Positions</div>
             </CardContent>
           </Card>
           <Card className="bg-primary/5 border-primary/20">
-            <CardContent className="p-4 text-center">
+            <CardContent onClick={() => navigate("/total-applications")} className="p-4 text-center">
               <div className="text-3xl font-bold text-primary">{CompanyProfile.TotalApplications}</div>
               <div className="text-sm text-muted-foreground">Total Applications</div>
             </CardContent>

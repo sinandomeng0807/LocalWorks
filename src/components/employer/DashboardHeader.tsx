@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import EditProfileModal from "./EditProfileModal";
 import { useState } from "react"
+import axios from "axios";
+
+axios.defaults.withCredentials = true
 
 interface DashboardHeaderProps {
   onViewProfile?: () => void;
@@ -18,7 +21,7 @@ interface DashboardHeaderProps {
   onWriteReview?: () => void;
 }
 
-const DashboardHeader = ({ onViewProfile, onEditProfile, onWriteReview }: DashboardHeaderProps) => {
+const DashboardHeader = () => {
   const navigate = useNavigate();
     
       const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -29,6 +32,20 @@ const DashboardHeader = ({ onViewProfile, onEditProfile, onWriteReview }: Dashbo
 
   const EmployerProfilePage = () => {
     navigate("/employer-profile")
+  }
+
+  const Logout = async () => {
+    await axios.post("http://localhost:8920/api/pro/logout", {}, { withCredentials: true })
+      .then(function (response) {
+        if (response.data) {
+          navigate("/")
+        }
+      })
+      .catch(function (error) {
+        if (error.response) {
+          alert(error.response.data.message)
+        }
+      })
   }
 
   return (
@@ -63,7 +80,7 @@ const DashboardHeader = ({ onViewProfile, onEditProfile, onWriteReview }: Dashbo
               Edit Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
+            <DropdownMenuItem onClick={() => Logout()} className="cursor-pointer text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </DropdownMenuItem>

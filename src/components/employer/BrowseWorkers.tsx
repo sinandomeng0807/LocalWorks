@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, MapPin, Star, Briefcase, Filter, Mail, Phone } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import ModalContact from "./ModalContact";
 
 axios.defaults.withCredentials = true
 
@@ -96,6 +97,7 @@ const getInitials = (name: string) => {
 const BrowseWorkers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredWorkers, setFilteredWorkers] = useState([]);
+  const [modalContact, setModalContact] = useState(false);
 
   const BrowseWorkersAx = async () => {
     const { data } = await axios.get("http://localhost:8920/api/pro/viewWorkers", { withCredentials: true })
@@ -199,13 +201,14 @@ const BrowseWorkers = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button className="flex-1 gap-2" size="sm">
+                <Button onClick={() => setModalContact(true)} className="flex-1 gap-2" size="sm">
                   <Mail className="w-4 h-4" />
                   Contact
                 </Button>
                
               </div>
             </CardContent>
+            <ModalContact open={modalContact} onOpenChange={setModalContact} worker={worker._id} />
           </Card>
         ))}
       </div>

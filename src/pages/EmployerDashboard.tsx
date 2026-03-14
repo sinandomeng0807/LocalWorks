@@ -7,15 +7,13 @@ import CompanyProfile from "@/components/employer/CompanyProfile";
 import WorkerApplications from "@/components/employer/WorkerApplications";
 import BrowseWorkers from "@/components/employer/BrowseWorkers";
 import PostJobModal from "@/components/employer/PostJobModal";
-import WriteReviewModal from "@/components/WriteReviewModal";
 
 const EmployerDashboard = () => {
   const [postJobOpen, setPostJobOpen] = useState(false);
-  const [reviewOpen, setReviewOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader onWriteReview={() => setReviewOpen(true)} />
+      <DashboardHeader />
 
       <main className="container mx-auto px-4 py-8">
         {/* Company Profile Section */}
@@ -56,12 +54,6 @@ const EmployerDashboard = () => {
 
       {/* Post Job Modal */}
       <PostJobModal open={postJobOpen} onOpenChange={setPostJobOpen} />
-      <WriteReviewModal
-        open={reviewOpen}
-        onOpenChange={setReviewOpen}
-        userName="Employer"
-        userRole="Business Owner"
-      />
     </div>
   );
 };
