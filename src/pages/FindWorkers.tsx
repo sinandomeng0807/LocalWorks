@@ -19,6 +19,7 @@ import SignUpModal from "@/components/SignUpModal";
 import AuthPromptModal from "@/components/AuthPromptModal";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import ModalContact from "@/components/employer/ModalContact";
 
 const FindWorkers = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,12 +27,29 @@ const FindWorkers = () => {
   const [skill, setSkill] = useState("");
   const [authPromptOpen, setAuthPromptOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [signUpOpen, setSignUpOpen] = useState(false);
+  const [ModalContactOpen, setModalContactOpen] = useState(false);
 
   const DisplayWorkers = async () => {
     const result = await axios.get("http://localhost:8920/api/auth/workers")
     return result.data
   }
+
+  const isLogged = async () => {
+      const result = await axios.get("http://localhost:8920/api/pro/isUserLoggedEmployer", { withCredentials: true })
+      if (!result.data) {
+        setIsLoggedIn(
+          false
+        )
+      } else {
+        setIsLoggedIn(
+          true
+        )
+      }
+    }
+  
+    isLogged()
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['Workers'],
@@ -53,7 +71,12 @@ const FindWorkers = () => {
   });
 
   const handleHire = () => {
-    setAuthPromptOpen(true);
+    if (!isLoggedIn) {
+      setAuthPromptOpen(true);
+    } else {
+      setModalContactOpen(true);
+    }
+
   };
 
   const handleChooseLogin = () => {
@@ -210,6 +233,7 @@ const FindWorkers = () => {
                     </Button>
                   </div>
                 </CardContent>
+                <ModalContact open={ModalContactOpen} onOpenChange={setModalContactOpen} worker={worker._id} />
               </Card>
             ))}
           </div>

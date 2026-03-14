@@ -14,6 +14,7 @@ axios.defaults.withCredentials = true
 
 const OpenPositions = () => {
   const [jobDetailsModalOpen, setJobDetailsModalOpen] = useState(false)
+  const [jobInfo, setJobInfo] = useState(null)
   const OpenPosition = async () => {
     const result = await axios.get("http://localhost:8920/api/pro/company", { withCredentials: true })
     return result.data
@@ -35,7 +36,7 @@ const OpenPositions = () => {
 
       <main className="container mx-auto px-4 py-8 ">
       {!data.JobsInfo.length ? <div>No Open Positions Available</div> : data.JobsInfo.map((job) => (
-        <Card style={styles}>
+        <Card style={styles}><JobDetailsModal open={jobDetailsModalOpen} onOpenChange={setJobDetailsModalOpen} job={jobInfo} />
           <CardHeader>
             <h1 className="text-xl mb-1">{job.title}</h1>
             <CardDescription className="flex items-center gap-2 text-base">
@@ -50,14 +51,14 @@ const OpenPositions = () => {
             <Button 
                     variant="secondary" 
                     className="gap-2"
-                    onClick={() => setJobDetailsModalOpen(true)}
+                    onClick={() => { setJobDetailsModalOpen(true), setJobInfo(job) }}
                   >
                     <Eye className="w-4 h-4" />
                     View Details
                   </Button>
           </CardContent>
           
-        <JobDetailsModal open={jobDetailsModalOpen} onOpenChange={setJobDetailsModalOpen} job={job} />
+        <JobDetailsModal open={jobDetailsModalOpen} onOpenChange={setJobDetailsModalOpen} job={jobInfo} />
         </Card>
       ))}
       </main>
