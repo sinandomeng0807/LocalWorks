@@ -15,7 +15,6 @@ import {
 import FileUpload from "./FileUpload";
 import OTPVerification from "./OTPVerification";
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
 
 interface EmployerSignUpFormProps {
   onClose: () => void;
@@ -31,6 +30,7 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
     companyName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     phone: "",
     industry: "",
   });
@@ -60,18 +60,13 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
       })
   }
 
-  const dropdownCompanies = async () => {
-    const { data } = await axios.get("http://localhost:8920/api/auth/dropdown")
-    return data
-  }
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['dropdownCompanies'],
-    queryFn: dropdownCompanies
-  })
-
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>Error: {error.message}</div>
+  const industryOptions = [
+    { value: "technology", label: "Technology" },
+    { value: "manufacturing", label: "Manufacturing" },
+    { value: "healthcare", label: "Healthcare" },
+    { value: "finance", label: "Finance" },
+    { value: "agriculture", label: "Agriculture" },
+  ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -97,6 +92,11 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
       return;
     }
 
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
     console.log("Employer signup:", { ...formData, files });
     Register();
   };
@@ -106,17 +106,15 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
       {/* Company Name */}
       <div className="space-y-2">
         <Label htmlFor="company-name">Company/Business Name</Label>
-                        <Select
-                          value={formData.companyName}
-                          onValueChange={(value) => setFormData({ ...formData, companyName: value })}
-                        >
-                          <SelectTrigger id="company-name">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent defaultValue={"Choose a Skill Category"}>
-                            {!data.Companies.length ? "N/A" : data.Companies.map((skill: any) => <SelectItem value={skill._id}>{skill.title}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+        <Input
+          id="company-name"
+          name="companyName"
+          type="text"
+          placeholder="Enter your company or business name"
+          value={formData.companyName}
+          onChange={handleChange}
+          required
+        />
       </div>
 
       {/* Email with OTP */}
@@ -127,7 +125,7 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
             id="employer-email"
             name="email"
             type="email"
-            placeholder="contact@company.com"
+            placeholder="Enter your business email address"
             value={formData.email}
             onChange={handleChange}
             required
@@ -167,8 +165,32 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
             id="employer-password"
             name="password"
             type={showPassword ? "text" : "password"}
-            placeholder="••••••••"
+            placeholder="Create a secure password"
             value={formData.password}
+            onChange={handleChange}
+            required
+            className="pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Confirm Password */}
+      <div className="space-y-2">
+        <Label htmlFor="employer-confirm-password">Confirm Password</Label>
+        <div className="relative">
+          <Input
+            id="employer-confirm-password"
+            name="confirmPassword"
+            type={showPassword ? "text" : "password"}
+            placeholder="Confirm your password"
+            value={formData.confirmPassword}
             onChange={handleChange}
             required
             className="pr-10"
@@ -192,17 +214,21 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
       {/* Industry */}
       <div className="space-y-2">
         <Label htmlFor="employer-industry">Industry</Label>
-                        <Select
-                          value={formData.industry}
-                          onValueChange={(value) => setFormData({ ...formData, industry: value })}
-                        >
-                          <SelectTrigger id="company-name">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent defaultValue={"Choose a Skill Category"}>
-                            {!data.Industries.length ? "N/A" : data.Industries.map((skill: any) => <SelectItem value={skill._id}>{skill.title}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+        <Select
+          value={formData.industry}
+          onValueChange={(value) => setFormData({ ...formData, industry: value })}
+        >
+          <SelectTrigger id="employer-industry">
+            <SelectValue placeholder="Select your industry" />
+          </SelectTrigger>
+          <SelectContent defaultValue={"Choose an industry"}>
+            {industryOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Business Permit Upload */}

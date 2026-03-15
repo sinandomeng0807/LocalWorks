@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import PhoneInput from "./PhoneInput";
 import FileUpload from "./FileUpload";
 import OTPVerification from "./OTPVerification";
-import { useQuery } from "@tanstack/react-query";
 import {
   Select,
   SelectContent,
@@ -24,16 +23,32 @@ interface WorkerSignUpFormProps {
   onClose: () => void;
 }
 
+interface WorkerFormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  phoneNumber: string;
+  skills: string[];
+  skillCategory: string;
+}
+
+interface SkillCategory {
+  _id: string;
+  title: string;
+}
+
 const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
   const navigate = useNavigate();
   const [step, setStep] = useState<"form" | "otp">("form");
   const [showPassword, setShowPassword] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<WorkerFormData>({
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     phoneNumber: "",
     skills: [],
     skillCategory: ""
@@ -106,18 +121,13 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
       })
   }
 
-  const ViewSkills = async () => {
-    const { data } = await axios.get("http://localhost:8920/api/auth/ViewSkills")
-    return data.skills
-  }
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['ViewSkills'],
-    queryFn: ViewSkills
-  })
-
-  if (error) return <div>Error: {error.message}</div>
-  if (isLoading) return <div>Loading...</div>
+  const skillCategoryOptions = [
+    { value: "communication", label: "Communication" },
+    { value: "leadership", label: "Leadership" },
+    { value: "critical-thinking", label: "Critical Thinking" },
+    { value: "data-analysis", label: "Data Analysis" },
+    { value: "technical-proficiency", label: "Technical Proficiency" },
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +137,12 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
       return;
     }
 
-    submit()
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    submit();
     console.log("Worker signup:", { ...formData, files });
     
   };
@@ -150,7 +165,7 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
           id="worker-name"
           name="name"
           type="text"
-          placeholder="Juan Dela Cruz"
+          placeholder="Enter your full name"
           value={formData.name}
           onChange={handleChange}
           required
@@ -165,7 +180,7 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
             id="worker-email"
             name="email"
             type="email"
-            placeholder="juan@example.com"
+            placeholder="Enter your email address"
             value={formData.email}
             onChange={handleChange}
             required
@@ -205,8 +220,32 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
             id="worker-password"
             name="password"
             type={showPassword ? "text" : "password"}
-            placeholder="••••••••"
+            placeholder="Create a secure password"
             value={formData.password}
+            onChange={handleChange}
+            required
+            className="pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Confirm Password */}
+      <div className="space-y-2">
+        <Label htmlFor="worker-confirm-password">Confirm Password</Label>
+        <div className="relative">
+          <Input
+            id="worker-confirm-password"
+            name="confirmPassword"
+            type={showPassword ? "text" : "password"}
+            placeholder="Confirm your password"
+            value={formData.confirmPassword}
             onChange={handleChange}
             required
             className="pr-10"
@@ -233,11 +272,15 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
                   value={formData.skillCategory}
                   onValueChange={(value) => setFormData({ ...formData, skillCategory: value })}
                 >
-                  <SelectTrigger id="type">
-                    <SelectValue />
+                  <SelectTrigger id="skillCategory">
+                    <SelectValue placeholder="Select a skill category" />
                   </SelectTrigger>
                   <SelectContent defaultValue={"Choose a Skill Category"}>
-                    {data.map((skill: any) => <SelectItem value={skill._id}>{skill.title}</SelectItem>)}
+                    {skillCategoryOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
