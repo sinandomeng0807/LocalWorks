@@ -72,7 +72,7 @@ const FindJobs = () => {
   if (error) return <div>Error: {error.message}</div>
   if (isLoading) return <div>Loading...</div>
 
-  const jobs = data.jobs
+  const { jobs } = data
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -220,7 +220,7 @@ const FindJobs = () => {
           </p>
 
           <div className="grid gap-4">
-            {filteredJobs.map((job) => {
+            {!filteredJobs.length ? <div>No Jobs</div> : filteredJobs.map((job) => {
               return (
                 <Card key={job._id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-2">

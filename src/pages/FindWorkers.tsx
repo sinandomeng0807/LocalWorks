@@ -165,7 +165,7 @@ const FindWorkers = () => {
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Workers.map((worker) => (
+            {!Workers.length ? <div>No Workers</div> : Workers.map((worker) => (
               <Card key={worker._id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-2">
                   <div className="flex items-start gap-4">

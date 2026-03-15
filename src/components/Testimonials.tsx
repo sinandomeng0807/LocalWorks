@@ -113,7 +113,7 @@ const Testimonials = () => {
                   {current.worker.name}
                 </p>
                 <p className="text-muted-foreground">
-                  {current.worker.skillCategory}
+                  {current.skill.title}
                 </p>
               </div>
             </div>

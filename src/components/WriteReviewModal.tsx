@@ -44,8 +44,8 @@ const WriteReviewModal = ({
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>Error: {error.message}</div>
 
-  const Rate = async () => {
-    await axios.post("http://localhost:8920/api/pro/rating", { rating, description: text }, { withCredentials: true })
+  const Rate = async (skill) => {
+    await axios.post("http://localhost:8920/api/pro/rating", { rating, description: text, skill }, { withCredentials: true })
       .then(function (response) {
         if (response.data) {
           handleSubmit()
@@ -163,7 +163,7 @@ const WriteReviewModal = ({
             </div>
           )}
 
-          <Button onClick={Rate} className="w-full">
+          <Button onClick={() => Rate(data.WorkerProf.skillCategory)} className="w-full">
             Submit Review
           </Button>
         </div>

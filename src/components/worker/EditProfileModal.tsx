@@ -192,7 +192,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent defaultValue={"Choose a Skill Category"}>
-                      {!data.Locations.length ? "N/A" : data.Locations.map((skill: any) => <SelectItem value={skill._id}>{skill.name}</SelectItem>)}
+                      {!data.Locations.length ? "N/A" : data.Locations.map((skill: any) => <SelectItem value={skill.name}>{skill.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
             </div>
