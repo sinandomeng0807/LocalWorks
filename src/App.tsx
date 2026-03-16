@@ -13,9 +13,8 @@ import FindJobs from "./pages/FindJobs";
 import FindWorkers from "./pages/FindWorkers";
 import NotFound from "./pages/NotFound";
 import Images from "./pages/Images";
-import AdminSign from "./pages/AdminSign";
+import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
-import PostedJobs from "./pages/PostedJobs";
 import EmployerProfile from "./components/employer/EmployerProfile";
 import NumberEmployees from "./pages/NumberEmployees";
 import OpenPositions from "./pages/OpenPositions";
@@ -41,9 +40,8 @@ const App = () => (
           <Route path="/open-positions" element={<OpenPositions />} />
           <Route path="/total-applications" element={<NumberEmployees />} />
           <Route path="/images" element={<Images />} />
-          <Route path="/admin" element={<AdminSign />} />
+          <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/posted-jobs" element={<PostedJobs />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
