@@ -33,41 +33,45 @@ const CompanyProfile = () => {
   
   const CompanyProfile = data
 
+  const styles = {
+    cursor: "pointer"
+  }
+
   return (
     <Card>
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
             <Avatar className="w-20 h-20">
-              <AvatarImage src={CompanyProfile.logo} />
+              <AvatarImage src={CompanyProfile.EmployerInformation.logo} />
               <AvatarFallback className="bg-primary/10 text-primary text-2xl">
-                {CompanyProfile.company.title.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                {CompanyProfile.EmployerInformation.company.split(" ").map(n => n[0]).join("").slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-2xl">{CompanyProfile.company.title}</CardTitle>
+              <CardTitle className="text-2xl">{CompanyProfile.EmployerInformation.company}</CardTitle>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary">{CompanyProfile.company.industry.title}</Badge>
+                <Badge variant="secondary">{CompanyProfile.EmployerInformation.industry.title}</Badge>
               </div>
               <div className="flex items-center gap-2 mt-2 text-muted-foreground text-sm">
                 <MapPin className="w-4 h-4" />
-                {CompanyProfile.company.location.name}
+                {CompanyProfile.EmployerInformation.location}
               </div>
             </div>
           </div>
-          <Button onClick={() => setEditProfileOpen(true)} variant="outline" size="sm" className="gap-2">
+          {/* <Button onClick={() => setEditProfileOpen(true)} variant="outline" size="sm" className="gap-2">
             <Edit className="w-4 h-4" />
             Edit Profile
-          </Button>
+          </Button> */}
         </div>
       </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground mb-6">{CompanyProfile.company.description}</p>
+      {<CardContent>
+        <p className="text-muted-foreground mb-6">{CompanyProfile.EmployerInformation.description}</p>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="flex items-center gap-2 text-sm">
             <Users className="w-4 h-4 text-muted-foreground" />
-            <span>{CompanyProfile.company.noOfEmployees} employees</span>
+            <span>{CompanyProfile.EmployerInformation.noOfEmployees} employees</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Briefcase className="w-4 h-4 text-muted-foreground" />
@@ -75,29 +79,29 @@ const CompanyProfile = () => {
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Globe className="w-4 h-4 text-muted-foreground" />
-            <span>{CompanyProfile.company.website}</span>
+            <span>{CompanyProfile.EmployerInformation.website}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Mail className="w-4 h-4 text-muted-foreground" />
-            <span>{CompanyProfile.company.companyOwner.email}</span>
+            <span>{CompanyProfile.EmployerInformation.owner}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Card className="bg-primary/5 border-primary/20">
-            <CardContent onClick={() => navigate("/open-positions")} className="p-4 text-center">
+            <CardContent style={styles} onClick={() => navigate("/open-positions")} className="p-4 text-center">
               <div className="text-3xl font-bold text-primary">{CompanyProfile.Jobs}</div>
               <div className="text-sm text-muted-foreground">Open Positions</div>
             </CardContent>
           </Card>
           <Card className="bg-primary/5 border-primary/20">
-            <CardContent onClick={() => navigate("/total-applications")} className="p-4 text-center">
+            <CardContent style={styles} onClick={() => navigate("/total-applications")} className="p-4 text-center">
               <div className="text-3xl font-bold text-primary">{CompanyProfile.TotalApplications}</div>
               <div className="text-sm text-muted-foreground">Total Applications</div>
             </CardContent>
           </Card>
         </div>
-      </CardContent>
+      </CardContent>}
       
       {/* Edit Profile Modal */}
       <EditProfileModal open={editProfileOpen} onOpenChange={setEditProfileOpen} />

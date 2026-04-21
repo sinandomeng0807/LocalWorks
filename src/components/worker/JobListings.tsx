@@ -18,17 +18,18 @@ import { toast } from "sonner";
 import JobDetailsModal from "./JobDetailsModal";
 import { useJobsStore, Job } from "@/lib/jobsStore";
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 axios.defaults.withCredentials = true;
 
 const JobListings = () => {
+  const queryClient = useQueryClient()
   const jobs = useJobsStore((state) => state.jobs);
   const [searchTerm, setSearchTerm] = useState("");
-  const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
   const [selectedJob, setSelectedJob] = useState(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [confirmApplyOpen, setConfirmApplyOpen] = useState(false);
   const [jobToApply, setJobToApply] = useState(null);
+
 
   const Jobs = async () => {
     const { data } = await axios.get("http://localhost:8920/api/pro/viewJobs", { withCredentials: true })
@@ -40,7 +41,7 @@ const JobListings = () => {
     queryFn: Jobs
   })
 
-  if (error) return <div>Error: {error.message}</div>
+  if (error) return <div>An error occured</div>
   if (isLoading) return <div>Loading...</div>
 
   const AllJobs = data.jobs
@@ -66,27 +67,30 @@ const JobListings = () => {
   };
 
   const addApplication = async (jobToApply: any) => {
-    await axios.post("http://localhost:8920/api/pro/createApplication", { job: jobToApply.info._id })
-      .then(function (response) {
-        if (response.data) {
-          
-        toast.success(`Application submitted for ${jobToApply.info.title}!`, {
-          description: `Your application to ${jobToApply.info.company} has been sent.`,
-        });
-        }
-      })
-      .catch(function (error) {
-        if (error.response) {
-          toast.error(error.response.data.message)
-        }
-      })
-  }
+    return axios.post("http://localhost:8920/api/pro/createApplication", {
+      job: jobToApply.info._id,
+      location: jobToApply.info.location._id,
+    });
+  };
 
-  const handleConfirmApply = () => {
-    if (jobToApply) {
-      setAppliedJobs([...appliedJobs, jobToApply.info._id]);
-      addApplication(jobToApply)
+  const handleConfirmApply = async () => {
+    if (!jobToApply) return;
+
+    try {
+      const response = await addApplication(jobToApply);
+
+      toast.success(`Application submitted for ${jobToApply.info.title}!`, {
+        description: `Your application to ${jobToApply.info.company} has been sent.`,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ["job"] });
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message || "Application failed";
+
+      toast.error(message);
     }
+
     setConfirmApplyOpen(false);
     setJobToApply(null);
   };
@@ -124,7 +128,6 @@ const JobListings = () => {
       {/* Job Listings */}
       <div className="grid gap-4">
         {AllJobs.map((job: any) => {
-          const isApplied = appliedJobs.includes(job.info._id);
           return (
             <Card key={job.info._id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">

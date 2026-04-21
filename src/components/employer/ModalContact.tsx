@@ -11,14 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Briefcase } from "lucide-react";
 
 import { Textarea } from "../ui/textarea";
 import { toast } from "sonner";
@@ -80,9 +73,12 @@ const ModalContact = ({ open, onOpenChange, worker }: PostJobModalProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Profile</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Briefcase className="w-5 h-5 text-primary" />
+            Contact Worker
+          </DialogTitle>
           <DialogDescription>
-            Update your profile information to help employers find you.
+            Fill in the details below to contact worker.
           </DialogDescription>
         </DialogHeader>
 

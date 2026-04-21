@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Shield, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.avif";
+import axios from "axios";
 
-const ADMIN_CREDENTIALS = { email: "admin@localworks.com", password: "admin123" };
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -17,17 +17,29 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const AdminLogUser = async () => {
+    await axios.post("http://localhost:8920/api/auth/admin/login", { email, password }, {
+      withCredentials: true
+    })
+      .then(function (response) {
+        if (response.data) {
+          navigate("/admin-dashboard");
+          localStorage.setItem("admin-authenticated", "true");
+          toast.success("Welcome back, Admin!");
+        }
+      })
+      .catch(function (error) {
+        if (error.response) {
+          toast.error(error.response.data.message);
+        }
+      })
+  }
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
-      if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-        localStorage.setItem("admin-authenticated", "true");
-        toast.success("Welcome back, Admin!");
-        navigate("/admin");
-      } else {
-        toast.error("Invalid credentials");
-      }
+      AdminLogUser()
       setLoading(false);
     }, 800);
   };
@@ -55,7 +67,7 @@ const AdminLogin = () => {
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -87,13 +99,10 @@ const AdminLogin = () => {
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button onClick={handleLogin} type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Default: admin@localworks.com / admin123
-          </p>
         </CardContent>
       </Card>
     </div>

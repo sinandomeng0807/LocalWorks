@@ -76,8 +76,12 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
     queryFn: ViewProfDetails
   })
 
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>Error: {error.message}</div>
+  const styleDisplay = {
+    display: "none"
+  }
+
+  if (isLoading) return <div style={styleDisplay}>Loading...</div>
+  if (error) return <div style={styleDisplay}>Error: {error.message}</div>
 
   const UpdateProf = async () => {
     await axios.put("http://localhost:8920/api/pro/worker/updateProfile", formData, { withCredentials: true })

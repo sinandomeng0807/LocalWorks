@@ -30,7 +30,10 @@ interface Application {
     email: string;
     phone: string;
     salary: string;
-  }
+  },
+  location: {
+    name: string;
+  };
   status: string;
   interviewDate?: string;
   createdAt: string;
@@ -41,6 +44,14 @@ interface ApplicationDetailsModalProps {
   onOpenChange: (open: boolean) => void;
   application: Application | null;
   onWithdraw?: () => void;
+}
+
+const UTC_Converter = (createdAt) => {
+  const splitDateAndTime = createdAt.split("T")
+  const date = splitDateAndTime[0].split("-")
+  const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "June", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  
+  return months[Number(date[1])] + " " + date[1+1] + ", " + date[0]
 }
 
 const getStatusInfo = (status: string) => {
@@ -136,11 +147,11 @@ const ApplicationDetailsModal = ({
           <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              {extendedApp.job.location}
+              {extendedApp.location.name}
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
-              Applied: {extendedApp.createdAt}
+              Applied: {UTC_Converter(extendedApp.createdAt)}
             </div>
             <span className="font-medium text-foreground">
               {extendedApp.job.salary}

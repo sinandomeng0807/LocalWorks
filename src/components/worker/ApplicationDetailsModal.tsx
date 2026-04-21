@@ -43,6 +43,15 @@ interface ApplicationDetailsModalProps {
   onWithdraw?: () => void;
 }
 
+
+const UTC_Converter = (createdAt) => {
+  const splitDateAndTime = createdAt.split("T")
+  const date = splitDateAndTime[0].split("-")
+  const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "June", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  
+  return months[Number(date[1])] + " " + date[1+1] + ", " + date[0]
+}
+
 const getStatusInfo = (status: string) => {
   switch (status) {
     case "Pending Review":
@@ -99,7 +108,7 @@ const getExtendedApplicationDetails = (application: Application) => ({
   jobType: "Full-time",
   jobDescription: "Looking for dedicated professionals to join our team. This role requires attention to detail and strong work ethic.",
   timeline: [
-    { date: application.createdAt, event: "Application Submitted", completed: true },
+    { date: UTC_Converter(application.createdAt), event: "Application Submitted", completed: true },
     { date: "In Progress", event: "Application Review", completed: application.status !== "Pending Review" },
     { date: application.interviewDate || "N/A", event: "Interview Scheduled", completed: application.status === "Accepted" || application.status === "Not Selected" },
     { date: application.status === "Accepted" || application.status === "Not Selected" ? application.status : "Pending", event: "Final Decision", completed: application.status === "Accepted" || application.status === "Not Selected" },
@@ -140,7 +149,7 @@ const ApplicationDetailsModal = ({
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
-              Applied: {extendedApp.createdAt}
+              Applied: {UTC_Converter(extendedApp.createdAt)}
             </div>
             <span className="font-medium text-foreground">
               {extendedApp.job.salary}

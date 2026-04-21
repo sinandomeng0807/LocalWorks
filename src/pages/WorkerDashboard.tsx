@@ -16,7 +16,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import logo from "@/assets/logo.avif";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import axios from "axios";
+
+axios.defaults.withCredentials = true
 
 const WorkerDashboard = () => {
   const navigate = useNavigate();
@@ -28,6 +32,29 @@ const WorkerDashboard = () => {
     await axios.post("http://localhost:8920/api/pro/logout", {}, { withCredentials: true })
     navigate("/");
   };
+
+  const isWorkerLogged = async () => {
+    const result = await axios.get("http://localhost:8920/api/pro/isWorkerLogged", { withCredentials: true })
+    return result.data
+  }
+
+  const { isLoading, error } = useQuery({
+    queryKey: ['isWorkerLogged'],
+    queryFn: isWorkerLogged
+  })
+
+  const styleCenter = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    margin: "40px"
+  }
+
+  if (isLoading) return <div style={styleCenter}>Loading...</div>
+  if (error) {
+    navigate("/", { replace: true })
+    toast.info("Please Login as Worker to use the Worker Dashboard.")
+  }
 
   const handleViewProfile = () => {
     setActiveTab("profile");

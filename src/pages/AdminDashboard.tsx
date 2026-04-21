@@ -16,8 +16,14 @@ import AdminNotifications from "@/components/admin/AdminNotifications";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+
+axios.defaults.withCredentials = true
 
 const AdminDashboard = () => {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const jobs = useJobsStore((s) => s.jobs);
@@ -25,20 +31,47 @@ const AdminDashboard = () => {
   const updateJobStatus = useJobsStore((s) => s.updateJobStatus);
   const reviews = useReviewsStore((s) => s.reviews);
 
-  useEffect(() => {
-    const isAuth = localStorage.getItem("admin-authenticated");
-    if (!isAuth) navigate("/admin-login");
-  }, [navigate]);
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
 
-  const totalJobs = jobs.length;
-  const acceptedJobs = jobs.filter((j) => j.status === "accepted").length;
-  const pendingJobs = jobs.filter((j) => j.status === "pending").length;
-  const rejectedJobs = jobs.filter((j) => j.status === "rejected").length;
+    queryClient.invalidateQueries({
+      queryKey: ['adminDashboard'],
+      refetchType: 'active',
+    });
+  };
+
+  const Dashboard = async () => {
+    const result = await axios.get("http://localhost:8920/api/admin/dashboard", { withCredentials: true })
+    return result.data
+  }
+  
+  const styleCenter = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    margin: "40px"
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['adminDashboard'],
+    queryFn: Dashboard,
+  })
+
+  if (isLoading) return <div style={styleCenter}>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  const { JOBS, WORKERS } = data 
+
+
+  const totalJobs = JOBS.length;
+  const acceptedJobs = JOBS.filter((j) => j.status === "ACCEPTED").length;
+  const pendingJobs = JOBS.filter((j) => j.status === "PENDING").length;
+  const rejectedJobs = JOBS.filter((j) => j.status === "DECLINED").length;
 
   const handleExportJobs = () => {
     exportToCSV(
-      jobs.map(({ id, title, company, location, salary, type, posted, status }) => ({
-        id, title, company, location, salary, type, posted, status: status || "pending",
+      jobs.map(({ _id, title, company, location, salary, type, posted, status }) => ({
+        _id, title, company, location, salary, type, posted, status: status || "pending",
       })),
       "jobs"
     );
@@ -68,7 +101,7 @@ const AdminDashboard = () => {
     if (activeTab === "jobs") {
       return (
         <AllPostedJobs
-          jobs={jobs}
+          jobs={JOBS}
           onUpdateStatus={updateJobStatus}
           onDelete={removeJob}
         />
@@ -84,7 +117,7 @@ const AdminDashboard = () => {
     }
 
     if (activeTab === "reports") {
-      return <AdminReports jobs={jobs} />;
+      return <AdminReports jobs={JOBS} />;
     }
 
     return (
@@ -101,21 +134,21 @@ const AdminDashboard = () => {
           rejectedJobs={rejectedJobs}
         />
 
-        <AdminCharts jobs={jobs} />
+        <AdminCharts jobs={JOBS} workers={WORKERS} />
 
         <PostedJobsTable
-          jobs={jobs}
+          jobs={JOBS}
           onViewAll={() => setActiveTab("jobs")}
         />
 
-        <CategoryDetails jobs={jobs} />
+        <CategoryDetails workers={WORKERS} />
       </main>
     );
   };
 
   return (
     <div className="flex min-h-screen bg-muted/30">
-      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <AdminSidebar activeTab={activeTab} onTabChange={handleTabChange} />
 
       <div className="flex-1 flex flex-col min-w-0">
         <AdminHeader />

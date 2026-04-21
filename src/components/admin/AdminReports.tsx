@@ -13,6 +13,8 @@ import {
 import { Job } from "@/lib/jobsStore";
 import { exportToCSV } from "@/lib/csvExport";
 import { toast } from "sonner";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 const BAR_COLORS = [
   "hsl(24, 85%, 50%)",
@@ -26,31 +28,7 @@ interface AdminReportsProps {
   jobs: Job[];
 }
 
-// Mock data for charts
-const workerGrowthData = [
-  { month: "7 Jan", newWorkers: 3, activeWorkers: 2 },
-  { month: "11 Jan", newWorkers: 10, activeWorkers: 5 },
-  { month: "25 Sep", newWorkers: 7, activeWorkers: 8 },
-  { month: "20 Sep", newWorkers: 8, activeWorkers: 10 },
-  { month: "24 Sep", newWorkers: 12, activeWorkers: 14 },
-  { month: "27 Sep", newWorkers: 15, activeWorkers: 17 },
-  { month: "28 Sep", newWorkers: 14, activeWorkers: 15 },
-  { month: "29 Aug", newWorkers: 18, activeWorkers: 13 },
-  { month: "30 Aug", newWorkers: 16, activeWorkers: 19 },
-];
-
-const jobPerformanceData = [
-  { month: "Jan", posted: 12, filled: 8, expired: 2 },
-  { month: "Feb", posted: 15, filled: 10, expired: 3 },
-  { month: "Mar", posted: 20, filled: 14, expired: 4 },
-  { month: "Apr", posted: 18, filled: 16, expired: 1 },
-  { month: "May", posted: 25, filled: 20, expired: 3 },
-  { month: "Jun", posted: 22, filled: 18, expired: 2 },
-  { month: "Jul", posted: 28, filled: 22, expired: 4 },
-  { month: "Aug", posted: 30, filled: 25, expired: 3 },
-];
-
-const categoryTableData = [
+const categoryTable = [
   { name: "Hospitality", activeJobs: 15, avgApplicants: 22, acceptanceRate: 90, verifiedWorkers: 5 },
   { name: "Warehouse", activeJobs: 11, avgApplicants: 27, acceptanceRate: 90, verifiedWorkers: 11 },
   { name: "Construction", activeJobs: 10, avgApplicants: 35, acceptanceRate: 85, verifiedWorkers: 36 },
@@ -60,16 +38,30 @@ const categoryTableData = [
   { name: "Cleaning", activeJobs: 7, avgApplicants: 18, acceptanceRate: 85, verifiedWorkers: 15 },
 ];
 
-const placementData = [
-  { name: "Hospitality", value: 6 },
-  { name: "Warehouse", value: 10 },
-  { name: "Construction", value: 9 },
-  { name: "Security", value: 4 },
-  { name: "Klimt...", value: 5 },
-];
-
 const AdminReports = ({ jobs }: AdminReportsProps) => {
   const [activeTab, setActiveTab] = useState("worker");
+
+  const fetchReports = async () => {
+    const res = await axios.get("http://localhost:8920/api/admin/reports", {
+      withCredentials: true
+    });
+    return res.data;
+  };
+  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['Reports'],
+    queryFn: fetchReports
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  const {
+    jobsByIndustry = [],
+    workerGrowth = [],
+    jobPerformance = [],
+    categoryTable = [],
+  } = data || {};
 
   const handleExport = () => {
     exportToCSV(
@@ -129,7 +121,7 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
               <h3 className="text-base font-semibold text-foreground">Worker Growth</h3>
               <p className="text-xs text-muted-foreground mb-4">Worker Registration Trends</p>
               <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={workerGrowthData}>
+                <LineChart data={workerGrowth}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
@@ -150,13 +142,13 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
                 <h3 className="text-base font-semibold text-foreground">Payment Summary</h3>
                 <p className="text-xs text-muted-foreground mb-4">Completed Placements by Category</p>
                 <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={placementData} barSize={28}>
+                  <BarChart data={jobsByIndustry} barSize={28}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} axisLine={false} tickLine={false} />
                     <Tooltip />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                      {placementData.map((_, i) => (
+                      {jobsByIndustry.map((_, i) => (
                         <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />
                       ))}
                     </Bar>
@@ -193,7 +185,7 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
 
           {/* Category Table - full width below */}
           <div className="lg:col-span-2">
-            <CategoryTable data={categoryTableData} />
+            <CategoryTable data={categoryTable} />
           </div>
         </div>
       )}
@@ -205,7 +197,7 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
               <h3 className="text-base font-semibold text-foreground">Job Posting Trends</h3>
               <p className="text-xs text-muted-foreground mb-4">Monthly job activity overview</p>
               <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={jobPerformanceData}>
+                <LineChart data={jobPerformance}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
@@ -252,27 +244,27 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
           </div>
 
           <div className="lg:col-span-2">
-            <CategoryTable data={categoryTableData} />
+            <CategoryTable data={categoryTable} />
           </div>
         </div>
       )}
 
       {activeTab === "category" && (
         <div className="space-y-4">
-          <CategoryTable data={categoryTableData} />
+          <CategoryTable data={categoryTable} />
           <div className="grid sm:grid-cols-2 gap-4">
             <Card className="border-none shadow-sm">
               <CardContent className="p-5">
                 <h3 className="text-base font-semibold text-foreground">Placements by Category</h3>
                 <p className="text-xs text-muted-foreground mb-4">Completed placements breakdown</p>
                 <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={placementData} barSize={36}>
+                  <BarChart data={jobsByIndustry} barSize={36}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                     <Tooltip />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                      {placementData.map((_, i) => (
+                      {jobsByIndustry.map((_, i) => (
                         <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />
                       ))}
                     </Bar>
@@ -284,7 +276,7 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
               <CardContent className="p-5 space-y-3">
                 <h3 className="text-base font-semibold text-foreground">Category Health</h3>
                 <div className="space-y-2">
-                  {categoryTableData.slice(0, 5).map((cat) => (
+                  {categoryTable.slice(0, 5).map((cat) => (
                     <div key={cat.name} className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">{cat.name}:</span>
                       <span className="font-semibold text-foreground">{cat.acceptanceRate}% acceptance</span>
@@ -301,32 +293,33 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
 };
 
 // Extracted category table component
-const CategoryTable = ({ data }: { data: typeof categoryTableData }) => (
+const CategoryTable = ({ data }: { data: typeof categoryTable }) => (
   <Card className="border-none shadow-sm">
     <CardContent className="p-5">
       <h3 className="text-base font-semibold text-foreground mb-1">Category Detailed Data</h3>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="border-muted">
-              <TableHead className="text-xs font-semibold">Category Name</TableHead>
-              <TableHead className="text-xs font-semibold text-center">Total Active Jobs</TableHead>
-              <TableHead className="text-xs font-semibold text-center">Average Applicants</TableHead>
-              <TableHead className="text-xs font-semibold text-center">Acceptance Rate (%)</TableHead>
-              <TableHead className="text-xs font-semibold text-center">Verified Workers in Category</TableHead>
+          <TableRow className="border-muted">
+            <TableHead className="text-xs font-semibold">Category Name</TableHead>
+            <TableHead className="text-xs font-semibold text-center">Active Jobs</TableHead>
+            <TableHead className="text-xs font-semibold text-center">Total Applications</TableHead>
+            <TableHead className="text-xs font-semibold text-center">Acceptance Rate (%)</TableHead>
+          </TableRow>
+        </TableHeader>
+
+        <TableBody>
+          {data.map((row, i) => (
+            <TableRow key={i} className="border-muted/50">
+              <TableCell className="text-sm font-medium">{row.name}</TableCell>
+              <TableCell className="text-sm text-center">{row.activeJobs}</TableCell>
+              <TableCell className="text-sm text-center">{row.totalApplications}</TableCell>
+              <TableCell className="text-sm text-center">
+                {row.acceptanceRate}%
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((row, i) => (
-              <TableRow key={i} className="border-muted/50">
-                <TableCell className="text-sm font-medium">{row.name}</TableCell>
-                <TableCell className="text-sm text-center">{row.activeJobs}</TableCell>
-                <TableCell className="text-sm text-center">{row.avgApplicants}</TableCell>
-                <TableCell className="text-sm text-center">{row.acceptanceRate}%</TableCell>
-                <TableCell className="text-sm text-center">{row.verifiedWorkers}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+          ))}
+        </TableBody>
         </Table>
       </div>
     </CardContent>

@@ -3,6 +3,9 @@ import { LayoutDashboard, Briefcase, FileText, BarChart3, Bell, Users, LogOut } 
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import logo from "@/assets/logo.avif";
+import axios from "axios";
+
+axios.defaults.withCredentials = true
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -20,10 +23,21 @@ const navItems = [
 const AdminSidebar = ({ activeTab, onTabChange }: AdminSidebarProps) => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem("admin-authenticated");
-    navigate("/admin-login");
-    toast.success("Logged out");
+  const handleLogout = async () => {
+    await axios.post("http://localhost:8920/api/pro/logout", {}, { withCredentials: true })
+      .then(function (response) {
+        if (response.data) {
+          navigate("/admin")
+          toast.success(response.data.message, {
+            description: "Sign In Again to use this Application"
+          })
+        }
+      })
+      .catch(function (error) {
+        if (error.response) {
+          toast.info(error.response.data.message)
+        }
+      })
   };
 
   return (

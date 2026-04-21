@@ -75,6 +75,14 @@ const getExtendedProfile = (worker: WorkerProfile) => ({
   availability: "Available immediately",
 });
 
+  const UTC_Converter = (createdAt) => {
+    const splitDateAndTime = createdAt.split("T")
+    const date = splitDateAndTime[0].split("-")
+    const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "June", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    
+    return months[Number(date[1])] + " " + date[1+1] + ", " + date[0]
+  }
+
 const WorkerProfileModal = ({
   open,
   onOpenChange,
@@ -112,7 +120,7 @@ const WorkerProfileModal = ({
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
-                <span>{extendedWorker.job.location}</span>
+                <span>{extendedWorker.location.name}</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Briefcase className="w-4 h-4" />
@@ -127,7 +135,7 @@ const WorkerProfileModal = ({
           <p className="text-sm text-muted-foreground">Applied for</p>
           <p className="font-semibold text-primary">{extendedWorker.job.title}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Applied {extendedWorker.createdAt}
+            Applied {UTC_Converter(extendedWorker.createdAt)}
           </p>
         </div>
 

@@ -41,8 +41,12 @@ const WriteReviewModal = ({
     queryFn: WorkerProfile
   })
 
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>Error: {error.message}</div>
+  const styleDisplay = {
+    display: "none"
+  }
+
+  if (isLoading) return <div style={styleDisplay}>Loading...</div>
+  if (error) return <div style={styleDisplay}>Error: {error.message}</div>
 
   const Rate = async (skill) => {
     await axios.post("http://localhost:8920/api/pro/rating", { rating, description: text, skill }, { withCredentials: true })

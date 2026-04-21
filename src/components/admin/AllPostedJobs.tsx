@@ -23,7 +23,9 @@ interface AllPostedJobsProps {
 
 const AllPostedJobs = ({ jobs, onUpdateStatus, onDelete }: AllPostedJobsProps) => {
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "pending" | "accepted" | "rejected">("all");
+  const [filter, setFilter] = useState<
+  "all" | "PENDING" | "ACCEPTED" | "DECLINED"
+>("all");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [companyModalOpen, setCompanyModalOpen] = useState(false);
@@ -43,19 +45,28 @@ const AllPostedJobs = ({ jobs, onUpdateStatus, onDelete }: AllPostedJobsProps) =
         return matchesSearch && matchesFilter;
       })
       .sort((a, b) => {
-        const aMax = Math.max(...a[1].map(j => j.id));
-        const bMax = Math.max(...b[1].map(j => j.id));
+        const aMax = Math.max(...a[1].map(j => new Date(j.createdAt).getTime()));
+        const bMax = Math.max(...b[1].map(j => new Date(j.createdAt).getTime()));
         return sort === "newest" ? bMax - aMax : aMax - bMax;
       });
   }, [jobs, search, filter, sort]);
 
   const getCompanyStatus = (companyJobs: Job[]) => {
-    const pending = companyJobs.filter(j => j.status === "pending").length;
-    const accepted = companyJobs.filter(j => j.status === "accepted").length;
+    const pending = companyJobs.filter(j => j.status === "PENDING").length;
+    const accepted = companyJobs.filter(j => j.status === "ACCEPTED").length;
     if (pending > 0) return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 text-xs">{pending} Pending</Badge>;
     if (accepted === companyJobs.length) return <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">All Accepted</Badge>;
     return <Badge className="bg-muted text-muted-foreground text-xs">{companyJobs.length} Jobs</Badge>;
   };
+
+
+  const UTC_Converter = (createdAt) => {
+    const splitDateAndTime = createdAt.split("T")
+    const date = splitDateAndTime[0].split("-")
+    const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "June", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    
+    return months[Number(date[1])] + " " + date[1+1] + ", " + date[0]
+  }
 
   return (
     <>
@@ -87,9 +98,9 @@ const AllPostedJobs = ({ jobs, onUpdateStatus, onDelete }: AllPostedJobsProps) =
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">ALL</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="accepted">Accepted</SelectItem>
-                      <SelectItem value="rejected">Declined</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="ACCEPTED">Accepted</SelectItem>
+                      <SelectItem value="DECLINED">Declined</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -142,7 +153,7 @@ const AllPostedJobs = ({ jobs, onUpdateStatus, onDelete }: AllPostedJobsProps) =
                   </div>
 
                   <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <p className="text-[10px] text-muted-foreground">{companyJobs[0]?.posted}</p>
+                    <p className="text-[10px] text-muted-foreground">{UTC_Converter(companyJobs[0]?.createdAt)}</p>
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
@@ -169,6 +180,7 @@ const AllPostedJobs = ({ jobs, onUpdateStatus, onDelete }: AllPostedJobsProps) =
           open={companyModalOpen}
           onOpenChange={setCompanyModalOpen}
           onUpdateStatus={(id, status) => { onUpdateStatus(id, status); toast.success(`Job ${status}`); }}
+          status={filter}
           onDelete={(id) => { onDelete(id); toast.success("Job deleted"); }}
         />
       )}

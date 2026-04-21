@@ -50,7 +50,7 @@ const FindJobs = () => {
   }
 
   const isLogged = async () => {
-    const result = await axios.get("http://localhost:8920/api/pro/isUserLoggedWorker", { withCredentials: true })
+    const result = await axios.get("http://localhost:8920/api/pro/isWorkerLogged", { withCredentials: true })
     if (!result.data) {
       setIsLoggedIn(
         false
@@ -69,17 +69,24 @@ const FindJobs = () => {
     queryFn: findJobs
   })
 
-  if (error) return <div>Error: {error.message}</div>
-  if (isLoading) return <div>Loading...</div>
+  const styleCenter = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    margin: "40px"
+  }
+
+  if (error) return <div style={styleCenter}>Error: {error.message}</div>
+  if (isLoading) return <div style={styleCenter}>Loading...</div>
 
   const { jobs } = data
 
   const filteredJobs = jobs.filter((job) => {
-    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesLocation = !location || job.location.toLowerCase().includes(location.toLowerCase());
-    const matchesType = !jobType || jobType === "all" || job.type === jobType;
+    const matchesSearch = job.info.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.info.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.info.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesLocation = !location || job.info.location.name.toLowerCase().includes(location.toLowerCase());
+    const matchesType = !jobType || jobType === "all" || job.info.type === jobType;
     return matchesSearch && matchesLocation && matchesType;
   });
 
@@ -96,12 +103,12 @@ const FindJobs = () => {
   const handleConfirmApply = async () => {
     if (selectedJobId) {
       setAppliedJobs([...appliedJobs, selectedJobId]);
-      const job = jobs.find(j => j._id === selectedJobId);
-      await axios.post("http://localhost:8920/api/pro/createApplication", { job: job._id }, { withCredentials: true })
+      const job = jobs.find(j => j.info._id === selectedJobId);
+      await axios.post("http://localhost:8920/api/pro/createApplication", { job: job.info._id, location: job.info.location._id }, { withCredentials: true })
         .then(function (response) {
           if (response.data) {
-            toast.success(`Application submitted for ${job?.title}!`, {
-              description: `Your application to ${job?.company} has been sent.`,
+            toast.success(`Application submitted for ${job?.info.title}!`, {
+              description: `Your application to ${job?.info.company} has been sent.`,
             });
           }
         })
@@ -155,7 +162,15 @@ const FindJobs = () => {
     }
   };
 
-  const selectedJob = jobs.find(j => j._id === selectedJobId);
+  const selectedJob = jobs.find(j => j.info._id === selectedJobId);
+
+  const UTC_Converter = (createdAt) => {
+    const splitDateAndTime = createdAt.split("T")
+    const date = splitDateAndTime[0].split("-")
+    const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "June", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    
+    return months[Number(date[1])] + " " + date[1+1] + ", " + date[0]
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -204,6 +219,7 @@ const FindJobs = () => {
                     <SelectItem value="Full-Time">Full-time</SelectItem>
                     <SelectItem value="Part-Time">Part-time</SelectItem>
                     <SelectItem value="Contract">Contract</SelectItem>
+                    <SelectItem value="Intern">Intern</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -222,14 +238,14 @@ const FindJobs = () => {
           <div className="grid gap-4">
             {!filteredJobs.length ? <div>No Jobs</div> : filteredJobs.map((job) => {
               return (
-                <Card key={job._id} className="hover:shadow-lg transition-shadow">
+                <Card key={job.info._id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-2">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                       <div>
-                        <CardTitle className="text-xl">{job.title}</CardTitle>
+                        <CardTitle className="text-xl">{job.info.title}</CardTitle>
                         <div className="flex items-center gap-2 text-muted-foreground mt-1">
                           <Building2 className="w-4 h-4" />
-                          <span>{job.company}</span>
+                          <span>{job.info.company}</span>
                         </div>
                       </div>
                       {/* {isApplied ? (
@@ -241,36 +257,36 @@ const FindJobs = () => {
                         <Button onClick={() => handleApplyClick(job._id)}>Apply Now</Button>
                       )} */}
 
-                      <Button onClick={() => handleApplyClick(job._id)}>Apply Now</Button>
+                      <Button onClick={() => handleApplyClick(job.info._id)}>Apply Now</Button>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground mb-4">{job.description}</p>
+                    <p className="text-muted-foreground mb-4">{job.info.description}</p>
                     
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                       <div className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
-                        {job.location}
+                        {job.info.location.name}
                       </div>
                       <div className="flex items-center gap-1">
                         <Briefcase className="w-4 h-4" />
-                        {job.type}
+                        {job.info.type}
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        {job.posted}
+                        Posted: {UTC_Converter(job.info.createdAt)}
                       </div>
                     </div>
                     
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex flex-wrap gap-2">
-                        {job.tags.map((tag) => (
+                        {job.info.tags.map((tag) => (
                           <Badge key={tag} variant="secondary">
                             {tag}
                           </Badge>
                         ))}
                       </div>
-                      <span className="font-semibold text-primary">{job.salary}</span>
+                      <span className="font-semibold text-primary">{job.info.salary}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -294,7 +310,7 @@ const FindJobs = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Application</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to apply for <strong>{selectedJob?.title}</strong> at <strong>{selectedJob?.company}</strong>?
+              Are you sure you want to apply for <strong>{selectedJob?.info.title}</strong> at <strong>{selectedJob?.info.company}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

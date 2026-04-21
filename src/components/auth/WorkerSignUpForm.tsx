@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PhoneInput from "./PhoneInput";
 import FileUpload from "./FileUpload";
@@ -15,8 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus } from "lucide-react";
-import axios from "axios"
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { useToast } from "@/components/ui/use-toast";
+
 axios.defaults.withCredentials = true;
 
 interface WorkerSignUpFormProps {
@@ -29,8 +31,7 @@ interface WorkerFormData {
   password: string;
   confirmPassword: string;
   phoneNumber: string;
-  skills: string[];
-  skillCategory: string;
+  skill: string;
 }
 
 interface SkillCategory {
@@ -40,31 +41,51 @@ interface SkillCategory {
 
 const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+
   const [step, setStep] = useState<"form" | "otp">("form");
   const [showPassword, setShowPassword] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
-  
+
   const [formData, setFormData] = useState<WorkerFormData>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
     phoneNumber: "",
-    skills: [],
-    skillCategory: ""
+    skill: "",
   });
-  
+
   const [files, setFiles] = useState<{
-    photo: File | "";
-    resume: File | "";
+    photo: File | null;
+    resume: File | null;
   }>({
-    photo: "",
-    resume: "",
+    photo: null,
+    resume: null,
   });
 
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
 
+  // Fetch skill categories
+  const fetchSkills = async () => {
+    const result = await axios.get(
+      "http://localhost:8920/api/auth/ViewSkills"
+    );
+    return result.data;
+  };
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["ViewSkills"],
+    queryFn: fetchSkills,
+  });
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error instanceof Error) return <div>Error: {error.message}</div>;
+
+  const skillCategoryOptions: SkillCategory[] = data.skills;
+
+  // Add skill
   const handleAddSkill = () => {
     if (skillInput.trim() && !skills.includes(skillInput.trim())) {
       setSkills([...skills, skillInput.trim()]);
@@ -72,10 +93,12 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
     }
   };
 
+  // Remove skill
   const handleRemoveSkill = (skillToRemove: string) => {
     setSkills(skills.filter((skill) => skill !== skillToRemove));
   };
 
+  // Add skill on Enter
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -83,80 +106,150 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
     }
   };
 
+  // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Reset verification if email changes
+
     if (e.target.name === "email" && isEmailVerified) {
       setIsEmailVerified(false);
     }
   };
 
+  // Send OTP
   const handleSendOTP = () => {
-    if (formData.email && formData.email.includes("@")) {
-      setStep("otp");
-      // Simulate sending OTP to email
-      console.log("OTP sent to " + formData.email);
+    if (!formData.email.includes("@")) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setStep("otp");
+  };
+
+  // Submit form
+  const submit = async () => {
+    try {
+      if (!files.resume || files.resume.size === 0) {
+        toast({
+          title: "Resume Required",
+          description: "Please upload your resume before signing up.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const formDataToSend = new FormData();
+
+      // Append text fields
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("password", formData.password);
+      formDataToSend.append(
+        "phoneNumber",
+        `+63${formData.phoneNumber}`
+      );
+      formDataToSend.append("role", "worker");
+      formDataToSend.append("skill", formData.skill);
+
+      // Append skills
+      skills.forEach((skill) => {
+        formDataToSend.append("skills", skill);
+      });
+
+      // Optional photo
+      if (files.photo) {
+        formDataToSend.append("photo", files.photo);
+      }
+
+      // Required resume
+      formDataToSend.append("resume", files.resume);
+
+      const response = await axios.post(
+        "http://localhost:8920/api/auth/worker/register",
+        formDataToSend,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      toast({
+        title: "Success",
+        description: response.data.message,
+      });
+
+      onClose();
+    } catch (error: any) {
+      if (error.response) {
+        toast({
+          title: "Registration Failed",
+          description: error.response.data.message,
+          variant: "destructive",
+        });
+      } else if (error.request) {
+        toast({
+          title: "Server Error",
+          description: "No response from the server.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     }
   };
 
-  const submit = async () => {
-    await axios.post("http://localhost:8920/api/auth/worker/register", {
-      ...formData, skills, phoneNumber: `+63${formData.phoneNumber}`, files: {
-        photo: files.photo,
-        resume: files.resume
-      }
-    }, { withCredentials: true })
-      .then((response) => {
-        alert(response.data.message)
-        navigate("/worker-dashboard");
-      })
-      .catch((error) => {
-        if (error.response) {
-          alert(error.response.data.message)
-        } else if (error.request) {
-          alert(error.request)
-        } else {
-          alert("Error: " + error.message)
-        }
-      })
-  }
-
-  const skillCategoryOptions = [
-    { value: "communication", label: "Communication" },
-    { value: "leadership", label: "Leadership" },
-    { value: "critical-thinking", label: "Critical Thinking" },
-    { value: "data-analysis", label: "Data Analysis" },
-    { value: "technical-proficiency", label: "Technical Proficiency" },
-  ];
-
+  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isEmailVerified) {
-      alert("Please verify your email first");
+      toast({
+        title: "Email Not Verified",
+        description: "Please verify your email first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!files.resume) {
+      toast({
+        title: "Resume Required",
+        description: "Please upload your resume before signing up.",
+        variant: "destructive",
+      });
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match.",
+        variant: "destructive",
+      });
       return;
     }
 
     submit();
-    console.log("Worker signup:", { ...formData, files });
-    
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Profile Photo Upload */}
-      <FileUpload
-        label="Profile Photo"
+      {/* <FileUpload
+        label="Profile Photo (Optional)"
         accept="image/*"
-        onChange={(file) => setFiles({ ...files, photo: file })}
-        helpText="Upload a clear photo of yourself"
-        type="image"
-      />
+        file={files.photo}
+        onChange={(file) =>
+          setFiles((prev) => ({ ...prev, photo: file }))
+        }
+      /> */}
 
       {/* Name */}
       <div className="space-y-2">
@@ -174,40 +267,52 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
 
       {/* Email with OTP */}
       <div className="space-y-3">
-        <div className="space-y-2">
-          <Label htmlFor="worker-email">Email</Label>
-          <Input
-            id="worker-email"
-            name="email"
-            type="email"
-            placeholder="Enter your email address"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            disabled={isEmailVerified}
-          />
-        </div>
-        
-        {step === "form" && formData.email.includes("@") && !isEmailVerified && (
-          <Button type="button" variant="secondary" onClick={handleSendOTP} className="w-full">
+        <Label htmlFor="worker-email">Email</Label>
+        <Input
+          id="worker-email"
+          name="email"
+          type="email"
+          placeholder="Enter your email address"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          disabled={isEmailVerified}
+        />
+
+        {!isEmailVerified && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleSendOTP}
+            className="w-full"
+          >
             Send OTP to Email
           </Button>
         )}
-        
+
         {step === "otp" && !isEmailVerified && (
           <OTPVerification
             email={formData.email}
             onVerified={() => {
               setIsEmailVerified(true);
               setStep("form");
+              toast({
+                title: "Email Verified",
+                description: "Your email has been successfully verified.",
+              });
             }}
-            onResend={() => console.log("OTP resent to " + formData.email)}
+            onResend={() =>
+              toast({
+                title: "OTP Resent",
+                description: `A new OTP has been sent to ${formData.email}.`,
+              })
+            }
           />
         )}
-        
+
         {isEmailVerified && (
-          <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
-            <span className="text-sm text-primary">✓ Email verified</span>
+          <div className="text-sm text-green-600 font-medium">
+            ✓ Email verified
           </div>
         )}
       </div>
@@ -229,99 +334,120 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2"
           >
-            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {showPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
           </button>
         </div>
       </div>
 
       {/* Confirm Password */}
       <div className="space-y-2">
-        <Label htmlFor="worker-confirm-password">Confirm Password</Label>
-        <div className="relative">
-          <Input
-            id="worker-confirm-password"
-            name="confirmPassword"
-            type={showPassword ? "text" : "password"}
-            placeholder="Confirm your password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            className="pr-10"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        </div>
+        <Label htmlFor="worker-confirm-password">
+          Confirm Password
+        </Label>
+        <Input
+          id="worker-confirm-password"
+          name="confirmPassword"
+          type={showPassword ? "text" : "password"}
+          placeholder="Confirm your password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+        />
       </div>
 
       {/* Phone Number */}
       <PhoneInput
         value={formData.phoneNumber}
-        onChange={(value) => setFormData({ ...formData, phoneNumber: value })}
+        onChange={(value) =>
+          setFormData({ ...formData, phoneNumber: value })
+        }
       />
 
+      {/* Skill Category */}
       <div className="space-y-2">
-                <Label htmlFor="skillCategory">Skill Category</Label>
-                <Select
-                  value={formData.skillCategory}
-                  onValueChange={(value) => setFormData({ ...formData, skillCategory: value })}
-                >
-                  <SelectTrigger id="skillCategory">
-                    <SelectValue placeholder="Select a skill category" />
-                  </SelectTrigger>
-                  <SelectContent defaultValue={"Choose a Skill Category"}>
-                    {skillCategoryOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <Label htmlFor="skill">Skill Category</Label>
+        <Select
+          value={formData.skill}
+          onValueChange={(value) =>
+            setFormData({ ...formData, skill: value })
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a skill category" />
+          </SelectTrigger>
+          <SelectContent>
+            {skillCategoryOptions.map((option) => (
+              <SelectItem key={option.title} value={option.title}>
+                {option.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-
-
+      {/* Skills */}
       <div className="space-y-2">
-          <Label htmlFor="skills">Add Skills</Label>
-          <div className="flex gap-2">
-            <Input
-              id="skills"
-              placeholder="e.g., Physical Labor, No Experience Needed"
-              value={skillInput}
-              onChange={(e) => setSkillInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            <Button type="button" variant="outline" size="icon" onClick={handleAddSkill}>
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-          {skills.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {skills.map((tag) => (
-                <Badge key={tag} variant="secondary" className="gap-1">
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSkill(tag)}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
+        <Label>Add Skills</Label>
+        <div className="flex gap-2">
+          <Input
+            placeholder="e.g., Carpentry"
+            value={skillInput}
+            onChange={(e) => setSkillInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={handleAddSkill}
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
         </div>
 
-        <Button type="submit" className="w-full" size="lg" disabled={!isEmailVerified}>
-          Sign Up as Worker
-        </Button>
+        {skills.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {skills.map((tag) => (
+              <Badge key={tag} variant="secondary" className="gap-1">
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSkill(tag)}
+                  className="ml-1"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <FileUpload
+        label="Resume *"
+        accept=".pdf,.doc,.docx"
+        file={files.resume}
+        onChange={(file) =>
+          setFiles((prev) => ({ ...prev, resume: file }))
+        }
+        helpText="Upload your resume in PDF, DOC, or DOCX format."
+      />
+
+      {/* Submit Button */}
+      <Button
+        type="submit"
+        className="w-full"
+        size="lg"
+        disabled={!isEmailVerified || !files.resume}
+      >
+        Sign Up as Worker
+      </Button>
     </form>
   );
 };

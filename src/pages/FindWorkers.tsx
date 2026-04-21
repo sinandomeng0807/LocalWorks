@@ -20,6 +20,7 @@ import AuthPromptModal from "@/components/AuthPromptModal";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import ModalContact from "@/components/employer/ModalContact";
+import { Mail } from "lucide-react";
 
 const FindWorkers = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,6 +31,7 @@ const FindWorkers = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [signUpOpen, setSignUpOpen] = useState(false);
   const [ModalContactOpen, setModalContactOpen] = useState(false);
+  const [Worker, SetWorker] = useState(null)
 
   const DisplayWorkers = async () => {
     const result = await axios.get("http://localhost:8920/api/auth/workers")
@@ -37,7 +39,7 @@ const FindWorkers = () => {
   }
 
   const isLogged = async () => {
-      const result = await axios.get("http://localhost:8920/api/pro/isUserLoggedEmployer", { withCredentials: true })
+      const result = await axios.get("http://localhost:8920/api/pro/isEmployerLogged", { withCredentials: true })
       if (!result.data) {
         setIsLoggedIn(
           false
@@ -56,24 +58,31 @@ const FindWorkers = () => {
     queryFn: DisplayWorkers
   })
 
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>Error: {error.message}</div>
+  
+  const styleCenter = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    margin: "40px"
+  }
+
+  if (isLoading) return <div style={styleCenter}>Loading...</div>
+  if (error) return <div style={styleCenter}>Error: {error.message}</div>
 
   const { Workers } = data
 
   const filteredWorkers = Workers.filter((worker) => {
-    const matchesSearch = worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      worker.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      worker.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = worker.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLocation = !location || worker.location.toLowerCase().includes(location.toLowerCase());
     const matchesSkill = !skill || skill === "all" || worker.skills.some(s => s.toLowerCase().includes(skill.toLowerCase()));
     return matchesSearch && matchesLocation && matchesSkill;
   });
 
-  const handleHire = () => {
+  const contactNow = (worker) => {
     if (!isLoggedIn) {
       setAuthPromptOpen(true);
     } else {
+      SetWorker(worker)
       setModalContactOpen(true);
     }
 
@@ -98,6 +107,12 @@ const FindWorkers = () => {
     setSignUpOpen(false);
     setLoginOpen(true);
   };
+
+  const styleContactBtn = {
+    width: "99.1%",
+    marginTop: "21px"
+  }
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -165,7 +180,7 @@ const FindWorkers = () => {
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {!Workers.length ? <div>No Workers</div> : Workers.map((worker) => (
+            {!filteredWorkers.length ? <div>No Workers</div> : filteredWorkers.map((worker) => (
               <Card key={worker._id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-2">
                   <div className="flex items-start gap-4">
@@ -228,12 +243,13 @@ const FindWorkers = () => {
                     >
                       {worker.availability}
                     </Badge>
-                    <Button size="sm" onClick={handleHire}>
-                      Hire Now
-                    </Button>
                   </div>
+                  <Button style={styleContactBtn} onClick={() => contactNow(worker._id)} className="flex-1 gap-2" size="sm">
+                        <Mail className="w-4 h-4" />
+                        Contact
+                      </Button>
                 </CardContent>
-                <ModalContact open={ModalContactOpen} onOpenChange={setModalContactOpen} worker={worker._id} />
+                
               </Card>
             ))}
           </div>
@@ -256,6 +272,7 @@ const FindWorkers = () => {
         onSignUp={handleChooseSignUp}
         action="hire"
       />
+      <ModalContact open={ModalContactOpen} onOpenChange={setModalContactOpen} worker={Worker} />
       <LoginModal 
         open={loginOpen} 
         onOpenChange={setLoginOpen} 

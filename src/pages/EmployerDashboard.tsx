@@ -7,9 +7,39 @@ import CompanyProfile from "@/components/employer/CompanyProfile";
 import WorkerApplications from "@/components/employer/WorkerApplications";
 import BrowseWorkers from "@/components/employer/BrowseWorkers";
 import PostJobModal from "@/components/employer/PostJobModal";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import axios from "axios";
+
+axios.defaults.withCredentials = true
 
 const EmployerDashboard = () => {
+  const navigate = useNavigate()
   const [postJobOpen, setPostJobOpen] = useState(false);
+
+  const isEmployerLogged = async () => {
+    const result = await axios.get("http://localhost:8920/api/pro/isEmployerLogged", { withCredentials: true })
+    return result.data
+  }
+
+  const { isLoading, error } = useQuery({
+    queryKey: ['isEmployerLogged'],
+    queryFn: isEmployerLogged
+  })
+  
+  const styleCenter = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    margin: "40px"
+  }
+
+  if (isLoading) return <div style={styleCenter}>Loading...</div>
+  if (error) {
+    navigate("/", { replace: true })
+    toast.info("Please Login as Employer to use the Employer Dashboard.")
+  }
 
   return (
     <div className="min-h-screen bg-background">

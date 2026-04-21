@@ -15,16 +15,18 @@ const COLORS = [
 ];
 
 interface CategoryDetailsProps {
-  jobs: Job[];
+  workers: any[]; // replace with your Worker type if you have one
 }
 
-const CategoryDetails = ({ jobs }: CategoryDetailsProps) => {
+const CategoryDetails = ({ workers }: CategoryDetailsProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const tagCounts: Record<string, number> = {};
-  jobs.forEach((j) => {
-    const category = j.tags?.[0] || j.type;
-    tagCounts[category] = (tagCounts[category] || 0) + 1;
+
+  workers.forEach((w) => {
+    w.skills?.forEach((skill: string) => {
+      tagCounts[skill] = (tagCounts[skill] || 0) + 1;
+    });
   });
 
   const categories = Object.entries(tagCounts)
@@ -42,7 +44,9 @@ const CategoryDetails = ({ jobs }: CategoryDetailsProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-base font-semibold">Category Details</CardTitle>
-                <p className="text-sm text-muted-foreground mt-0.5">Detailed breakdown of job categories</p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                    Detailed breakdown of worker categories
+                  </p>
               </div>
               <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </div>

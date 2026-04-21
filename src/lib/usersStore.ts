@@ -1,19 +1,27 @@
 import { create } from 'zustand';
 
 export interface UserProfile {
+  _id?: string;
   id: number;
   name: string;
   email: string;
   phone: string;
+  phoneNumber?: string;
   location: string;
   role: "worker" | "employer";
   status: "active" | "not_active" | "pending";
   photoUrl: string | null;
+  photo?: string;
   resumeUrl: string | null;       // workers
+  resume?: string;
   permitUrl: string | null;       // employers
+  permit?: string;
   skills?: string;
+  skillCategory?: string;
   companyName?: string;
+  company?: string;
   industry?: string;
+  skill?: string;
   reportsSubmitted: number;
   createdAt: string;
 }

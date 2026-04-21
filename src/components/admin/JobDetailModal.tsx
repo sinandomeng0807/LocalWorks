@@ -1,34 +1,103 @@
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, XCircle, Trash2, MapPin, DollarSign, Clock, Building2, Mail, Phone } from "lucide-react";
-import { Job } from "@/lib/jobsStore";
+import {
+  CheckCircle,
+  XCircle,
+  Trash2,
+  MapPin,
+  DollarSign,
+  Clock,
+  Building2,
+  Mail,
+  Phone,
+} from "lucide-react";
+import { useJobsStore, Job } from "@/lib/jobsStore";
+import { toast } from "sonner";
+import axios from "axios";
+import { useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface JobDetailModalProps {
   job: Job | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdateStatus: (id: number, status: "accepted" | "rejected") => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }
 
-const JobDetailModal = ({ job, open, onOpenChange, onUpdateStatus, onDelete }: JobDetailModalProps) => {
+const JobDetailModal = ({
+  job,
+  open,
+  onOpenChange,
+  onDelete,
+}: JobDetailModalProps) => {
+  const isUpdatingRef = useRef(false);
+  const queryClient = useQueryClient();
+
   if (!job) return null;
+
+  const updateStatus = async (
+    _id: string,
+    newStatus: "ACCEPTED" | "DECLINED" | "DELETED"
+  ) => {
+    if (isUpdatingRef.current) return;
+    isUpdatingRef.current = true;
+
+    try {
+      const response = await axios.put(
+        `http://localhost:8920/api/admin/updateJob/${_id}`,
+        { newStatus },
+        { withCredentials: true }
+      );
+
+      toast.success(response.data.message);
+
+      // ✅ THIS triggers refetch of data.JOBS
+      await queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
+
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Request failed");
+    } finally {
+      isUpdatingRef.current = false;
+    }
+  };
 
   const getStatusBadge = (status?: string) => {
     switch (status) {
-      case "accepted":
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Accepted</Badge>;
-      case "rejected":
-        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Declined</Badge>;
+      case "ACCEPTED":
+        return (
+          <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+            Accepted
+          </Badge>
+        );
+      case "DECLINED":
+        return (
+          <Badge className="bg-destructive/10 text-destructive border-destructive/20">
+            Declined
+          </Badge>
+        );
       default:
-        return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">Pending</Badge>;
+        return (
+          <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+            Pending
+          </Badge>
+        );
     }
   };
+
+  const locationText =
+    typeof job.location === "string"
+      ? job.location
+      : job.location?.name || "N/A";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,37 +116,30 @@ const JobDetailModal = ({ job, open, onOpenChange, onUpdateStatus, onDelete }: J
 
         <ScrollArea className="max-h-[55vh] px-6">
           <div className="space-y-5 pb-4">
-            {/* Quick info */}
+            {/* Quick Info */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4 text-primary" /> {job.location}
+                <MapPin className="w-4 h-4 text-primary" />
+                {locationText}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <DollarSign className="w-4 h-4 text-primary" /> {job.salary}
+                <DollarSign className="w-4 h-4 text-primary" />
+                {job.salary || "N/A"}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="w-4 h-4 text-primary" /> {job.type}
+                <Clock className="w-4 h-4 text-primary" />
+                {job.type || "N/A"}
               </div>
             </div>
 
             <Separator />
 
-            {/* Tags */}
-            {job.tags && job.tags.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold">Tags</h4>
-                <div className="flex flex-wrap gap-2">
-                  {job.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Description */}
             <div className="space-y-2">
               <h4 className="text-sm font-semibold">Description</h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">{job.description}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {job.description || "No description available."}
+              </p>
             </div>
 
             {/* Requirements */}
@@ -85,7 +147,9 @@ const JobDetailModal = ({ job, open, onOpenChange, onUpdateStatus, onDelete }: J
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">Requirements</h4>
                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                  {job.requirements.map((req, i) => <li key={i}>{req}</li>)}
+                  {job.requirements.map((req, i) => (
+                    <li key={i}>{req}</li>
+                  ))}
                 </ul>
               </div>
             )}
@@ -95,7 +159,9 @@ const JobDetailModal = ({ job, open, onOpenChange, onUpdateStatus, onDelete }: J
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">Benefits</h4>
                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                  {job.benefits.map((b, i) => <li key={i}>{b}</li>)}
+                  {job.benefits.map((b, i) => (
+                    <li key={i}>{b}</li>
+                  ))}
                 </ul>
               </div>
             )}
@@ -118,39 +184,40 @@ const JobDetailModal = ({ job, open, onOpenChange, onUpdateStatus, onDelete }: J
                 </div>
               </div>
             )}
-
-            <Separator />
-
-            <p className="text-xs text-muted-foreground">Posted: {job.posted}</p>
           </div>
         </ScrollArea>
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-2 p-6 pt-2 border-t border-border">
-          {job.status !== "accepted" && (
+          {job.status !== "ACCEPTED" && (
             <Button
               size="sm"
               className="bg-green-600 hover:bg-green-700 text-white gap-1.5"
-              onClick={() => { onUpdateStatus(job.id, "accepted"); onOpenChange(false); }}
+              onClick={() => updateStatus(job._id, "ACCEPTED")}
             >
               <CheckCircle className="w-4 h-4" /> Accept
             </Button>
           )}
-          {job.status !== "rejected" && (
+
+          {job.status !== "DECLINED" && (
             <Button
               size="sm"
               variant="outline"
               className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1.5"
-              onClick={() => { onUpdateStatus(job.id, "rejected"); onOpenChange(false); }}
+              onClick={() => updateStatus(job._id, "DECLINED")}
             >
               <XCircle className="w-4 h-4" /> Decline
             </Button>
           )}
+
           <Button
             size="sm"
             variant="destructive"
             className="gap-1.5"
-            onClick={() => { onDelete(job.id); onOpenChange(false); }}
+            onClick={() => {
+              updateStatus(job._id, "DELETED")
+              onOpenChange(false);
+            }}
           >
             <Trash2 className="w-4 h-4" /> Delete
           </Button>

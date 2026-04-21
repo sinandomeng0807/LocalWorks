@@ -15,6 +15,8 @@ import {
 import FileUpload from "./FileUpload";
 import OTPVerification from "./OTPVerification";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
 
 interface EmployerSignUpFormProps {
   onClose: () => void;
@@ -22,6 +24,8 @@ interface EmployerSignUpFormProps {
 
 const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+
   const [step, setStep] = useState<"form" | "otp">("form");
   const [showPassword, setShowPassword] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -41,32 +45,78 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
     permit: null,
   });
 
-  const Register = async () => {
-    await axios.post("http://localhost:8920/api/auth/employer/register", {
-      company: formData.companyName,
-      email: formData.email,
-      password: formData.password,
-      phone: `+63${formData.phone}`,
-      industry: formData.industry
-    })
-      .then(function (response: any) {
-        alert(response.data.message)
-        navigate("/employer-dashboard");
+const Register = async () => {
+  try {
+    if (!files.permit || files.permit.size === 0) {
+      toast({
+        title: "No Business Permit Included",
+        description: "Please enter a valid business permit",
+        variant: "destructive"
       })
-      .catch(function (error: any) {
-        if (error.response) {
-          alert(error.response.data.message)
-        }
+      return;
+    }
+
+    const formDataToSend = new FormData();
+
+    formDataToSend.append("company", formData.companyName);
+    formDataToSend.append("email", formData.email);
+    formDataToSend.append("password", formData.password);
+    formDataToSend.append("phone", `+63${formData.phone}`);
+    formDataToSend.append("industry", formData.industry);
+    formDataToSend.append("role", "employer");
+
+    // ONLY file (permit)
+    formDataToSend.append("permit", files.permit);
+
+    const response = await axios.post(
+      "http://localhost:8920/api/auth/employer/register",
+      formDataToSend,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    toast({
+      title: "Success",
+      description: response.data.message
+    });
+
+    onClose()
+  } catch (error: any) {
+    if (error.response) {
+      toast({
+        title: "An error occured",
+        description: error.response.data.message,
+        variant: "destructive"
       })
+    } else {
+      
+      toast({
+        title: "An error occured",
+        description: error.message,
+        variant: "destructive"
+      })
+    }
+  }
+};
+
+  const IndustryInfo = async () => {
+    const result = await axios.get("http://localhost:8920/api/auth/dropdown", { withCredentials: true })
+    return result.data
   }
 
-  const industryOptions = [
-    { value: "technology", label: "Technology" },
-    { value: "manufacturing", label: "Manufacturing" },
-    { value: "healthcare", label: "Healthcare" },
-    { value: "finance", label: "Finance" },
-    { value: "agriculture", label: "Agriculture" },
-  ];
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['IndustryInformation'],
+    queryFn: IndustryInfo
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  const industryOptions = data.Industries;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -88,12 +138,22 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
     e.preventDefault();
     
     if (!isEmailVerified) {
-      alert("Please verify your email first");
+      
+      toast({
+        title: "An error occured",
+        description: "Please verify your email first",
+        variant: "destructive"
+      })
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match",
+        variant: "destructive"
+      })
       return;
     }
 
@@ -223,8 +283,8 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
           </SelectTrigger>
           <SelectContent defaultValue={"Choose an industry"}>
             {industryOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
+              <SelectItem key={option.title} value={option._id}>
+                {option.title}
               </SelectItem>
             ))}
           </SelectContent>
@@ -233,12 +293,15 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
 
       {/* Business Permit Upload */}
       <FileUpload
-        label="Business/Company Permit"
-        accept="image/*,.pdf"
-        onChange={(file) => setFiles({ ...files, permit: file })}
-        helpText="Upload a photo or scan of your business permit"
-        type="image"
-      />
+      label="Business/Company Permit"
+      accept="image/*,.pdf"
+      file={files.permit}   // ✅ REQUIRED
+      onChange={(file) =>
+        setFiles((prev) => ({ ...prev, permit: file }))
+      }
+      helpText="Upload a photo or scan of your business permit"
+      type="image"
+    />
 
       <Button type="submit" className="w-full" size="lg" disabled={!isEmailVerified}>
         Sign Up as Employer

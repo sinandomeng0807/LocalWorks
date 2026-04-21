@@ -84,6 +84,14 @@ const getStatusBadge = (status: string) => {
   }
 };
 
+const UTC_Converter = (createdAt) => {
+  const splitDateAndTime = createdAt.split("T")
+  const date = splitDateAndTime[0].split("-")
+  const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "June", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  
+  return months[Number(date[1])] + " " + date[1+1] + ", " + date[0]
+}
+
 const MyApplications = () => {
   const [applications, setApplications] = useState<Application[]>(initialApplications);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
@@ -176,7 +184,7 @@ const MyApplications = () => {
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  Applied: {application.createdAt}
+                  Applied: {UTC_Converter(application.createdAt)}
                 </span>
                 <span className="font-medium text-foreground">
                   {application.job.salary}
