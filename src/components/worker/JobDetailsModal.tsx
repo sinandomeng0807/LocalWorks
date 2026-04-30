@@ -23,9 +23,7 @@ interface Job {
     id: string;
     title: string;
     company: string;
-    location: {
-      name: string
-    };
+    location: string;
     salary: string;
     type: string;
     posted: {
@@ -92,7 +90,7 @@ const JobDetailsModal = ({
           <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              {extendedJob.info.location.name}
+              {extendedJob.info.location}
             </div>
             <div className="flex items-center gap-1">
               <DollarSign className="w-4 h-4" />

@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Phone, Mail, Briefcase, Calendar } from "lucide-react";
@@ -52,7 +52,7 @@ const WorkerProfile = ({ onEdit }: WorkerProfileProps) => {
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-start gap-6">
             <Avatar className="w-24 h-24">
-              <AvatarImage src="" />
+              <AvatarImage src={`http://localhost:8920${WorkerProf.photo}`} />
               <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                 {WorkerProf.name.split(" ").map(n => n[0]).join("")}
               </AvatarFallback>

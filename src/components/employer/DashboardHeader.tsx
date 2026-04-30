@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import EditProfileModal from "./EditProfileModal";
 import { useState } from "react"
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 axios.defaults.withCredentials = true
@@ -48,6 +49,19 @@ const DashboardHeader = () => {
       })
   }
 
+  const employer = async () => {
+    const result = await axios.get("http://localhost:8920/api/pro/employer/information")
+    return result.data
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['employer'],
+    queryFn: employer
+  })
+
+  const profile = data?.EmployerProf?.profile;
+  const email = data?.EmployerProf?.email;
+
   return (
     <header className="border-b border-border bg-card sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -62,12 +76,21 @@ const DashboardHeader = () => {
           <DropdownMenuTrigger className="focus:outline-none">
             <div className="flex flex-col items-center gap-1 cursor-pointer">
               <Avatar className="h-10 w-10">
-                <AvatarImage src="" alt="Employer" />
+                {profile && (
+                  <AvatarImage
+                    src={`http://localhost:8920${profile}`}
+                    alt="Employer"
+                  />
+                )}
+
                 <AvatarFallback className="bg-primary text-primary-foreground">
-                  <UserCircle className="h-6 w-6" />
+                  {email
+                    ? email.split("@")[0].slice(0, 2).toUpperCase()
+                    : <UserCircle className="h-6 w-6" />
+                  }
                 </AvatarFallback>
               </Avatar>
-              <span className="text-xs text-muted-foreground">Employer</span>
+              <span className="text-xs text-muted-foreground">{email}</span>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">

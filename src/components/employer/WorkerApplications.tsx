@@ -181,6 +181,8 @@ const WorkerApplications = () => {
       setConfirmDialog({ open: false, type: "accept", application: null });
       setDateInput("");
       refetch()
+
+      queryClient.invalidateQueries({ queryKey: ['CompanyInfo'] })
     },
     onError: (error: any) => {
       toast.error(
@@ -482,7 +484,7 @@ const ApplicationSection = ({
             <CardHeader className="pb-2">
               <div className="flex items-start gap-4">
                 <Avatar className="w-14 h-14">
-                  <AvatarImage src={application.worker.photo} />
+                  <AvatarImage src={`http://localhost:8920${application.worker.photo}`} />
                   <AvatarFallback className="bg-primary/10 text-primary">
                     {getInitials(application.worker.name)}
                   </AvatarFallback>

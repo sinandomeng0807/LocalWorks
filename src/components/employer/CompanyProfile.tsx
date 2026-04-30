@@ -30,8 +30,6 @@ const CompanyProfile = () => {
 
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>Error: {error.message}</div>
-  
-  const CompanyProfile = data
 
   const styles = {
     cursor: "pointer"
@@ -43,19 +41,19 @@ const CompanyProfile = () => {
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
             <Avatar className="w-20 h-20">
-              <AvatarImage src={CompanyProfile.EmployerInformation.logo} />
+              <AvatarImage src={data.CompanyInformation.photo} />
               <AvatarFallback className="bg-primary/10 text-primary text-2xl">
-                {CompanyProfile.EmployerInformation.company.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                {data.CompanyInformation.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-2xl">{CompanyProfile.EmployerInformation.company}</CardTitle>
+              <CardTitle className="text-2xl">{data.CompanyInformation.name}</CardTitle>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary">{CompanyProfile.EmployerInformation.industry.title}</Badge>
+                <Badge variant="secondary">{data.CompanyInformation.industry.title}</Badge>
               </div>
               <div className="flex items-center gap-2 mt-2 text-muted-foreground text-sm">
                 <MapPin className="w-4 h-4" />
-                {CompanyProfile.EmployerInformation.location}
+                {data.CompanyInformation.location}
               </div>
             </div>
           </div>
@@ -66,37 +64,37 @@ const CompanyProfile = () => {
         </div>
       </CardHeader>
       {<CardContent>
-        <p className="text-muted-foreground mb-6">{CompanyProfile.EmployerInformation.description}</p>
+        <p className="text-muted-foreground mb-6">{data.CompanyInformation.description}</p>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="flex items-center gap-2 text-sm">
             <Users className="w-4 h-4 text-muted-foreground" />
-            <span>{CompanyProfile.EmployerInformation.noOfEmployees} employees</span>
+            <span>{data.Employees} employees</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Briefcase className="w-4 h-4 text-muted-foreground" />
-            <span>{CompanyProfile.Jobs} open positions</span>
+            <span>{data.OpenPositionsLength} open positions</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Globe className="w-4 h-4 text-muted-foreground" />
-            <span>{CompanyProfile.EmployerInformation.website}</span>
+            <span>{data.CompanyInformation.website || "No Website Available"}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Mail className="w-4 h-4 text-muted-foreground" />
-            <span>{CompanyProfile.EmployerInformation.owner}</span>
+            <span>{data.CompanyInformation.owner || "No Owner"}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Card className="bg-primary/5 border-primary/20">
             <CardContent style={styles} onClick={() => navigate("/open-positions")} className="p-4 text-center">
-              <div className="text-3xl font-bold text-primary">{CompanyProfile.Jobs}</div>
+              <div className="text-3xl font-bold text-primary">{data.OpenPositionsLength}</div>
               <div className="text-sm text-muted-foreground">Open Positions</div>
             </CardContent>
           </Card>
           <Card className="bg-primary/5 border-primary/20">
             <CardContent style={styles} onClick={() => navigate("/total-applications")} className="p-4 text-center">
-              <div className="text-3xl font-bold text-primary">{CompanyProfile.TotalApplications}</div>
+              <div className="text-3xl font-bold text-primary">{data.TotalApplications}</div>
               <div className="text-sm text-muted-foreground">Total Applications</div>
             </CardContent>
           </Card>

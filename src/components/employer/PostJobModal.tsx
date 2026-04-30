@@ -62,18 +62,16 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
   /*                             Fetch Locations                                */
   /* -------------------------------------------------------------------------- */
   const fetchLocations = async () => {
-    const { data } = await axios.get(
-      "http://localhost:8920/api/pro/Locations"
-    );
+    const { data } = await axios.get("http://localhost:8920/api/pro/Locations", { withCredentials: true });
     return data;
   };
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["Locations"],
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["fetchLocations"],
     queryFn: fetchLocations,
   });
 
-  const locations: Location[] = data?.Locations || [];
+  const locations = data?.Locations || [];
 
   const fetchIndustries = async () => {
     const { data } = await axios.get("http://localhost:8920/api/pro/Industries");
@@ -263,16 +261,13 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                       placeholder={
                         isLoading
                           ? "Loading locations..."
-                          : "Select location"
+                          : error ? "Failed to load locations" : "Select location"
                       }
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {locations.map((location) => (
-                      <SelectItem
-                        key={location._id}
-                        value={location._id}
-                      >
+                    {locations.map((location: any) => (
+                      <SelectItem key={location._id} value={location.name}>
                         {location.name}
                       </SelectItem>
                     ))}

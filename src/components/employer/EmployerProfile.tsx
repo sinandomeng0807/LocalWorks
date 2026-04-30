@@ -22,7 +22,7 @@ const EmployerProfile = () => {
   }
 
   const { data, error, isLoading } = useQuery({
-    queryKey: ['profile'],
+    queryKey: ['profileEmployer'],
     queryFn: viewProfile
   })
 
@@ -46,9 +46,15 @@ const EmployerProfile = () => {
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-start gap-6">
             <Avatar className="w-24 h-24">
-              <AvatarImage src="" />
+              <AvatarImage src={`http://localhost:8920${EmployerProf.profile}` || ""} />
+
               <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                {EmployerProf.email}
+                {EmployerProf.email
+                  ? EmployerProf.email
+                      .split("@")[0]
+                      .slice(0, 2)
+                      .toUpperCase()
+                  : "EM"}
               </AvatarFallback>
             </Avatar>
             

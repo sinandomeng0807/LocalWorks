@@ -128,7 +128,33 @@ const AdminProfiles = () => {
                     {/* Header */}
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border-2 border-border shrink-0">
-                        <User className="w-6 h-6 text-muted-foreground" />
+                        {user.photo ?
+                          <div
+                            style={{
+                              width: 24,
+                              height: 24,
+                              borderRadius: "50%",
+                              overflow: "hidden",
+                              flex: "0 0 24px",
+                              position: "relative",
+                              display: "block",
+                            }}
+                          >
+                            <img
+                              src={`http://localhost:8920${user.photo}`}
+                              alt="User avatar"
+                              style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                display: "block",
+                              }}
+                            />
+                          </div>
+                        : <User className="w-6 h-6 text-muted-foreground" />}
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-sm text-foreground truncate">

@@ -38,9 +38,19 @@ const WorkerDashboard = () => {
     return result.data
   }
 
+  const viewProfile = async () => {
+    const result = await axios.get("http://localhost:8920/api/pro/worker/profile", { withCredentials: true })
+    return result.data
+  }
+
   const { isLoading, error } = useQuery({
     queryKey: ['isWorkerLogged'],
     queryFn: isWorkerLogged
+  })
+
+  const { data } = useQuery({
+    queryKey: ['profile'],
+    queryFn: viewProfile
   })
 
   const styleCenter = {
@@ -84,12 +94,12 @@ const WorkerDashboard = () => {
             <DropdownMenuTrigger className="focus:outline-none">
               <div className="flex flex-col items-center gap-1 cursor-pointer">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src="" alt="John" />
+                  <AvatarImage src={`http://localhost:8920${data?.WorkerProf?.photo}`} />
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     <UserCircle className="h-6 w-6" />
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-xs text-muted-foreground">John</span>
+                <span className="text-xs text-muted-foreground">{data?.WorkerProf?.name}</span>
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">

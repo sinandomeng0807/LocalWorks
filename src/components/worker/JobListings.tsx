@@ -21,6 +21,16 @@ import axios from "axios";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 axios.defaults.withCredentials = true;
 
+
+const UTC_Converter = (createdAt) => {
+  const splitDateAndTime = createdAt.split("T")
+  const date = splitDateAndTime[0].split("-")
+  const months = ["", "Jan", "Feb", "Mar", "Apr", "May", "June", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  
+  return months[Number(date[1])] + " " + date[1+1] + ", " + date[0]
+}
+
+
 const JobListings = () => {
   const queryClient = useQueryClient()
   const jobs = useJobsStore((state) => state.jobs);
@@ -69,7 +79,7 @@ const JobListings = () => {
   const addApplication = async (jobToApply: any) => {
     return axios.post("http://localhost:8920/api/pro/createApplication", {
       job: jobToApply.info._id,
-      location: jobToApply.info.location._id,
+      location: jobToApply.info.location,
     });
   };
 
@@ -150,14 +160,14 @@ const JobListings = () => {
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                   <span className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
-                    {job.info.location.name}
+                    {job.info.location}
                   </span>
                   <span className="flex items-center gap-1">
                     {job.info.salary}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    Posted: {job.info.posted.email}
+                    Posted: {UTC_Converter(job.info.createdAt)}
                   </span>
                 </div>
 

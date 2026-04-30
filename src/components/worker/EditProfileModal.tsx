@@ -22,6 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 axios.defaults.withCredentials = true
 
@@ -31,16 +33,18 @@ interface EditProfileModalProps {
 }
 
 const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
+  const queryClient = useQueryClient();
+
   const [formData, setFormData] = useState({
     name: "John Smith",
     email: "john.smith@email.com",
-    phone: "+1 (555) 123-4567",
+    phoneNumber: "+1 (555) 123-4567",
     location: "Metro City, State",
-    title: "Construction Worker",
-    experience: "5 years",
-    bio: "Experienced construction worker with expertise in commercial and residential projects. Skilled in operating heavy machinery, reading blueprints, and working with various materials.",
+    jobTitle: "Construction Worker",
+    yearsOfExperience: "5 years",
+    about_me: "Experienced construction worker with expertise in commercial and residential projects. Skilled in operating heavy machinery, reading blueprints, and working with various materials.",
     availability: "full-time",
-    expectedSalary: "$20-30/hr",
+    expected_salary: "$20-30/hr",
   });
 
   const [skills, setSkills] = useState([
@@ -52,27 +56,17 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
     "Safety Compliance",
   ]);
   const [newSkill, setNewSkill] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
 
   const ViewProfDetails = async () => {
     const result = await axios.get("http://localhost:8920/api/pro/worker/profile", { withCredentials: true })
-    const { data } = result
-    setSkills(data.WorkerProf.skills)
-    setFormData({
-      name: data.WorkerProf.name,
-      email: data.WorkerProf.email,
-      phone: data.WorkerProf.phoneNumber,
-      location: data.WorkerProf.location,
-      title: data.WorkerProf.skillCategory,
-      experience: data.WorkerProf.yearsOfExperience,
-      bio: data.WorkerProf.about_me,
-      availability: data.WorkerProf.availability,
-      expectedSalary: data.WorkerProf.expected_salary,
-    })
+
     return result.data
   }
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['ViewProfDetails'],
+    queryKey: ['profile'],
     queryFn: ViewProfDetails
   })
 
@@ -80,25 +74,77 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
     display: "none"
   }
 
+  useEffect(() => {
+    if (data?.WorkerProf) {
+      setSkills(data.WorkerProf.skills || []);
+      setFormData({
+        name: data.WorkerProf.name || "",
+        email: data.WorkerProf.email || "",
+        phoneNumber: data.WorkerProf.phoneNumber || "",
+        location: data.WorkerProf.location || "",
+        jobTitle: data.WorkerProf.jobTitle || "",
+        yearsOfExperience: data.WorkerProf.yearsOfExperience || "",
+        about_me: data.WorkerProf.about_me || "",
+        availability: data.WorkerProf.availability || "",
+        expected_salary: data.WorkerProf.expected_salary || "",
+      });
+    }
+  }, [data]);
+
   if (isLoading) return <div style={styleDisplay}>Loading...</div>
   if (error) return <div style={styleDisplay}>Error: {error.message}</div>
 
+  const UpdatePhoto = async () => {
+    if (!photo) return;
+
+    const formData = new FormData();
+    formData.append("photo", photo);
+
+    await axios.put(
+      "http://localhost:8920/api/pro/worker/upload-photo",
+      formData,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" }
+      }
+    );
+  };
+
   const UpdateProf = async () => {
-    await axios.put("http://localhost:8920/api/pro/worker/updateProfile", formData, { withCredentials: true })
-      .then(function (response) {
-        if (response.data) {
-          toast.success(response.data.message, {
-            description: "Your Profile has been successfully updated!"
-          })
-          onOpenChange(false)
-        }
-      })
-      .catch(function (error) {
-        if (error.response) {
-          toast.info(error.response.data.message)
-        }
-      })
-  }
+    try {
+      if (photo) {
+        await UpdatePhoto();
+      }
+
+      const payload = {
+        ...formData,
+        skills,
+        ...(formData.yearsOfExperience.trim() !== "" && {
+          yearsOfExperience: formData.yearsOfExperience.trim()
+        })
+      };
+
+      if (formData.yearsOfExperience.trim() === "") {
+        delete payload.yearsOfExperience;
+      }
+
+      const response = await axios.put(
+        "http://localhost:8920/api/pro/worker/updateProfile",
+        payload,
+        { withCredentials: true }
+      );
+
+      toast.success(response.data.message);
+
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      onOpenChange(false);
+
+    } catch (error: any) {
+      if (error.response) {
+        toast.info(error.response.data.message);
+      }
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -134,6 +180,42 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Profile Photo */}
+          <div className="space-y-2">
+            <Label>Profile Photo</Label>
+
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setPhoto(file);
+
+                if (file) {
+                  setPreview(URL.createObjectURL(file));
+                }
+              }}
+            />
+
+            {/* Existing photo from server */}
+            {!preview && data?.WorkerProf?.photo && (
+              <img
+                src={`http://localhost:8920${data.WorkerProf.photo}`}
+                className="w-20 h-20 rounded-full object-cover"
+                alt="profile"
+              />
+            )}
+
+            {/* New selected file preview */}
+            {preview && (
+              <img
+                src={preview}
+                className="w-20 h-20 rounded-full object-cover"
+                alt="preview"
+              />
+            )}
+          </div>
+
           {/* Basic Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -141,83 +223,73 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               <Input
                 id="name"
                 name="name"
-                defaultValue={data.WorkerProf.name}
+                value={formData.name}
                 onChange={handleChange}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="title">Job Title</Label>
-                  <Select
-                    defaultValue={data.WorkerProf.skillCategory}
-                    onValueChange={(value) => setFormData({ ...formData, title: value })}
-                  >
-                    <SelectTrigger id="company-name">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent defaultValue={"Choose a Skill Category"}>
-                      {!data.Skills.length ? "N/A" : data.Skills.map((skill: any) => <SelectItem value={skill._id}>{skill.title}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+              <Label htmlFor="jobTitle">Job Title</Label>
+                <Input
+                  id="jobTitle"
+                  name="jobTitle"
+                  value={formData.jobTitle}
+                  onChange={handleChange}
+                  placeholder="e.g. Construction Worker"
+                />
             </div>
           </div>
 
           {/* Contact Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="phoneNumber">Phone</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                defaultValue={data.WorkerProf.email}
+                id="phoneNumber"
+                name="phoneNumber"
+                value={formData.phoneNumber}
                 onChange={handleChange}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                name="phone"
-                defaultValue={data.WorkerProf.phoneNumber}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          {/* Location & Experience */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
                   <Select
-                    defaultValue={data.WorkerProf.location}
+                    value={formData.location}
                     onValueChange={(value) => setFormData({ ...formData, location: value })}
                   >
                     <SelectTrigger id="company-name">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent defaultValue={"Choose a Skill Category"}>
-                      {!data.Locations.length ? "N/A" : data.Locations.map((skill: any) => <SelectItem value={skill.name}>{skill.name}</SelectItem>)}
+                      {!data?.Locations?.length ? (
+                        <SelectItem value="N/A">N/A</SelectItem>
+                      ) : (
+                        data.Locations.map((skill: any) => (
+                          <SelectItem key={skill.name} value={skill.name}>
+                            {skill.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
             </div>
+          </div>
+
+          {/* Location & Experience */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="experience">Years of Experience</Label>
+              <Label htmlFor="yearsOfExperience">Years of Experience</Label>
               <Input
-                id="experience"
-                name="experience"
-                defaultValue={data.WorkerProf.yearsOfExperience}
+                id="yearsOfExperience"
+                name="yearsOfExperience"
+                value={formData.yearsOfExperience === "N/A" ? "" : formData.yearsOfExperience}
                 onChange={handleChange}
                 placeholder="e.g., 5 years"
               />
             </div>
-          </div>
-
-          {/* Availability & Salary */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Availability</Label>
               <Select
-                defaultValue={data.WorkerProf.availability}
+                value={formData.availability}
                 onValueChange={(value) =>
                   setFormData({ ...formData, availability: value })
                 }
@@ -233,12 +305,16 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Availability & Salary */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="expectedSalary">Expected Salary</Label>
+              <Label htmlFor="expected_salary">Expected Salary</Label>
               <Input
-                id="expectedSalary"
-                name="expectedSalary"
-                defaultValue={data.WorkerProf.salary}
+                id="expected_salary"
+                name="expected_salary"
+                value={formData.expected_salary === "N/A" ? "" : formData.expected_salary}
                 onChange={handleChange}
                 placeholder="e.g., $20-30/hr"
               />
@@ -247,11 +323,11 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
 
           {/* Bio */}
           <div className="space-y-2">
-            <Label htmlFor="bio">About Me</Label>
+            <Label htmlFor="about_me">About Me</Label>
             <Textarea
-              id="bio"
-              name="bio"
-              defaultValue={data.WorkerProf.about_me}
+              id="about_me"
+              name="about_me"
+              value={formData.about_me}
               onChange={handleChange}
               rows={4}
               placeholder="Tell employers about yourself, your experience, and what you're looking for..."
@@ -306,7 +382,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
           </div>
         </form>
       </DialogContent>
-    </Dialog>
+    </Dialog> 
   );
 };
 

@@ -32,6 +32,7 @@ interface WorkerFormData {
   confirmPassword: string;
   phoneNumber: string;
   skill: string;
+  jobTitle: string;
 }
 
 interface SkillCategory {
@@ -54,6 +55,7 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
     confirmPassword: "",
     phoneNumber: "",
     skill: "",
+    jobTitle: ""
   });
 
   const [files, setFiles] = useState<{
@@ -152,6 +154,7 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
       );
       formDataToSend.append("role", "worker");
       formDataToSend.append("skill", formData.skill);
+      formDataToSend.append("jobTitle", formData.jobTitle)
 
       // Append skills
       skills.forEach((skill) => {
@@ -368,6 +371,17 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
           setFormData({ ...formData, phoneNumber: value })
         }
       />
+
+      <div className="space-y-2">
+        <Label htmlFor="skill">Job Title</Label>
+        <Input
+          name="jobTitle"
+          placeholder="Enter your job title (e.g., Carpenter)"
+          value={formData.jobTitle}
+          onChange={handleChange}
+          required
+        />
+      </div>
 
       {/* Skill Category */}
       <div className="space-y-2">

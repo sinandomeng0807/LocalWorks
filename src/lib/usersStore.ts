@@ -24,6 +24,7 @@ export interface UserProfile {
   skill?: string;
   reportsSubmitted: number;
   createdAt: string;
+  jobTitle?: string;
 }
 
 const mockUsers: UserProfile[] = [

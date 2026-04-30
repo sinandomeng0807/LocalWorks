@@ -22,6 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 axios.defaults.withCredentials = true
 
@@ -31,6 +33,8 @@ interface EditProfileModalProps {
 }
 
 const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
+  const queryClient = useQueryClient();
+
   const [formData, setFormData] = useState({
     company: "",
     email: "",
@@ -38,43 +42,87 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
     industry: ""
   });
 
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+
   const ViewProfDetails = async () => {
-    const result = await axios.get("http://localhost:8920/api/pro/employer/information", { withCredentials: true })
-    const { data } = result
+    const result = await axios.get(
+      "http://localhost:8920/api/pro/employer/information",
+      { withCredentials: true }
+    );
+
+    const { data } = result;
+
     setFormData({
       company: data.EmployerProf.company,
       email: data.EmployerProf.email,
       phone: data.EmployerProf.phone,
       industry: data.EmployerProf.industry
-    })
-    return result.data
-  }
+    });
+
+    return data;
+  };
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['ViewProfDetails'],
+    queryKey: ["ViewProfDetails"],
     queryFn: ViewProfDetails
-  })
+  });
 
+  const currentProfile = data?.EmployerProf?.profile;
 
-  if (isLoading) return
-  if (error) return
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
+  if (isLoading) return null;
+  if (error) return null;
 
   const UpdateProf = async () => {
-    await axios.put("http://localhost:8920/api/pro/update/employer", formData, { withCredentials: true })
-      .then(function (response) {
-        if (response.data) {
-          toast.success(response.data.message, {
-            description: "Your Profile has been successfully updated!"
-          })
-          onOpenChange(false)
-        }
-      })
-      .catch(function (error) {
-        if (error.response) {
-          toast.info(error.response.data.message)
-        }
-      })
-  }
+    try {
+      // 1. upload photo if exists
+      if (profilePhoto) {
+        const photoForm = new FormData();
+        photoForm.append("photo", profilePhoto);
+
+        await axios.put(
+          "http://localhost:8920/api/pro/employer/upload-photo",
+          photoForm,
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+      }
+
+      // 2. update profile data (JSON request)
+      const response = await axios.put(
+        "http://localhost:8920/api/pro/update/employer",
+        {
+          company: formData.company,
+          email: formData.email,
+          phone: formData.phone,
+          industry: formData.industry,
+        },
+        { withCredentials: true }
+      );
+
+      await queryClient.invalidateQueries({ queryKey: ["profileEmployer"] });
+
+      toast.success(response.data.message, {
+        description: "Your Profile has been successfully updated!",
+      });
+
+      onOpenChange(false);
+    } catch (error: any) {
+      if (error.response) {
+        toast.info(error.response.data.message);
+      }
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -99,31 +147,50 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Profile Photo */}
+          <div className="space-y-2">
+            <Label htmlFor="photo">Profile Photo</Label>
+            <Input
+              id="photo"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  const file = e.target.files[0];
+                  setProfilePhoto(file);
+                  setPreview(URL.createObjectURL(file));
+                }
+              }}
+            />
+
+            {(preview || currentProfile) && (
+              <div className="flex flex-col items-center gap-2">
+                <img
+                  src={
+                    preview
+                      ? preview
+                      : currentProfile
+                      ? `http://localhost:8920${currentProfile}`
+                      : undefined
+                  }
+                  alt="profile preview"
+                  className="w-24 h-24 rounded-full object-cover"
+                />
+              </div>
+            )}
+          </div>
+
           {/* Basic Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Company</Label>
               <Input
-                id="name"
-                name="name"
+                id="company"
+                name="company"
                 defaultValue={data.EmployerProf.company}
                 onChange={handleChange}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                defaultValue={data.EmployerProf.email}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          {/* Contact Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
               <Input
@@ -133,6 +200,10 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
                 onChange={handleChange}
               />
             </div>
+          </div>
+
+          {/* Contact Info */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="industry">Industry</Label>
                   <Select
@@ -142,8 +213,12 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
                     <SelectTrigger id="industry">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent defaultValue={"Choose a Skill Category"}>
-                      {!data.Industries ? "N/A" : data.Industries.map((skill: any) => <SelectItem value={skill._id}>{skill.title}</SelectItem>)}
+                    <SelectContent>
+                      {data?.Industries?.map((skill: any) => (
+                        <SelectItem key={skill._id} value={skill._id}>
+                          {skill.title}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
             </div>

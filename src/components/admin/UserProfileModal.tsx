@@ -99,12 +99,38 @@ const UserProfileModal = ({ user, open, onOpenChange }: UserProfileModalProps) =
           {/* Avatar + Name */}
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center border-2 border-border">
-              <User className="w-8 h-8 text-muted-foreground" />
+              {user.photo ?
+                          <div
+                            style={{
+                              width: 24,
+                              height: 24,
+                              borderRadius: "50%",
+                              overflow: "hidden",
+                              flex: "0 0 24px",
+                              position: "relative",
+                              display: "block",
+                            }}
+                          >
+                            <img
+                              src={`http://localhost:8920${user.photo}`}
+                              alt="User avatar"
+                              style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                display: "block",
+                              }}
+                            />
+                          </div>
+                        : <User className="w-8 h-8 text-muted-foreground" />}
             </div>
 
             <div>
               <h3 className="font-semibold text-foreground">{user.email}</h3>
-              <p className="text-sm text-muted-foreground">{user.skillCategory || user.company}</p>
+              <p className="text-sm text-muted-foreground">{user.jobTitle || user.company}</p>
 
               <div className="flex gap-2 mt-1">
                 <Badge variant="outline" className="text-xs capitalize">

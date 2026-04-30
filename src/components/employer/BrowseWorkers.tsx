@@ -98,6 +98,7 @@ const BrowseWorkers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredWorkers, setFilteredWorkers] = useState([]);
   const [modalContact, setModalContact] = useState(false);
+  const [worker, setWorker] = useState(null);
 
   const BrowseWorkersAx = async () => {
     const { data } = await axios.get("http://localhost:8920/api/pro/viewWorkers", { withCredentials: true })
@@ -161,7 +162,7 @@ const BrowseWorkers = () => {
             <CardHeader className="pb-2">
               <div className="flex items-start gap-4">
                 <Avatar className="w-16 h-16">
-                  <AvatarImage src={worker.photo} />
+                  <AvatarImage src={`http://localhost:8920${worker.photo}`} />
                   <AvatarFallback className="bg-primary/10 text-primary text-lg">
                     {getInitials(worker.name)}
                   </AvatarFallback>
@@ -201,17 +202,18 @@ const BrowseWorkers = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={() => setModalContact(true)} className="flex-1 gap-2" size="sm">
+                <Button onClick={() => { setModalContact(true); setWorker(worker._id) }} className="flex-1 gap-2" size="sm">
                   <Mail className="w-4 h-4" />
                   Contact
                 </Button>
                
               </div>
             </CardContent>
-            <ModalContact open={modalContact} onOpenChange={setModalContact} worker={worker._id} />
           </Card>
         ))}
       </div>
+
+      <ModalContact open={modalContact} onOpenChange={setModalContact} worker={worker} />
 
       {filteredWorkers.length === 0 && (
         <div className="text-center py-12">
