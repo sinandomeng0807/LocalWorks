@@ -39,33 +39,179 @@ const JobListings = () => {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [confirmApplyOpen, setConfirmApplyOpen] = useState(false);
   const [jobToApply, setJobToApply] = useState(null);
+  const [lowMatchWarningOpen, setLowMatchWarningOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedMatchFilter, setSelectedMatchFilter] = useState("all");
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState("all");
+  const [selectedAppliedFilter, setSelectedAppliedFilter] = useState("all");
 
 
+  // Match score:
+  const MATCH_THRESHOLD = 40;
+
+
+  // A function for returning the jobs:
   const Jobs = async () => {
-    const { data } = await axios.get("http://localhost:8920/api/pro/viewJobs", { withCredentials: true })
+    const { data } = await axios.get("http://localhost:8920/api/pro/viewJobs", {
+      withCredentials: true
+    })
+
     return data
   }
 
+  // A function for returning the user information:
+  const UserProfile = async () => {
+    const { data } = await axios.get("http://localhost:8920/api/pro/worker/profile", {
+      withCredentials: true
+    })
+
+    return data
+  }
+
+  // Display all jobs:
+  // # ----------------------------------------------------------------------- #
+  // # - The purpose of this useQuery function is to display all the jobs    - #
+  // # ----------------------------------------------------------------------- #
   const { data, error, isLoading } = useQuery({
     queryKey: ['job'],
     queryFn: Jobs
   })
 
-  if (error) return <div>An error occured</div>
-  if (isLoading) return <div>Loading...</div>
 
+
+
+  // Display user information for job matching based on the user skill:
+  // # ----------------------------------------------------------------------- #
+  // # - The purpose of this useQuery function is to display user info       - #
+  // # ----------------------------------------------------------------------- #
+  const { data: userData, error: userError, isLoading: userLoading } = useQuery({
+    queryKey: ['userQueryKey'],
+    queryFn: UserProfile
+  })
+
+
+
+  // Load the jobs and user information:
+  if (isLoading || userLoading) return <div>Loading...</div>;
+  if (error || userError) return <div>An error occured</div>;
+
+  // Store the jobs inside the AllJobs variable:
   const AllJobs = data.jobs
-
   if (!AllJobs.length) return <div>{data.message}</div>
 
+  // Store the jobs inside the AllJobs variable:
+  const UserInfo = userData?.WorkerProf
+
+
+  // The remaining code:
+  // # ----------------------------------------------------------------------- #
+  // # -                                                                     - #
+  // # ----------------------------------------------------------------------- #
+  const normalize = (str) =>
+  (str || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ""); // collapse all separators
+
+  const calculateMatchScore = (userSkills, jobTags) => {
+    const user = (userSkills || []).map(normalize);
+    const required = (jobTags || []).map(normalize);
+
+    const matched = required.filter(skill => user.includes(skill));
+
+    const score = required.length
+      ? (matched.length / required.length) * 100
+      : 0;
+
+    return {
+      score: Math.round(score),
+      matchedSkills: matched,
+      missingSkills: required.filter(skill => !user.includes(skill))
+    };
+  };
+
+  const enrichedJobs = (AllJobs || []).map(job => {
+    const result = calculateMatchScore(
+      userData?.WorkerProf?.skills || [],
+      job?.info?.tags || []
+    );
+
+    return {
+      ...job,
+      matchScore: result.score,
+      matchedSkills: result.matchedSkills,
+      missingSkills: result.missingSkills
+    };
+  });
+
+  const sortedJobs = [...enrichedJobs].sort(
+    (a, b) => (b.matchScore || 0) - (a.matchScore || 0)
+  );
+
+  const filteredJobs = sortedJobs.filter((job: any) => {
+    const search = searchTerm.toLowerCase();
+
+    const matchesSearch =
+      job.info.title?.toLowerCase().includes(search) ||
+      job.info.company?.toLowerCase().includes(search) ||
+      job.info.location?.toLowerCase().includes(search) ||
+      (job.info.tags || []).some((tag: string) =>
+        tag.toLowerCase().includes(search)
+      );
+
+    const matchesScore =
+      selectedMatchFilter === "all" ||
+      (selectedMatchFilter === "90" && job.matchScore >= 90) ||
+      (selectedMatchFilter === "70" && job.matchScore >= 70) ||
+      (selectedMatchFilter === "50" && job.matchScore >= 50);
+
+    const matchesType =
+      selectedTypeFilter === "all" ||
+      job.info.type === selectedTypeFilter;
+
+    const matchesApplied =
+      selectedAppliedFilter === "all" ||
+      (selectedAppliedFilter === "applied" && job.IsApplied) ||
+      (selectedAppliedFilter === "not-applied" && !job.IsApplied);
+
+    return (
+      matchesSearch &&
+      matchesScore &&
+      matchesType &&
+      matchesApplied
+    );
+  });
+
+  const recommendedJobs = filteredJobs.filter(
+    (job) => (job.matchScore || 0) >= 50
+  );
+
+
+
+
+
+  // Functions:
+  // # ----------------------------------------------------------------------- #
+  // # -                                                                     - #
+  // # ----------------------------------------------------------------------- #
   const handleViewDetails = (job: Job) => {
     setSelectedJob(job);
     setDetailsModalOpen(true);
   };
 
-  const handleApplyClick = (job: Job) => {
+  const handleApplyClick = (job: any) => {
     setJobToApply(job);
-    setConfirmApplyOpen(true);
+
+    const score = job.matchScore || 0;
+
+    if (score >= 70) {
+      setConfirmApplyOpen(true);
+    } 
+    else if (score >= MATCH_THRESHOLD) {
+      setConfirmApplyOpen(true);
+    } 
+    else {
+      setLowMatchWarningOpen(true);
+    }
   };
 
   const handleApplyFromModal = () => {
@@ -122,36 +268,193 @@ const JobListings = () => {
               className="pl-10"
             />
           </div>
-          <Button type="submit">Search</Button>
-          <Button type="button" variant="outline" className="gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="gap-2"
+            onClick={() => setFilterOpen(!filterOpen)}
+          >
             <Filter className="w-4 h-4" />
             Filter
           </Button>
         </form>
       </div>
 
+      {filterOpen && (
+        <div className="mt-4 flex flex-wrap gap-4 p-4 border rounded-lg">
+          
+          <div className="relative">
+            <select
+              value={selectedMatchFilter}
+              onChange={(e) => setSelectedMatchFilter(e.target.value)}
+              className="border rounded-md px-3 py-2 pr-10 appearance-none cursor-pointer"
+            >
+              <option value="all">All Match Scores</option>
+              <option value="90">90%+</option>
+              <option value="70">70%+</option>
+              <option value="50">50%+</option>
+            </select>
+
+            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              ▼
+            </div>
+          </div>
+
+          <div className="relative">
+            <select
+              value={selectedTypeFilter}
+              onChange={(e) => setSelectedTypeFilter(e.target.value)}
+              className="border rounded-md px-3 py-2 pr-10 appearance-none cursor-pointer"
+            >
+              <option value="all">All Types</option>
+              <option value="Full-Time">Full-Time</option>
+              <option value="Part-Time">Part-Time</option>
+              <option value="Remote">Remote</option>
+            </select>
+
+            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              ▼
+            </div>
+          </div>
+
+          <div className="relative">
+            <select
+              value={selectedAppliedFilter}
+              onChange={(e) => setSelectedAppliedFilter(e.target.value)}
+              className="border rounded-md px-3 py-2 pr-10 appearance-none cursor-pointer"
+            >
+              <option value="all">All Applications</option>
+              <option value="applied">Applied</option>
+              <option value="not-applied">Not Applied</option>
+            </select>
+
+            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              ▼
+            </div>
+          </div>
+
+        </div>
+      )}
+
       {/* Results Count */}
       <p className="text-sm text-muted-foreground mb-4">
-        Showing {AllJobs.length} job{AllJobs.length !== 1 ? "s" : ""}
+        Showing {filteredJobs.length} job{filteredJobs.length !== 1 ? "s" : ""}
       </p>
 
       {/* Job Listings */}
       <div className="grid gap-4">
-        {AllJobs.map((job: any) => {
+        {/* Recommended Jobs */}
+        {recommendedJobs.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold">Recommended For You</h3>
+                <p className="text-sm text-muted-foreground">
+                  Jobs matching your skills above 50%
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {recommendedJobs.map((job: any) => (
+                <Card
+                  key={`recommended-${job.info._id}`}
+                  className="w-1/2 min-w-[50%] flex-shrink-0 hover:shadow-md transition-shadow flex flex-col"
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <CardTitle className="text-lg line-clamp-1">
+                          {job.info.title}
+                        </CardTitle>
+
+                        <CardDescription className="flex items-center gap-2 mt-1">
+                          <Building2 className="w-4 h-4" />
+                          {job.info.company}
+                        </CardDescription>
+                      </div>
+
+                      <Badge>
+                        {job.matchScore}% Match
+                      </Badge>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent>
+                    <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mb-3">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {job.info.location}
+                      </span>
+
+                      <span>
+                        {job.info.salary}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {(job.info.tags || []).slice(0, 3).map((tag: any) => (
+                        <Badge key={tag} variant="outline">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2 pt-6 mt-auto">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleViewDetails(job)}
+                      >
+                        View
+                      </Button>
+
+                      {job.IsApplied ? (
+                        <Button disabled size="sm" className="flex-1">
+                          Applied
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleApplyClick(job)}
+                        >
+                          Apply
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+        {filteredJobs.map((job: any) => {
           return (
             <Card key={job.info._id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-xl mb-1">{job.info.title}</CardTitle>
+                    <CardTitle className="text-xl mb-1">
+                      {job.info.title}
+                    </CardTitle>
+
                     <CardDescription className="flex items-center gap-2 text-base">
                       <Building2 className="w-4 h-4" />
                       {job.info.company}
                     </CardDescription>
                   </div>
-                  <Badge variant={job.info.type === "Full-Time" ? "default" : "secondary"}>
-                    {job.info.type}
-                  </Badge>
+
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge>
+                      {(job.matchScore || 0)}% Match
+                    </Badge>
+
+                    <Badge variant={job.info.type === "Full-Time" ? "default" : "secondary"}>
+                      {job.info.type}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -172,7 +475,7 @@ const JobListings = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {job.info.tags.map((tag: any) => (
+                  {(job.info.tags || []).map((tag: any) => (
                     <Badge key={tag} variant="outline">
                       {tag}
                     </Badge>
@@ -203,7 +506,7 @@ const JobListings = () => {
         })}
       </div>
 
-      {AllJobs.length === 0 && (
+      {filteredJobs.length === 0 && (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">No jobs found matching your search.</p>
           <Button variant="link" onClick={() => { setSearchTerm(""); }}>
@@ -232,6 +535,36 @@ const JobListings = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmApply}>Submit Application</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
+      <AlertDialog open={lowMatchWarningOpen} onOpenChange={setLowMatchWarningOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Low Match Warning</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your skills do not strongly match this job. Are you sure you want to continue applying?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setLowMatchWarningOpen(false);
+              setJobToApply(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={() => {
+                setLowMatchWarningOpen(false);
+                setConfirmApplyOpen(true);
+              }}
+            >
+              Continue
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -58,6 +58,35 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
 
+  const [mapQuery, setMapQuery] = useState("");
+  const [mapUrl, setMapUrl] = useState(
+    "https://maps.google.com/maps?q=16.167700,120.426300&z=18&output=embed"
+  );
+
+  const handleLocationSearch = async () => {
+    if (!mapQuery.trim()) return;
+
+    const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+      mapQuery
+    )}`;
+
+    const res = await fetch(geocodeUrl);
+    const data = await res.json();
+
+    if (!data.length) return;
+
+    const { lat, lon, display_name } = data[0];
+
+    setMapUrl(
+      `https://maps.google.com/maps?q=${lat},${lon}&z=17&output=embed`
+    );
+
+    setFormData({
+      ...formData,
+      location: display_name,
+    });
+  };
+
   /* -------------------------------------------------------------------------- */
   /*                             Fetch Locations                                */
   /* -------------------------------------------------------------------------- */
@@ -65,13 +94,6 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
     const { data } = await axios.get("http://localhost:8920/api/pro/Locations", { withCredentials: true });
     return data;
   };
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["fetchLocations"],
-    queryFn: fetchLocations,
-  });
-
-  const locations = data?.Locations || [];
 
   const fetchIndustries = async () => {
     const { data } = await axios.get("http://localhost:8920/api/pro/Industries");
@@ -248,31 +270,51 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3 mb-25">
                 <Label>Location *</Label>
-                <Select
-                  value={formData.location}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, location: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        isLoading
-                          ? "Loading locations..."
-                          : error ? "Failed to load locations" : "Select location"
-                      }
+
+                <div className="flex flex-col gap-3">
+
+                  {/* Search bar */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Search place, city, barangay, address..."
+                      value={mapQuery}
+                      onChange={(e) => setMapQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleLocationSearch();
+                        }
+                      }}
                     />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.map((location: any) => (
-                      <SelectItem key={location._id} value={location.name}>
-                        {location.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+                    <Button type="button" onClick={handleLocationSearch}>
+                      Search
+                    </Button>
+                  </div>
+
+                  {/* Map */}
+                  <div
+                    className="ratio ratio-4x3"
+                    style={{ maxWidth: "500px", height: "300px" }}
+                  >
+                    <iframe
+                      src={mapUrl}
+                      style={{
+                        border: 0,
+                        borderRadius: "12px",
+                        width: "100%",
+                        height: "100%",
+                      }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Google Map"
+                    />
+                  </div>
+
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -358,6 +400,42 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                 }
               />
             </div>
+
+            <div className="space-y-2">
+  <Label>Tags</Label>
+
+  <div className="flex gap-2">
+    <Input
+      placeholder="e.g., Construction, Urgent, Night Shift"
+      value={tagInput}
+      onChange={(e) => setTagInput(e.target.value)}
+      onKeyDown={handleKeyDown}
+    />
+
+    <Button type="button" onClick={handleAddTag} size="icon">
+      <Plus className="w-4 h-4" />
+    </Button>
+  </div>
+
+  <div className="flex flex-wrap gap-2 mt-2">
+      {tags.map((tag) => (
+        <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+          {tag}
+          <button
+            type="button"
+            onClick={() => handleRemoveTag(tag)}
+            className="ml-1"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </Badge>
+      ))}
+    </div>
+
+    <p className="text-xs text-muted-foreground">
+      Press Enter or click + to add tags
+    </p>
+  </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">

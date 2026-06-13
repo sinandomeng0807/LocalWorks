@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Search, Filter, Building2, UserCircle, Info, FileText, MoreHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,12 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import axios from "axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { socket } from "@/socket";
 
 interface Notification {
-  id: string;
+  _id: string;
   type: "job_posted" | "verification" | "application" | "report";
   title: string;
   description: string;
@@ -30,68 +33,9 @@ interface Notification {
   details?: string;
 }
 
-const initialNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "job_posted",
-    title: "New Job Posted for Construction by Client [Manila Corp]",
-    description: "New Job Posted for Construction by Client Manila Corp.",
-    time: "5 mins ago",
-    read: false,
-    category: "job",
-    details: "A new Construction job has been posted by Manila Corp. The position requires 3 years of experience and is located in Manila. Please review and approve/reject the listing.",
-  },
-  {
-    id: "2",
-    type: "verification",
-    title: "Worker Account Pending Verification",
-    description: "Worker Account Pending Verification for your Client Worker.",
-    time: "1 hour ago",
-    read: false,
-    category: "account",
-    details: "A new worker account has been created and is pending verification. The worker has uploaded their CV/Resume for review. Please verify the documents and approve or reject the account.",
-  },
-  {
-    id: "3",
-    type: "application",
-    title: "Job Application Accepted for Warehouse Role",
-    description: "Job Application Accepted for Warehouse Role in mow accepted.",
-    time: "1 hour ago",
-    read: false,
-    category: "job",
-    details: "The job application for the Warehouse Role has been accepted by the employer. The worker has been notified and can now proceed with the onboarding process.",
-  },
-  {
-    id: "4",
-    type: "report",
-    title: "Weekly Summary Report Ready for Review",
-    description: "Weekly Summary Report ready for Review in eare update for your accounts.",
-    time: "Yesterday",
-    read: true,
-    category: "account",
-    details: "Your weekly summary report is now available. It includes updates on new registrations, job postings, applications, and platform activity for the past week.",
-  },
-  {
-    id: "5",
-    type: "job_posted",
-    title: "New Job Posted for Plumbing by Client [Quezon Services]",
-    description: "New Job Posted for Plumbing by Client Quezon Services.",
-    time: "2 days ago",
-    read: true,
-    category: "job",
-    details: "A new Plumbing job has been posted by Quezon Services. The position is full-time and located in Quezon City. Please review the listing.",
-  },
-  {
-    id: "6",
-    type: "verification",
-    title: "Employer Account Pending Verification",
-    description: "Employer Account Pending Verification for ABC Company.",
-    time: "3 days ago",
-    read: true,
-    category: "account",
-    details: "A new employer account has been created by ABC Company and is pending verification. Business permit has been uploaded for review.",
-  },
-];
+// Controller: { category }
+// createJob: { job }, WorkerRegister: { account }, newApplication: { job }
+
 
 const getNotificationIcon = (type: Notification["type"]) => {
   switch (type) {
@@ -119,14 +63,44 @@ const getIconBg = (type: Notification["type"]) => {
   }
 };
 
+const formatUTC = (utc: string) => {
+  if (!utc) return "";
+
+  return new Date(utc).toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
 const AdminNotifications = () => {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const queryClient = useQueryClient()
+
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
 
-  const filtered = notifications.filter((n) => {
+  const fetchAdminNotifications = async () => {
+    const result = await axios.get(
+      "http://localhost:8920/api/admin/admin-notifications"
+    )
+
+    return result.data.notifications
+  }
+
+  const {
+    data: notifications = [],
+    isLoading,
+    error,
+  } = useQuery<Notification[]>({
+    queryKey: ["adminNotifications"],
+    queryFn: fetchAdminNotifications,
+  })
+
+  const filtered = notifications.filter((n: Notification) => {
     const matchesSearch =
       n.title.toLowerCase().includes(search.toLowerCase()) ||
       n.description.toLowerCase().includes(search.toLowerCase());
@@ -136,22 +110,70 @@ const AdminNotifications = () => {
     return matchesSearch;
   });
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-    toast.success("Marked as read");
-  };
+  
+  
+  const markAsReadMutation = useMutation({
+    mutationFn: async (_id: string) => {
+      return await axios.patch(
+        `http://localhost:8920/api/admin/admin-notifications/${_id}`
+      )
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["adminNotifications"]
+      })
+
+      toast.success("Marked as read")
+    },
+
+    onError: () => {
+      toast.error("Failed to mark as read")
+    }
+  })
+
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (_id: string) => {
+      return await axios.delete(
+        `http://localhost:8920/api/admin/admin-notifications/delete/${_id}`
+      )
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["adminNotifications"]
+      })
+
+      setSelectedNotification(null)
+
+      toast.success("Notification deleted")
+    },
+
+    onError: () => {
+      toast.error("Failed to delete notification")
+    }
+  })
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (error) {
+    return <div>Failed to load notifications</div>
+  }
+
+  const markAsRead = (_id: string) => {
+    markAsReadMutation.mutate(_id)
+  }
 
   const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    toast.success("All notifications marked as read");
-  };
+    toast.success("All notifications marked as read")
+  }
 
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-    toast.success("Notification deleted");
-  };
+
+  const deleteNotification = (_id: string) => {
+    deleteNotificationMutation.mutate(_id)
+  }
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -237,13 +259,13 @@ const AdminNotifications = () => {
               <p className="text-sm">No notifications found</p>
             </div>
           ) : (
-            filtered.map((n) => (
+            filtered.map((n: Notification) => (
               <div
-                key={n.id}
+                key={n._id}
                 className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${
                   n.read
-                    ? "bg-card border-border"
-                    : "bg-muted/40 border-border"
+                    ? "bg-muted/40 border-border"
+                    : "bg-card border-border"
                 }`}
               >
                 {/* Icon */}
@@ -263,7 +285,9 @@ const AdminNotifications = () => {
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">
                     {n.description}
                   </p>
-                  <p className="text-[11px] text-muted-foreground/60 mt-1">{n.time}</p>
+                  <p className="text-[11px] text-muted-foreground/60 mt-1">
+                    {formatUTC(n.time)}
+                  </p>
                 </div>
 
                 {/* Actions */}
@@ -273,7 +297,7 @@ const AdminNotifications = () => {
                       variant="ghost"
                       size="sm"
                       className="text-xs text-primary hover:text-primary"
-                      onClick={() => markAsRead(n.id)}
+                      onClick={() => markAsRead(n._id)}
                     >
                       Mark as Read
                     </Button>
@@ -294,7 +318,7 @@ const AdminNotifications = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       {!n.read && (
-                        <DropdownMenuItem onClick={() => markAsRead(n.id)}>
+                        <DropdownMenuItem onClick={() => markAsRead(n._id)}>
                           Mark as Read
                         </DropdownMenuItem>
                       )}
@@ -303,7 +327,7 @@ const AdminNotifications = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
-                        onClick={() => deleteNotification(n.id)}
+                        onClick={() => deleteNotification(n._id)}
                       >
                         Delete
                       </DropdownMenuItem>
@@ -343,7 +367,11 @@ const AdminNotifications = () => {
               <Badge variant="secondary" className="text-xs capitalize">
                 {selectedNotification?.category}
               </Badge>
-              <span className="text-xs text-muted-foreground">{selectedNotification?.time}</span>
+              <span className="text-xs text-muted-foreground">
+                {selectedNotification?.time
+                  ? formatUTC(selectedNotification.time)
+                  : ""}
+              </span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               {selectedNotification?.details}
@@ -352,7 +380,7 @@ const AdminNotifications = () => {
               <Button
                 size="sm"
                 onClick={() => {
-                  markAsRead(selectedNotification.id);
+                  markAsRead(selectedNotification._id);
                   setSelectedNotification(null);
                 }}
               >

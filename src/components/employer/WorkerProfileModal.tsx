@@ -105,7 +105,7 @@ const WorkerProfileModal = ({
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row items-start gap-4">
           <Avatar className="w-20 h-20">
-            <AvatarImage src={extendedWorker.worker.photo} />
+            <AvatarImage src={`http://localhost:8920${extendedWorker.worker.photo}`} />
             <AvatarFallback className="bg-primary/10 text-primary text-2xl">
               {getInitials(extendedWorker.worker.name)}
             </AvatarFallback>
@@ -120,7 +120,7 @@ const WorkerProfileModal = ({
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
-                <span>{extendedWorker.location.name}</span>
+                <span>{extendedWorker.worker.location}</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Briefcase className="w-4 h-4" />
@@ -167,7 +167,7 @@ const WorkerProfileModal = ({
             <FileText className="w-4 h-4" />
             About
           </h3>
-          <p className="text-sm text-muted-foreground">{extendedWorker.about_me}</p>
+          <p className="text-sm text-muted-foreground">{extendedWorker.about_me || "Not specified"}</p>
         </div>
 
         <Separator />
@@ -193,12 +193,18 @@ const WorkerProfileModal = ({
             Certifications
           </h3>
           <ul className="space-y-1">
-            {extendedWorker.worker.certifications?.map((cert) => (
+            {!extendedWorker.worker.certifications.length ? (
+            <li className="text-sm text-muted-foreground list-none">
+              No certifications added
+            </li>
+          ) : (
+            extendedWorker.worker.certifications?.map((cert) => (
               <li key={cert} className="text-sm flex items-center gap-2">
                 <Check className="w-3 h-3 text-green-500" />
                 {cert}
               </li>
-            ))}
+            ))
+          )}
           </ul>
         </div>
 
@@ -211,14 +217,20 @@ const WorkerProfileModal = ({
             Work History
           </h3>
           <div className="space-y-3">
-            {extendedWorker.worker.previousJobs?.map((job, index) => (
-              <div key={index} className="text-sm">
-                <p className="font-medium">{job.title}</p>
-                <p className="text-muted-foreground">
-                  {job.company} • {job.duration}
-                </p>
+            {!extendedWorker.worker.previousJobs?.length ? (
+              <div className="text-sm text-muted-foreground">
+                No previous jobs listed
               </div>
-            ))}
+            ) : (
+              extendedWorker.worker.previousJobs?.map((job, index) => (
+                <div key={index} className="text-sm">
+                  <p className="font-medium">{job.title}</p>
+                  <p className="text-muted-foreground">
+                    {job.company} • {job.duration}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

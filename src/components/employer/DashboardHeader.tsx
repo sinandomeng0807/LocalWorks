@@ -12,6 +12,7 @@ import {
 import EditProfileModal from "./EditProfileModal";
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 import axios from "axios";
 
 axios.defaults.withCredentials = true
@@ -54,6 +55,19 @@ const DashboardHeader = () => {
     return result.data
   }
 
+  const fetchNotifications = async () => {
+    const res = await axios.get(
+      "http://localhost:8920/api/pro/notifications",
+      { withCredentials: true }
+    );
+    return res.data.notifications;
+  };
+
+  const { data: notifications = [] } = useQuery({
+    queryKey: ["employerNotifications"],
+    queryFn: fetchNotifications,
+  });
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['employer'],
     queryFn: employer
@@ -61,6 +75,8 @@ const DashboardHeader = () => {
 
   const profile = data?.EmployerProf?.profile;
   const email = data?.EmployerProf?.email;
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <header className="border-b border-border bg-card sticky top-0 z-50">
@@ -74,23 +90,34 @@ const DashboardHeader = () => {
         
         <DropdownMenu>
           <DropdownMenuTrigger className="focus:outline-none">
-            <div className="flex flex-col items-center gap-1 cursor-pointer">
-              <Avatar className="h-10 w-10">
-                {profile && (
-                  <AvatarImage
-                    src={`http://localhost:8920${profile}`}
-                    alt="Employer"
-                  />
-                )}
+            <div className="relative flex flex-col items-center gap-1">
+              <div className="relative">
+                <Avatar className="h-10 w-10">
+                  {profile && (
+                    <AvatarImage
+                      src={`http://localhost:8920${profile}`}
+                      alt="Employer"
+                    />
+                  )}
 
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {email
-                    ? email.split("@")[0].slice(0, 2).toUpperCase()
-                    : <UserCircle className="h-6 w-6" />
-                  }
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-xs text-muted-foreground">{email}</span>
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {email
+                      ? email.split("@")[0].slice(0, 2).toUpperCase()
+                      : <UserCircle className="h-6 w-6" />
+                    }
+                  </AvatarFallback>
+                </Avatar>
+
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+
+              <span className="text-xs text-muted-foreground">
+                {email}
+              </span>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">

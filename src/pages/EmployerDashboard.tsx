@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Contacts from "@/components/employer/Contacts";
 import { Button } from "@/components/ui/button";
-import { Users, Search, Plus } from "lucide-react";
+import { Users, Search, Plus, MessageSquare } from "lucide-react";
 import DashboardHeader from "@/components/employer/DashboardHeader";
 import CompanyProfile from "@/components/employer/CompanyProfile";
 import WorkerApplications from "@/components/employer/WorkerApplications";
@@ -10,7 +11,9 @@ import PostJobModal from "@/components/employer/PostJobModal";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Bell } from "lucide-react";
 import axios from "axios";
+import EmployerNotifications from "@/components/employer/EmployerNotifications";
 
 axios.defaults.withCredentials = true
 
@@ -58,17 +61,27 @@ const EmployerDashboard = () => {
           <CompanyProfile />
         </div>
 
-        {/* Tabs for Applications and Browse Workers */}
+        {/* Tabs for Applications, Browse Workers, and Contacts */}
         <Tabs defaultValue="applications" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="applications" className="gap-2">
               <Users className="w-4 h-4" />
               Applications
             </TabsTrigger>
-            
+
             <TabsTrigger value="browse" className="gap-2">
               <Search className="w-4 h-4" />
               Browse Workers
+            </TabsTrigger>
+
+            <TabsTrigger value="contacts" className="gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Contacts
+            </TabsTrigger>
+
+            <TabsTrigger value="notifications" className="gap-2">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Notifications</span>
             </TabsTrigger>
           </TabsList>
 
@@ -78,6 +91,14 @@ const EmployerDashboard = () => {
 
           <TabsContent value="browse">
             <BrowseWorkers />
+          </TabsContent>
+
+          <TabsContent value="contacts">
+            <Contacts />
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <EmployerNotifications />
           </TabsContent>
         </Tabs>
       </main>

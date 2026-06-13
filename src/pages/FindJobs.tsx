@@ -44,6 +44,17 @@ const FindJobs = () => {
   const [confirmApplyOpen, setConfirmApplyOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
 
+  const parseSalary = (salary: string) => {
+    // handles formats like "50,000", "$50,000", "50k"
+    const cleaned = salary.replace(/[^0-9kK]/g, "").toLowerCase();
+
+    if (cleaned.includes("k")) {
+      return parseFloat(cleaned.replace("k", "")) * 1000;
+    }
+
+    return parseFloat(cleaned) || 0;
+  };
+
   const findJobs = async () => {
     const result = await axios.get("http://localhost:8920/api/auth/jobs")
     return result.data
@@ -85,10 +96,27 @@ const FindJobs = () => {
     const matchesSearch = job.info.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.info.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.info.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesLocation = !location || job.info.location.name.toLowerCase().includes(location.toLowerCase());
+    const matchesLocation = !location || job.info.location.toLowerCase().includes(location.toLowerCase());
     const matchesType = !jobType || jobType === "all" || job.info.type === jobType;
     return matchesSearch && matchesLocation && matchesType;
   });
+
+  const sortedJobs = [...filteredJobs].sort((a, b) => {
+    const positionsA = Number(a.info.positions) || 0;
+    const positionsB = Number(b.info.positions) || 0;
+
+    const salaryA = parseSalary(a.info.salary);
+    const salaryB = parseSalary(b.info.salary);
+
+    // combine score
+    const scoreA = positionsA * 100000 + salaryA;
+    const scoreB = positionsB * 100000 + salaryB;
+
+    return scoreB - scoreA;
+  });
+
+  const displayedJobs =
+  sortedJobs.length > 10 ? sortedJobs.slice(0, 10) : sortedJobs;
 
   const handleApplyClick = (jobId: number) => {
     if (!isLoggedIn) {
@@ -231,12 +259,15 @@ const FindJobs = () => {
       {/* Job Listings */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <p className="text-muted-foreground mb-6">
-            Showing {filteredJobs.length} jobs
-          </p>
+          {/* If there are more than 10 jobs, then it should only show Top 10 jobs based on salary and positions available */}
+          <h1 className="mb-6 text-xl font-bold text-foreground">
+            {filteredJobs.length > 10
+              ? `Top 10 Jobs based on Salary and Positions Available`
+              : `Showing ${filteredJobs.length} jobs`}
+          </h1>
 
           <div className="grid gap-4">
-            {!filteredJobs.length ? <div>No Jobs</div> : filteredJobs.map((job) => {
+            {!filteredJobs.length ? <div>No Jobs</div> : displayedJobs.map((job) => {
               return (
                 <Card key={job.info._id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-2">
@@ -266,11 +297,15 @@ const FindJobs = () => {
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                       <div className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
-                        {job.info.location.name}
+                        {job.info.location}
                       </div>
                       <div className="flex items-center gap-1">
                         <Briefcase className="w-4 h-4" />
                         {job.info.type}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Building2 className="w-4 h-4" />
+                        {job.info.positions} Positions
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />

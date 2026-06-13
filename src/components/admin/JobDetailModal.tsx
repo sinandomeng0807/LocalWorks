@@ -94,11 +94,6 @@ const JobDetailModal = ({
     }
   };
 
-  const locationText =
-    typeof job.location === "string"
-      ? job.location
-      : job.location?.name || "N/A";
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] p-0">
@@ -120,7 +115,7 @@ const JobDetailModal = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <MapPin className="w-4 h-4 text-primary" />
-                {locationText}
+                {job.location || "No Location Specified"}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <DollarSign className="w-4 h-4 text-primary" />

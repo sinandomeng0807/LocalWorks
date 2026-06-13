@@ -17,6 +17,8 @@ import {
 import { Job } from "@/lib/jobsStore";
 import { useState } from "react";
 import JobDetailModal from "./JobDetailModal";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 interface CompanyDetailModalProps {
   company: string;
@@ -49,14 +51,19 @@ const CompanyDetailModal = ({
   const contactEmail = jobs.find((j) => j.contactEmail)?.contactEmail;
   const contactPhone = jobs.find((j) => j.contactPhone)?.contactPhone;
 
-  const applicants = [
-    "Juan Dela Cruz",
-    "Maria Santos",
-    "Pedro Reyes",
-    "Ana Garcia",
-    "Jose Rizal",
-    "Carmen Luna",
-  ];
+  const fetchApplicants = async (company: string) => {
+    const result = await axios.get(
+      `http://localhost:8920/api/admin/applications/${company}`
+    );
+    return result.data;
+  };
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["applicants", company],
+    queryFn: () => fetchApplicants(company),
+    enabled: !!company,
+  });
+
 
   const getStatusBadge = (status?: string) => {
     switch (status) {
@@ -169,7 +176,7 @@ const CompanyDetailModal = ({
                         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3 h-3" />
-                            {job.location.name}
+                            {job.location}
                           </span>
 
                           <span className="flex items-center gap-1">
@@ -193,11 +200,38 @@ const CompanyDetailModal = ({
                   <h4 className="font-bold text-sm">Applicants</h4>
 
                   <div className="space-y-2">
-                    {applicants.map((name, i) => (
-                      <p key={i} className="text-sm font-medium">
-                        {name}
+                    {isLoading ? (
+                      <p className="text-sm text-muted-foreground">
+                        Loading...
                       </p>
-                    ))}
+                    ) : error ? (
+                      <p className="text-sm text-destructive">
+                        Error loading applicants
+                      </p>
+                    ) : data?.applications?.length ? (
+                      <>
+                        {data.applications
+                          .slice(0, 5)
+                          .map((app: any) => (
+                            <div
+                              key={app._id}
+                              className="text-sm font-medium"
+                            >
+                              {app.worker?.name || "Unknown"}
+                            </div>
+                          ))}
+
+                        {data.applications.length > 5 && (
+                          <p className="text-xs text-muted-foreground">
+                            +{data.applications.length - 5} more
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No applicants found
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

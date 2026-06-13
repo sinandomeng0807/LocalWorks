@@ -20,7 +20,9 @@ export interface UserProfile {
   skillCategory?: string;
   companyName?: string;
   company?: string;
-  industry?: string;
+  industry?: {
+    title: string
+  };
   skill?: string;
   reportsSubmitted: number;
   createdAt: string;

@@ -4,9 +4,7 @@ export interface Job {
   _id: string;
   title: string;
   company: string;
-  location: {
-    name: string;
-  };
+  location: string;
   salary: string;
   type: string;
   posted: {
@@ -17,6 +15,11 @@ export interface Job {
   requirements?: string[];
   benefits?: string[];
   schedule?: string;
+  name: {
+    worker: {
+      name: string;
+    }
+  }
   contactEmail?: string;
   contactPhone?: string;
   status: "PENDING" | "ACCEPTED" | "DECLINED" | "active" | "pending" | "not_active";

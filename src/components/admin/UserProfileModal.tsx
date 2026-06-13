@@ -164,10 +164,10 @@ const UserProfileModal = ({ user, open, onOpenChange }: UserProfileModalProps) =
               <span>Joined {UTC_Converter(user.createdAt)}</span>
             </div>
 
-            {user.role === "worker" && user.skills && (
+            {user.role === "worker" && user.jobTitle && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Briefcase className="w-4 h-4" />
-                <span>{user.skills}</span>
+                <span>{user.jobTitle}</span>
               </div>
             )}
 
@@ -175,7 +175,7 @@ const UserProfileModal = ({ user, open, onOpenChange }: UserProfileModalProps) =
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Briefcase className="w-4 h-4" />
                 <span>
-                  {user.company} — {user.industry}
+                  {user.company} — {user.industry.title}
                 </span>
               </div>
             )}

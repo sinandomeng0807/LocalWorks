@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Briefcase, User, FileText, UserCircle, Star } from "lucide-react";
+import { LogOut, Briefcase, User, FileText, UserCircle, Star, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import WorkerProfile from "@/components/worker/WorkerProfile";
 import EditProfileModal from "@/components/worker/EditProfileModal";
@@ -18,6 +18,9 @@ import {
 import logo from "@/assets/logo.avif";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import Contacts from "@/components/worker/Contacts";
+import { Bell } from "lucide-react";
+import WorkerNotifications from "@/components/worker/WorkerNotifications";
 import axios from "axios";
 
 axios.defaults.withCredentials = true
@@ -42,6 +45,23 @@ const WorkerDashboard = () => {
     const result = await axios.get("http://localhost:8920/api/pro/worker/profile", { withCredentials: true })
     return result.data
   }
+
+  const fetchNotifications = async () => {
+    const result = await axios.get(
+      "http://localhost:8920/api/pro/notifications"
+    );
+
+    return result.data.notifications;
+  };
+
+  const { data: notifications = [] } = useQuery({
+    queryKey: ["workerNotifications"],
+    queryFn: fetchNotifications,
+  });
+
+  const unreadCount = notifications.filter(
+    (n: any) => !n.read
+  ).length;
 
   const { isLoading, error } = useQuery({
     queryKey: ['isWorkerLogged'],
@@ -92,14 +112,25 @@ const WorkerDashboard = () => {
           
           <DropdownMenu>
             <DropdownMenuTrigger className="focus:outline-none">
-              <div className="flex flex-col items-center gap-1 cursor-pointer">
+              <div className="relative flex flex-col items-center gap-1 cursor-pointer">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={`http://localhost:8920${data?.WorkerProf?.photo}`} />
+                  <AvatarImage
+                    src={`http://localhost:8920${data?.WorkerProf?.photo}`}
+                  />
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     <UserCircle className="h-6 w-6" />
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-xs text-muted-foreground">{data?.WorkerProf?.name}</span>
+
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+
+                <span className="text-xs text-muted-foreground">
+                  {data?.WorkerProf?.name}
+                </span>
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -136,6 +167,16 @@ const WorkerDashboard = () => {
               <Briefcase className="w-4 h-4" />
               <span className="hidden sm:inline">Find Jobs</span>
             </TabsTrigger>
+
+            <TabsTrigger value="contacts" className="gap-2">
+              <Phone className="w-4 h-4" />
+              <span className="hidden sm:inline">Contacts</span>
+            </TabsTrigger>
+
+            <TabsTrigger value="notifications" className="gap-2">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Notifications</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="jobs">
@@ -144,6 +185,14 @@ const WorkerDashboard = () => {
 
           <TabsContent value="applications">
             <MyApplications />
+          </TabsContent>
+
+          <TabsContent value="contacts">
+            <Contacts />
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <WorkerNotifications />
           </TabsContent>
 
           <TabsContent value="profile">
