@@ -54,6 +54,8 @@ type Contact = {
 const Contacts = () => {
   const queryClient = useQueryClient()
 
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+
   const [selectedChat, setSelectedChat] =
     useState<Contact | null>(null);
 
@@ -101,12 +103,6 @@ const Contacts = () => {
     refetchOnWindowFocus: false,
   });
 
-  
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
-  }, [messages]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["contacts"],
@@ -146,6 +142,37 @@ const Contacts = () => {
     },
   });
 
+  const markAsRead = useMutation({
+    mutationFn: async (contactId: string) => {
+      const { data } = await axios.patch(
+        `http://localhost:8920/api/pro/contacts/${contactId}/read`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      return data;
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["contacts"],
+      });
+    },
+  });
+
+    
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      const container = messagesContainerRef.current;
+
+      if (!container) return;
+
+      container.scrollTop = container.scrollHeight;
+    });
+  }, [messages, selectedChat]);
+
   if (isLoading) {
     return <div className="text-center py-10">Loading...</div>;
   }
@@ -158,7 +185,12 @@ const Contacts = () => {
     );
   }
 
-  const contacts: Contact[] = data?.contacts || [];
+  const contacts: Contact[] = [...(data?.contacts || [])].sort((a, b) => {
+    return (
+      new Date(b.lastMessageAt).getTime() -
+      new Date(a.lastMessageAt).getTime()
+    );
+  });
 
   return (
     <>
@@ -181,7 +213,7 @@ const Contacts = () => {
                       <CardTitle>{c.title}</CardTitle>
 
                       <CardDescription className="flex items-center gap-2 text-xs mt-3">
-                        <span className="h-2 w-2 rounded-full bg-primary" />
+                        {c.unreadCountWorker > 0 && <span className="h-2 w-2 rounded-full bg-primary" />}
 
                         <span>
                           Employer email: {c.employerId.email}
@@ -213,7 +245,13 @@ const Contacts = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setSelectedChat(c)}
+                      onClick={() => {
+                        setSelectedChat(c);
+
+                        if (c.unreadCountWorker > 0) {
+                          markAsRead.mutate(c._id);
+                        }
+                      }}
                     >
                       Open
                     </Button>
@@ -261,7 +299,7 @@ const Contacts = () => {
       </DialogDescription>
     </DialogHeader>
 
-    <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
+    <div ref={messagesContainerRef} className="flex-1 overflow-y-auto space-y-3 min-h-0">
 
       {loadingMessages ? (
   <p>Loading messages...</p>

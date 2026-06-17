@@ -43,7 +43,7 @@ type Contact = {
   lastMessage: string;
   lastMessageAt: string;
 
-  unreadCountWorker: number;
+  unreadCountEmployer: number;
 
   status: "active" | "archived" | "blocked";
 
@@ -63,7 +63,7 @@ const Contacts = () => {
   const [selectedEmployer, setSelectedEmployer] =
     useState<Contact | null>(null);
 
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   const fetchContacts = async () => {
     const { data } = await axios.get(
@@ -103,14 +103,20 @@ const Contacts = () => {
 
   
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
+    requestAnimationFrame(() => {
+      const container = messagesContainerRef.current;
+
+      if (!container) return;
+
+      container.scrollTop = container.scrollHeight;
     });
-  }, [messages]);
+  }, [messages, selectedChat]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["employer-contacts"],
     queryFn: fetchContacts,
+    refetchOnMount: "always",
+    refetchInterval: 3000
   });
     
   const sendMessage = useMutation({
@@ -146,6 +152,26 @@ const Contacts = () => {
     },
   });
 
+  const markAsRead = useMutation({
+    mutationFn: async (contactId: string) => {
+      const { data } = await axios.patch(
+        `http://localhost:8920/api/pro/contacts/${contactId}/read`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      return data;
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["employer-contacts"],
+      });
+    },
+  });
+
   if (isLoading) {
     return <div className="text-center py-10">Loading...</div>;
   }
@@ -158,7 +184,12 @@ const Contacts = () => {
     );
   }
 
-  const contacts: Contact[] = data?.contacts || [];
+  const contacts: Contact[] = [...(data?.contacts || [])].sort((a, b) => {
+    return (
+      new Date(b.lastMessageAt).getTime() -
+      new Date(a.lastMessageAt).getTime()
+    );
+  });
 
   return (
     <>
@@ -181,7 +212,7 @@ const Contacts = () => {
                       <CardTitle>{c.title}</CardTitle>
 
                       <CardDescription className="flex items-center gap-2 text-xs mt-3">
-                        <span className="h-2 w-2 rounded-full bg-primary" />
+                        {c.unreadCountEmployer > 0 && <span className="h-2 w-2 rounded-full bg-primary" />}
 
                         <span>
                           Employer email: {c.employerId.email}
@@ -189,9 +220,9 @@ const Contacts = () => {
                       </CardDescription>
                     </div>
 
-                    {c.unreadCountWorker > 0 && (
+                    {c.unreadCountEmployer > 0 && (
                       <Badge>
-                        {c.unreadCountWorker} new
+                        {c.unreadCountEmployer} new
                       </Badge>
                     )}
                   </div>
@@ -213,7 +244,13 @@ const Contacts = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setSelectedChat(c)}
+                      onClick={() => {
+                        setSelectedChat(c);
+
+                        if (c.unreadCountEmployer > 0) {
+                          markAsRead.mutate(c._id);
+                        }
+                      }}
                     >
                       Open
                     </Button>
@@ -261,7 +298,10 @@ const Contacts = () => {
       </DialogDescription>
     </DialogHeader>
 
-    <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
+    <div
+      ref={messagesContainerRef}
+      className="flex-1 overflow-y-auto space-y-3 min-h-0"
+    >
 
       {loadingMessages ? (
   <p>Loading messages...</p>
@@ -290,7 +330,6 @@ const Contacts = () => {
           No messages yet.
         </div>
       )}
-      <div ref={bottomRef} />
     </div>
 
     <div className="flex gap-2 pt-4">

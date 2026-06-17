@@ -163,20 +163,22 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               }}
             />
 
-            {(preview || currentProfile) && (
-              <div className="flex flex-col items-center gap-2">
-                <img
-                  src={
-                    preview
-                      ? preview
-                      : currentProfile
-                      ? `http://localhost:8920${currentProfile}`
-                      : undefined
-                  }
-                  alt="profile preview"
-                  className="w-24 h-24 rounded-full object-cover"
-                />
-              </div>
+            {/* Existing photo from server */}
+            {!preview && currentProfile && (
+              <img
+                src={`http://localhost:8920${currentProfile}`}
+                className="w-24 h-24 rounded-full object-cover"
+                alt="profile"
+              />
+            )}
+
+            {/* New selected file preview */}
+            {preview && (
+              <img
+                src={preview}
+                className="w-24 h-24 rounded-full object-cover"
+                alt="preview"
+              />
             )}
           </div>
 

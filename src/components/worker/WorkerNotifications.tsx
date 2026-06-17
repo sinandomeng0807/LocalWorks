@@ -121,6 +121,30 @@ const WorkerNotifications = () => {
     },
   });
 
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      return await axios.patch(
+        "http://localhost:8920/api/pro/markAllAsRead",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+    },
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["workerNotifications"],
+      });
+
+      toast.success("All notifications marked as read");
+    },
+
+    onError: () => {
+      toast.error("Failed to mark all notifications as read");
+    },
+  });
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -132,6 +156,17 @@ const WorkerNotifications = () => {
   const unreadCount = notifications.filter(
     (notification) => !notification.read
   ).length;
+
+  const sortedNotifications = [...notifications].sort((a, b) => {
+    if (a.read !== b.read) {
+      return Number(a.read) - Number(b.read); // unread first
+    }
+
+    return (
+      new Date(b.createdAt).getTime() -
+      new Date(a.createdAt).getTime()
+    );
+  });
 
   return (
     <main className="flex-1 p-6 space-y-6">
@@ -145,16 +180,28 @@ const WorkerNotifications = () => {
         </p>
       </div>
 
-      {unreadCount > 0 && (
-        <Badge variant="secondary">
-          {unreadCount} unread notification
-          {unreadCount > 1 ? "s" : ""}
-        </Badge>
-      )}
+      <div className="flex items-center gap-2">
+        {unreadCount > 0 && (
+          <>
+            <Badge variant="secondary">
+              {unreadCount} unread notification
+              {unreadCount > 1 ? "s" : ""}
+            </Badge>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => markAllAsReadMutation.mutate()}
+            >
+              Mark All as Read
+            </Button>
+          </>
+        )}
+</div>
 
       <ScrollArea className="h-[calc(100vh-220px)]">
         <div className="space-y-3">
-          {!notifications.length ? <div>You currently don't have any notifications yet.</div> : notifications.map((notification) => (
+          {!sortedNotifications.length ? <div>You currently don't have any notifications yet.</div> : sortedNotifications.map((notification) => (
             <div
               key={notification._id}
               className={`flex items-center gap-4 p-4 rounded-lg border ${

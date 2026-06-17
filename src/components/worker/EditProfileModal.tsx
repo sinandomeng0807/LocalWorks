@@ -47,6 +47,38 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
     expected_salary: "$20-30/hr",
   });
 
+  
+  const [mapQuery, setMapQuery] = useState("");
+
+  const [mapUrl, setMapUrl] = useState(
+    "https://maps.google.com/maps?q=16.167700,120.426300&z=18&output=embed"
+  );
+
+
+  const handleLocationSearch = async () => {
+    if (!mapQuery.trim()) return;
+
+    const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+      mapQuery
+    )}`;
+
+    const res = await fetch(geocodeUrl);
+    const data = await res.json();
+
+    if (!data.length) return;
+
+    const { lat, lon, display_name } = data[0];
+
+    setMapUrl(
+      `https://maps.google.com/maps?q=${lat},${lon}&z=17&output=embed`
+    );
+
+    setFormData({
+      ...formData,
+      location: display_name,
+    });
+  };
+
   const [skills, setSkills] = useState([
     "Construction",
     "Heavy Machinery",
@@ -250,38 +282,63 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
                 onChange={handleChange}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-                  <Select
-                    value={formData.location}
-                    onValueChange={(value) => setFormData({ ...formData, location: value })}
-                  >
-                    <SelectTrigger id="company-name">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent defaultValue={"Choose a Skill Category"}>
-                      {!data?.Locations?.length ? (
-                        <SelectItem value="N/A">N/A</SelectItem>
-                      ) : (
-                        data.Locations.map((skill: any) => (
-                          <SelectItem key={skill.name} value={skill.name}>
-                            {skill.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-            </div>
           </div>
 
           {/* Location & Experience */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-3 mb-25">
+              <Label>Location *</Label>
+
+              <div className="flex flex-col gap-3">
+
+                {/* Search bar */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Search place, city, barangay, address..."
+                    value={mapQuery}
+                    onChange={(e) => setMapQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleLocationSearch();
+                      }
+                    }}
+                  />
+
+                  <Button type="button" onClick={handleLocationSearch}>
+                    Search
+                  </Button>
+                </div>
+
+                {/* Map */}
+                <div
+                  className="ratio ratio-4x3"
+                  style={{ maxWidth: "500px", height: "300px" }}
+                >
+                  <iframe
+                    src={mapUrl}
+                    style={{
+                      border: 0,
+                      borderRadius: "12px",
+                      width: "100%",
+                      height: "100%",
+                    }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Google Map"
+                  />
+                </div>
+
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="yearsOfExperience">Years of Experience</Label>
               <Input
                 id="yearsOfExperience"
                 name="yearsOfExperience"
-                value={formData.yearsOfExperience === "N/A" ? "" : formData.yearsOfExperience}
+                value={formData.yearsOfExperience === "Years of experience isn't specified" ? "" : formData.yearsOfExperience}
                 onChange={handleChange}
                 placeholder="e.g., 5 years"
               />
@@ -378,7 +435,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
             >
               Cancel
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" onClick={() => alert(formData.yearsOfExperience)}>Save Changes</Button>
           </div>
         </form>
       </DialogContent>

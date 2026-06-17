@@ -8,7 +8,7 @@ import CompanyProfile from "@/components/employer/CompanyProfile";
 import WorkerApplications from "@/components/employer/WorkerApplications";
 import BrowseWorkers from "@/components/employer/BrowseWorkers";
 import PostJobModal from "@/components/employer/PostJobModal";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Bell } from "lucide-react";
@@ -18,6 +18,143 @@ import EmployerNotifications from "@/components/employer/EmployerNotifications";
 axios.defaults.withCredentials = true
 
 const EmployerDashboard = () => {
+  const queryClient = useQueryClient();
+
+  const fetchNotifications = async () => {
+    const result = await axios.get(
+      "http://localhost:8920/api/pro/employer/notifications",
+      {
+        withCredentials: true,
+      }
+    );
+
+    return result.data.notifications;
+  };
+
+  const { data: notifications = [] } = useQuery({
+    queryKey: ["employerNotifications"],
+    queryFn: fetchNotifications,
+  });
+
+  const unreadCount = notifications.filter(
+    (n: any) => !n.read
+  ).length;
+
+
+  const markAsReadMutation = useMutation({
+    mutationFn: async (_id: string) => {
+      return axios.patch(
+        `http://localhost:8920/api/pro/markAsRead/${_id}`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+    },
+
+    onMutate: async (_id) => {
+      await queryClient.cancelQueries({
+        queryKey: ["employerNotifications"],
+      });
+
+      const previous = queryClient.getQueryData([
+        "employerNotifications",
+      ]);
+
+      queryClient.setQueryData(
+        ["employerNotifications"],
+        (old: any[]) => {
+          if (!old) return [];
+
+          return old.map((n) =>
+            n._id === _id
+              ? { ...n, read: true }
+              : n
+          );
+        }
+      );
+
+      return { previous };
+    },
+
+
+    onError: (_err, _id, context) => {
+      queryClient.setQueryData(
+        ["employerNotifications"],
+        context?.previous
+      );
+
+      toast.error("Failed to mark as read");
+    },
+
+
+    onSuccess: () => {
+      toast.success("Marked as read");
+    },
+
+
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["employerNotifications"],
+      });
+    },
+  });
+
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      return axios.patch(
+        "http://localhost:8920/api/pro/markAllAsRead",
+        {},
+        { withCredentials: true }
+      );
+    },
+
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: ["employerNotifications"],
+      });
+
+      queryClient.setQueryData(
+        ["employerNotifications"],
+        (old:any[]) =>
+          old?.map(n => ({
+            ...n,
+            read:true
+          }))
+      );
+    },
+
+    onSuccess: () => {
+      toast.success("All notifications marked as read");
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey:["employerNotifications"]
+      });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async(id:string)=>{
+      return axios.delete(
+        `http://localhost:8920/api/pro/employer/deleteNotif/${id}`,
+        {
+          withCredentials:true
+        }
+      )
+    },
+
+    onSuccess:()=>{
+      queryClient.invalidateQueries({
+        queryKey:["employerNotifications"]
+      });
+
+      toast.success("Deleted");
+    }
+  });
+
   const navigate = useNavigate()
   const [postJobOpen, setPostJobOpen] = useState(false);
 
@@ -81,7 +218,16 @@ const EmployerDashboard = () => {
 
             <TabsTrigger value="notifications" className="gap-2">
               <Bell className="w-4 h-4" />
-              <span className="hidden sm:inline">Notifications</span>
+
+              <span className="hidden sm:inline">
+                Notifications
+              </span>
+
+              {unreadCount > 0 && (
+                <span className="ml-1 text-xs rounded-full bg-red-500 text-white px-2">
+                  {unreadCount}
+                </span>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -98,7 +244,12 @@ const EmployerDashboard = () => {
           </TabsContent>
 
           <TabsContent value="notifications">
-            <EmployerNotifications />
+            <EmployerNotifications
+              notifications={notifications}
+              markAsReadMutation={markAsReadMutation}
+              deleteMutation={deleteMutation}
+              markAllAsReadMutation={markAllAsReadMutation}
+            />
           </TabsContent>
         </Tabs>
       </main>
