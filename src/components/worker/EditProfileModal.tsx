@@ -4,7 +4,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,9 @@ interface EditProfileModalProps {
 const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
   const queryClient = useQueryClient();
 
+  const [customJobTitle, setCustomJobTitle] = useState("");
+  const [isOtherJob, setIsOtherJob] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "John Smith",
     email: "john.smith@email.com",
@@ -46,6 +49,57 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
     availability: "full-time",
     expected_salary: "$20-30/hr",
   });
+
+  const JOB_TITLES = [
+    "Construction Laborer",
+    "Carpenter",
+    "Electrician",
+    "Plumber",
+    "Mason",
+    "Painter",
+    "Welder",
+    "Pipe Fitter",
+    "Steel Fixer",
+    "Roofer",
+    "Tile Setter",
+    "Drywall Installer",
+    "Concrete Finisher",
+    "Scaffolder",
+    "Glazier",
+    "Insulation Worker",
+    "Demolition Worker",
+    "Heavy Equipment Operator",
+    "Forklift Operator",
+    "Crane Operator",
+    "Machine Operator",
+    "HVAC Technician",
+    "Refrigeration Technician",
+    "Maintenance Technician",
+    "Building Maintenance Worker",
+    "Mechanic",
+    "Auto Mechanic",
+    "Motorcycle Mechanic",
+    "Diesel Mechanic",
+    "Fabricator",
+    "Assembler",
+    "Production Worker",
+    "Factory Worker",
+    "Warehouse Worker",
+    "Delivery Driver",
+    "Truck Driver",
+    "Landscaper",
+    "Gardener",
+    "Janitor",
+    "Cleaner",
+    "Housekeeper",
+    "Security Guard",
+    "Fire Safety Officer",
+    "Solar Panel Installer",
+    "Water Pump Technician",
+    "Foreman",
+    "Site Supervisor",
+    "General Contractor",
+  ];
 
   
   const [mapQuery, setMapQuery] = useState("");
@@ -89,6 +143,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
   ]);
   const [newSkill, setNewSkill] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const [resume, setResume] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
   const ViewProfDetails = async () => {
@@ -108,13 +163,23 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
 
   useEffect(() => {
     if (data?.WorkerProf) {
+      const savedJobTitle = data.WorkerProf.jobTitle || "";
+
+      if (!JOB_TITLES.includes(savedJobTitle)) {
+        setCustomJobTitle(savedJobTitle);
+        setIsOtherJob(true);
+      } else {
+        setIsOtherJob(false);
+      }
+
       setSkills(data.WorkerProf.skills || []);
+
       setFormData({
         name: data.WorkerProf.name || "",
         email: data.WorkerProf.email || "",
         phoneNumber: data.WorkerProf.phoneNumber || "",
         location: data.WorkerProf.location || "",
-        jobTitle: data.WorkerProf.jobTitle || "",
+        jobTitle: savedJobTitle,
         yearsOfExperience: data.WorkerProf.yearsOfExperience || "",
         about_me: data.WorkerProf.about_me || "",
         availability: data.WorkerProf.availability || "",
@@ -126,49 +191,46 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
   if (isLoading) return <div style={styleDisplay}>Loading...</div>
   if (error) return <div style={styleDisplay}>Error: {error.message}</div>
 
-  const UpdatePhoto = async () => {
-    if (!photo) return;
-
-    const formData = new FormData();
-    formData.append("photo", photo);
-
-    await axios.put(
-      "http://localhost:8920/api/pro/worker/upload-photo",
-      formData,
-      {
-        withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" }
-      }
-    );
-  };
-
   const UpdateProf = async () => {
     try {
+
+      const payload = new FormData();
+
+      payload.append("name", String(formData.name));
+      payload.append("phoneNumber", String(formData.phoneNumber));
+      payload.append("location", String(formData.location));
+      payload.append("jobTitle", String(formData.jobTitle));
+      payload.append("yearsOfExperience", String(formData.yearsOfExperience === "" ? "Years of experience isn't specified" : formData.yearsOfExperience));
+      payload.append("about_me", String(formData.about_me));
+      payload.append("availability", String(formData.availability));
+      payload.append("expected_salary", String(formData.expected_salary));
+
+      // send array as JSON string
+      payload.append("skills", JSON.stringify(skills));
+
+
       if (photo) {
-        await UpdatePhoto();
+        payload.append("photo", photo);
       }
 
-      const payload = {
-        ...formData,
-        skills,
-        ...(formData.yearsOfExperience.trim() !== "" && {
-          yearsOfExperience: formData.yearsOfExperience.trim()
-        })
-      };
-
-      if (formData.yearsOfExperience.trim() === "") {
-        delete payload.yearsOfExperience;
+      if (resume) {
+        payload.append("resume", resume);
       }
+
 
       const response = await axios.put(
         "http://localhost:8920/api/pro/worker/updateProfile",
         payload,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+        }
       );
+
 
       toast.success(response.data.message);
 
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+
       onOpenChange(false);
 
     } catch (error: any) {
@@ -232,7 +294,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
             {/* Existing photo from server */}
             {!preview && data?.WorkerProf?.photo && (
               <img
-                src={`http://localhost:8920${data.WorkerProf.photo}`}
+                src={`http://localhost:8920/uploads/profile/${data.WorkerProf.photo}`}
                 className="w-20 h-20 rounded-full object-cover"
                 alt="profile"
               />
@@ -248,6 +310,20 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
             )}
           </div>
 
+          <div className="space-y-2">
+            <Label>Resume</Label>
+
+            <Input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setResume(file);
+              }}
+            />
+          </div>
+
+
           {/* Basic Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -260,14 +336,54 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="jobTitle">Job Title</Label>
+              <Label>Job Title</Label>
+
+              <Select
+                value={isOtherJob ? "Others" : formData.jobTitle}
+                onValueChange={(value) => {
+                  if (value === "Others") {
+                    setIsOtherJob(true);
+                    setFormData({
+                      ...formData,
+                      jobTitle: customJobTitle,
+                    });
+                  } else {
+                    setIsOtherJob(false);
+                    setCustomJobTitle("");
+                    setFormData({
+                      ...formData,
+                      jobTitle: value,
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Job Title" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {JOB_TITLES.map((job) => (
+                    <SelectItem key={job} value={job}>
+                      {job}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="Others">Others</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {isOtherJob && (
                 <Input
-                  id="jobTitle"
-                  name="jobTitle"
-                  value={formData.jobTitle}
-                  onChange={handleChange}
-                  placeholder="e.g. Construction Worker"
+                  placeholder="Enter Job Title"
+                  value={customJobTitle}
+                  onChange={(e) => {
+                    setCustomJobTitle(e.target.value);
+                    setFormData({
+                      ...formData,
+                      jobTitle: e.target.value,
+                    });
+                  }}
                 />
+              )}
             </div>
           </div>
 
@@ -435,7 +551,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
             >
               Cancel
             </Button>
-            <Button type="submit" onClick={() => alert(formData.yearsOfExperience)}>Save Changes</Button>
+            <Button type="submit">Save Changes</Button>
           </div>
         </form>
       </DialogContent>

@@ -14,6 +14,9 @@ import { toast } from "sonner";
 import { Bell } from "lucide-react";
 import axios from "axios";
 import EmployerNotifications from "@/components/employer/EmployerNotifications";
+import { Flag } from "lucide-react";
+import Reports from "@/components/employer/Reports";
+import WorkerAssignments from "@/components/employer/WorkerAssignments";
 
 axios.defaults.withCredentials = true
 
@@ -22,7 +25,7 @@ const EmployerDashboard = () => {
 
   const fetchNotifications = async () => {
     const result = await axios.get(
-      "http://localhost:8920/api/pro/employer/notifications",
+      "http://localhost:8920/api/pro/notifications",
       {
         withCredentials: true,
       }
@@ -139,7 +142,7 @@ const EmployerDashboard = () => {
   const deleteMutation = useMutation({
     mutationFn: async(id:string)=>{
       return axios.delete(
-        `http://localhost:8920/api/pro/employer/deleteNotif/${id}`,
+        `http://localhost:8920/api/pro/deleteNotif/${id}`,
         {
           withCredentials:true
         }
@@ -216,6 +219,11 @@ const EmployerDashboard = () => {
               Contacts
             </TabsTrigger>
 
+            <TabsTrigger value="reports" className="gap-2">
+              <Flag className="w-4 h-4" />
+              Reports
+            </TabsTrigger>
+
             <TabsTrigger value="notifications" className="gap-2">
               <Bell className="w-4 h-4" />
 
@@ -228,6 +236,11 @@ const EmployerDashboard = () => {
                   {unreadCount}
                 </span>
               )}
+            </TabsTrigger>
+
+            <TabsTrigger value="workerAssignments" className="gap-2">
+              <Flag className="w-4 h-4" />
+              Worker Assignments
             </TabsTrigger>
           </TabsList>
 
@@ -243,6 +256,10 @@ const EmployerDashboard = () => {
             <Contacts />
           </TabsContent>
 
+          <TabsContent value="reports">
+            <Reports />
+          </TabsContent>
+
           <TabsContent value="notifications">
             <EmployerNotifications
               notifications={notifications}
@@ -250,6 +267,10 @@ const EmployerDashboard = () => {
               deleteMutation={deleteMutation}
               markAllAsReadMutation={markAllAsReadMutation}
             />
+          </TabsContent>
+
+          <TabsContent value="workerAssignments">
+            <WorkerAssignments />
           </TabsContent>
         </Tabs>
       </main>

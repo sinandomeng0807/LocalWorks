@@ -1,8 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Briefcase, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 const Hero = () => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["hero-stats"],
+    queryFn: async () => {
+      const res = await axios.get("http://localhost:8920/api/auth/workers");
+      return res.data;
+    },
+  });
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Something went wrong.</div>;
+  }
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/10 py-20 lg:py-32">
       {/* Decorative Elements */}
@@ -53,17 +72,17 @@ const Hero = () => {
           {/* Trust Indicators */}
           <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-muted-foreground">
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-foreground">500+</span>
+              <span className="text-2xl font-bold text-foreground">{data.RegisteredWorkers}</span>
               <span className="text-sm">Registered Workers</span>
             </div>
             <div className="w-px h-8 bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-foreground">1,000+</span>
+              <span className="text-2xl font-bold text-foreground">2{data.jobs}</span>
               <span className="text-sm">Jobs Completed</span>
             </div>
             <div className="w-px h-8 bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-foreground">4.8★</span>
+              <span className="text-2xl font-bold text-foreground">{Number(data?.AverageRating ?? 0).toFixed(1)}★</span>
               <span className="text-sm">Average Rating</span>
             </div>
           </div>

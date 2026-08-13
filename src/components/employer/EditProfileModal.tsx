@@ -39,10 +39,12 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
     company: "",
     email: "",
     phone: "",
-    industry: ""
+    industry: "",
+    industryTitle: ""
   });
 
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [permitFile, setPermitFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
   const ViewProfDetails = async () => {
@@ -51,22 +53,50 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
       { withCredentials: true }
     );
 
-    const { data } = result;
+    console.log("RAW RESPONSE", result.data);
 
-    setFormData({
-      company: data.EmployerProf.company,
-      email: data.EmployerProf.email,
-      phone: data.EmployerProf.phone,
-      industry: data.EmployerProf.industry
-    });
-
-    return data;
+    return result.data;
   };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["ViewProfDetails"],
-    queryFn: ViewProfDetails
+    queryFn: ViewProfDetails,
+    enabled: open,
   });
+    
+  useEffect(() => {
+    if (!data?.EmployerProf) return;
+
+    const employer = data.EmployerProf;
+
+    console.log("EmployerProf:", employer);
+    console.log("Employer Industry:", employer.industry);
+    console.log("Industries:", data.Industries);
+
+    const industryExists = data.Industries?.find(
+      (item: any) => item._id === employer.industry
+    );
+
+    console.log("Found Industry:", industryExists);
+
+    if (industryExists && !industryExists.notAccepted) {
+      setFormData({
+        company: employer.company?.name ?? employer.company,
+        email: employer.email,
+        phone: employer.phone,
+        industry: industryExists._id,
+        industryTitle: "",
+      });
+    } else {
+      setFormData({
+        company: employer.company?.name ?? employer.company,
+        email: employer.email,
+        phone: employer.phone,
+        industry: "others",
+        industryTitle: employer.industry?.title ?? "",
+      });
+    }
+  }, [data]);
 
   const currentProfile = data?.EmployerProf?.profile;
 
@@ -82,35 +112,44 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
   const UpdateProf = async () => {
     try {
       // 1. upload photo if exists
-      if (profilePhoto) {
-        const photoForm = new FormData();
-        photoForm.append("photo", profilePhoto);
+      const updateForm = new FormData();
 
-        await axios.put(
-          "http://localhost:8920/api/pro/employer/upload-photo",
-          photoForm,
-          {
-            withCredentials: true,
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
+      updateForm.append("company", formData.company);
+      updateForm.append("phone", formData.phone);
+
+      if (formData.industry === "others") {
+        updateForm.append("industry", "");
+        updateForm.append("industryTitle", formData.industryTitle);
+      } else {
+        updateForm.append("industry", formData.industry);
       }
 
-      // 2. update profile data (JSON request)
+      if (profilePhoto) {
+        updateForm.append("photo", profilePhoto);
+      }
+
+      if (permitFile) {
+        updateForm.append("permit", permitFile);
+      }
+
       const response = await axios.put(
         "http://localhost:8920/api/pro/update/employer",
+        updateForm,
         {
-          company: formData.company,
-          email: formData.email,
-          phone: formData.phone,
-          industry: formData.industry,
-        },
-        { withCredentials: true }
+          withCredentials: true,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
 
-      await queryClient.invalidateQueries({ queryKey: ["profileEmployer"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["ViewProfDetails"]
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["employer"]
+      })
 
       toast.success(response.data.message, {
         description: "Your Profile has been successfully updated!",
@@ -155,11 +194,16 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               type="file"
               accept="image/*"
               onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  const file = e.target.files[0];
-                  setProfilePhoto(file);
-                  setPreview(URL.createObjectURL(file));
+                const file = e.target.files?.[0];
+
+                if (!file) return;
+
+                if (preview) {
+                  URL.revokeObjectURL(preview);
                 }
+
+                setProfilePhoto(file);
+                setPreview(URL.createObjectURL(file));
               }}
             />
 
@@ -168,7 +212,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               <img
                 src={`http://localhost:8920${currentProfile}`}
                 className="w-24 h-24 rounded-full object-cover"
-                alt="profile"
+                alt="photo"
               />
             )}
 
@@ -189,7 +233,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               <Input
                 id="company"
                 name="company"
-                defaultValue={data.EmployerProf.company}
+                value={formData.company}
                 onChange={handleChange}
               />
             </div>
@@ -198,7 +242,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               <Input
                 id="phone"
                 name="phone"
-                defaultValue={data.EmployerProf.phone}
+                value={formData.phone}
                 onChange={handleChange}
               />
             </div>
@@ -209,20 +253,63 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
             <div className="space-y-2">
               <Label htmlFor="industry">Industry</Label>
                   <Select
-                    defaultValue={data.EmployerProf.industry}
-                    onValueChange={(value) => setFormData({ ...formData, industry: value })}
+                    value={formData.industry}
+                    onValueChange={(value) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        industry: value
+                      }))
+                    }
                   >
                     <SelectTrigger id="industry">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {data?.Industries?.map((skill: any) => (
-                        <SelectItem key={skill._id} value={skill._id}>
-                          {skill.title}
+                      {data?.Industries?.map((industry: any) => (
+                        <SelectItem
+                          key={industry._id}
+                          value={industry._id}
+                        >
+                          {industry.title}
                         </SelectItem>
                       ))}
+
+                      <SelectItem value="others">
+                        Others
+                      </SelectItem>
                     </SelectContent>
                   </Select>
+
+                  {formData.industry === "others" && (
+                    <div className="space-y-2">
+                      <Label>Industry Name</Label>
+                      <Input
+                        value={formData.industryTitle}
+                        onChange={(e) =>
+                          setFormData(prev => ({
+                            ...prev,
+                            industryTitle: e.target.value
+                          }))
+                        }
+                        placeholder="Enter industry name"
+                      />
+                    </div>
+                  )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="permit">Business Permit</Label>
+
+              <Input
+                id="permit"
+                type="file"
+                accept=".pdf,image/*"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    setPermitFile(e.target.files[0]);
+                  }
+                }}
+              />
             </div>
           </div>
 

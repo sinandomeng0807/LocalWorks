@@ -20,6 +20,11 @@ const CompanyProfile = () => {
     const { data } = await axios.get("http://localhost:8920/api/pro/company", {
       withCredentials: true
     })
+
+    console.log(data);
+    console.log(data.CompanyInformation);
+    console.log(data.CompanyInformation.industry);
+
     return data
   }
 
@@ -49,7 +54,7 @@ const CompanyProfile = () => {
             <div>
               <CardTitle className="text-2xl">{data.CompanyInformation.name}</CardTitle>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary">{data.CompanyInformation.industry.title}</Badge>
+                <Badge variant="secondary">{data.CompanyInformation.industry?.title || "No industry"}</Badge>
               </div>
               <div className="flex items-center gap-2 mt-2 text-muted-foreground text-sm">
                 <MapPin className="w-4 h-4" />

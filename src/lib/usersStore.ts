@@ -27,6 +27,7 @@ export interface UserProfile {
   reportsSubmitted: number;
   createdAt: string;
   jobTitle?: string;
+  isVerified?: Boolean;
 }
 
 const mockUsers: UserProfile[] = [

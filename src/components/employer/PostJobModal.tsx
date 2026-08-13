@@ -53,6 +53,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
     applyBefore: "",
     startDate: "",
     category: "", // required
+    categoryTitle: "",
   });
 
   const [tags, setTags] = useState<string[]>([]);
@@ -154,7 +155,15 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
         startDate: formData.startDate || undefined,
         positions: Number(formData.positions),
         applyBefore: formData.applyBefore,
-        category: formData.category, // required
+        category:
+          formData.category === "others"
+            ? ""
+            : formData.category,
+
+        categoryTitle:
+          formData.category === "others"
+            ? formData.categoryTitle
+            : "", // required
       };
 
       const { data } = await axios.post(
@@ -181,6 +190,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
         applyBefore: "",
         startDate: "",
         category: "", // reset
+        categoryTitle: ""
       });
       setTags([]);
       onOpenChange(false);
@@ -205,11 +215,13 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
       !formData.schedule ||
       !formData.applyBefore ||
       !formData.positions ||
-      !formData.category
+      !formData.category ||
+      (formData.category === "others" &&
+        !formData.categoryTitle.trim())
     ) {
       toast.error("Please fill in all required fields.");
       return;
-    }
+}
 
     postJob();
   };
@@ -319,28 +331,57 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
 
               <div className="space-y-2">
                 <Label>Category *</Label>
+
                 <Select
                   value={formData.category}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, category: value })
+                    setFormData({
+                      ...formData,
+                      category: value,
+                      categoryTitle: "",
+                    })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue
                       placeholder={
-                        industryLoading ? "Loading categories..." : "Select category"
+                        industryLoading
+                          ? "Loading categories..."
+                          : "Select category"
                       }
                     />
                   </SelectTrigger>
+
                   <SelectContent>
                     {industries.map((industry: any) => (
                       <SelectItem key={industry._id} value={industry.title}>
                         {industry.title}
                       </SelectItem>
                     ))}
+
+                    <SelectItem value="others">
+                      Others
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
+              {formData.category === "others" && (
+                <div className="space-y-2">
+                  <Label>Category Name *</Label>
+
+                  <Input
+                    placeholder="Enter category"
+                    value={formData.categoryTitle}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        categoryTitle: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Salary/Rate *</Label>

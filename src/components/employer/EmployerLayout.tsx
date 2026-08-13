@@ -54,7 +54,14 @@ export default function EmployerLayout() {
         description: notification.description,
       });
 
-      queryClient.invalidateQueries({ queryKey: ["employerNotifications"] });
+      queryClient.setQueryData(
+        ["employerNotifications"],
+        (old: EmployerNotification[] | undefined) => {
+          if (!old) return [notification];
+
+          return [notification, ...old];
+        }
+      );
     };
 
     socket.off("notification:employer:new");

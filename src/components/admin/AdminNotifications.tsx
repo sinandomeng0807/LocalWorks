@@ -29,7 +29,7 @@ interface Notification {
   description: string;
   time: string;
   read: boolean;
-  category: "job" | "account";
+  category: "job" | "account" | "report";
   details?: string;
 }
 
@@ -100,15 +100,23 @@ const AdminNotifications = () => {
     queryFn: fetchAdminNotifications,
   })
 
-  const filtered = notifications.filter((n: Notification) => {
-    const matchesSearch =
-      n.title.toLowerCase().includes(search.toLowerCase()) ||
-      n.description.toLowerCase().includes(search.toLowerCase());
-    if (activeFilter === "unread") return matchesSearch && !n.read;
-    if (activeFilter === "job") return matchesSearch && n.category === "job";
-    if (activeFilter === "account") return matchesSearch && n.category === "account";
-    return matchesSearch;
-  });
+  const filtered = [...notifications]
+    .filter((n: Notification) => {
+      const matchesSearch =
+        n.title.toLowerCase().includes(search.toLowerCase()) ||
+        n.description.toLowerCase().includes(search.toLowerCase());
+
+      if (activeFilter === "unread") return matchesSearch && !n.read;
+      if (activeFilter === "job") return matchesSearch && n.category === "job";
+      if (activeFilter === "account") return matchesSearch && n.category === "account";
+      if (activeFilter === "report") return matchesSearch && n.category === "report";
+
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      if (a.read === b.read) return 0;
+      return a.read ? 1 : -1;
+    });
 
   
   
@@ -131,6 +139,29 @@ const AdminNotifications = () => {
       toast.error("Failed to mark as read")
     }
   })
+
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async (scope: string) => {
+      return await axios.patch(
+        "http://localhost:8920/api/admin/admin-notifications/mark-read",
+        { scope }
+      );
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["adminNotifications"],
+      });
+
+      toast.success("Notifications marked as read");
+    },
+
+    onError: () => {
+      toast.error("Failed to mark notifications as read");
+    },
+  });
+
 
   const deleteNotificationMutation = useMutation({
     mutationFn: async (_id: string) => {
@@ -167,8 +198,8 @@ const AdminNotifications = () => {
   }
 
   const markAllAsRead = () => {
-    toast.success("All notifications marked as read")
-  }
+    markAllAsReadMutation.mutate(activeFilter);
+  };
 
 
   const deleteNotification = (_id: string) => {
@@ -210,6 +241,7 @@ const AdminNotifications = () => {
                 { value: "unread", label: "Unread" },
                 { value: "job", label: "Job Updates" },
                 { value: "account", label: "Account Updates" },
+                { value: "report", label: "Reports" }
               ].map((tab) => (
                 <TabsTrigger
                   key={tab.value}

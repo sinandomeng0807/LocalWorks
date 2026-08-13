@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Calendar, Download } from "lucide-react";
+import { Badge, Calendar, Download } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, Cell,
@@ -15,6 +15,15 @@ import { exportToCSV } from "@/lib/csvExport";
 import { toast } from "sonner";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useQueryClient } from "@tanstack/react-query";
+
 
 const BAR_COLORS = [
   "hsl(24, 85%, 50%)",
@@ -39,22 +48,83 @@ const categoryTable = [
 ];
 
 const AdminReports = ({ jobs }: AdminReportsProps) => {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("worker");
 
   const fetchReports = async () => {
-    const res = await axios.get("http://localhost:8920/api/admin/reports", {
-      withCredentials: true
-    });
+    const res = await axios.get(
+      "http://localhost:8920/api/admin/reports",
+      {
+        withCredentials: true
+      }
+    );
+
     return res.data;
   };
-  
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['Reports'],
-    queryFn: fetchReports
-  })
 
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>Error: {error.message}</div>
+  const getApplicationHealth = async () => {
+    const res = await axios.get(
+      "http://localhost:8920/api/application-health"
+    );
+
+    console.log("API RESPONSE:", res.data);
+
+    return res.data;
+  };
+
+
+
+  const updateReportStatus = async (_id: string, status: string) => {
+    try {
+      await axios.patch(
+        "http://localhost:8920/api/admin/update/report",
+        {
+          _id,
+          status,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: ["Reports"],
+      });
+
+      toast.success("Report status updated");
+    } catch (error) {
+      toast.error("Failed to update report status");
+    }
+  };
+
+
+  const {
+    data,
+    isLoading,
+    error
+  } = useQuery({
+    queryKey: ["Reports"],
+    queryFn: fetchReports
+  });
+
+
+  const {
+    data: health,
+    isLoading: healthLoading,
+    error: healthError
+  } = useQuery({
+    queryKey: ["ApplicationHealth"],
+    queryFn: getApplicationHealth
+  });
+
+
+  if (isLoading || healthLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error || healthError) {
+    return <div>Error loading reports</div>;
+  }
 
   const {
     jobsByIndustry = [],
@@ -65,12 +135,35 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
 
   const handleExport = () => {
     exportToCSV(
-      jobs.map(({ id, title, company, location, salary, type, posted, status }) => ({
-        id, title, company, location, salary, type, posted, status: status || "pending",
+      jobs.map(({ _id, title, company, location, salary, type, posted, status }) => ({
+        _id, title, company, location, salary, type, posted: posted.email, status: status || "pending",
       })),
       "reports"
     );
     toast.success("Report exported successfully!");
+  };
+
+  const handleExport30Days = () => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    exportToCSV(
+      jobs
+        .filter((job) => new Date(job.createdAt) >= thirtyDaysAgo) // replace postedAt with your date field
+        .map(({ _id, title, company, location, salary, type, posted, status }) => ({
+          _id,
+          title,
+          company,
+          location,
+          salary,
+          type,
+          posted: posted.email,
+          status: status || "pending",
+        })),
+      "reports-last-30-days"
+    );
+
+    toast.success("Last 30 days report exported successfully!");
   };
 
   return (
@@ -86,7 +179,7 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
             <Download className="w-4 h-4" />
             Export
           </Button>
-          <Button variant="outline" size="sm" className="gap-2 text-sm">
+          <Button variant="outline" size="sm" className="gap-2 text-sm" onClick={handleExport30Days}>
             <Calendar className="w-4 h-4" />
             Last 30 Days
           </Button>
@@ -100,6 +193,7 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
             { value: "worker", label: "Worker Performance" },
             { value: "job", label: "Job Performance" },
             { value: "category", label: "Category Detailed Data" },
+            { value: "reports", label: "Reports" },
           ].map((tab) => (
             <TabsTrigger
               key={tab.value}
@@ -164,19 +258,19 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Verification Rate:</span>
-                    <span className="font-semibold text-foreground">95%</span>
+                    <span className="font-semibold text-foreground">{health?.data?.verificationRate ?? 0}%</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Average Match Time:</span>
-                    <span className="font-semibold text-foreground">12 Hrs</span>
+                    <span className="font-semibold text-foreground">{health?.data?.averageMatchTime ?? 0} Hrs</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Average Response Time:</span>
-                    <span className="font-semibold text-foreground">10 Mins</span>
+                    <span className="font-semibold text-foreground">{health?.data?.averageResponseTime ?? 0} Mins</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Platform Uptime:</span>
-                    <span className="font-semibold text-foreground">99.9%</span>
+                    <span className="font-semibold text-foreground">{health?.data?.platformUptime ?? 0}%</span>
                   </div>
                 </div>
               </CardContent>
@@ -222,20 +316,20 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Accepted:</span>
-                    <span className="font-semibold text-foreground">{jobs.filter(j => j.status === "accepted").length}</span>
+                    <span className="font-semibold text-foreground">{jobs.filter(j => j.status === "ACCEPTED").length}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Pending:</span>
-                    <span className="font-semibold text-foreground">{jobs.filter(j => j.status === "pending").length}</span>
+                    <span className="font-semibold text-foreground">{jobs.filter(j => j.status === "PENDING").length}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Rejected:</span>
-                    <span className="font-semibold text-foreground">{jobs.filter(j => j.status === "rejected").length}</span>
+                    <span className="font-semibold text-foreground">{jobs.filter(j => j.status === "DECLINED").length}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Fill Rate:</span>
                     <span className="font-semibold text-foreground">
-                      {jobs.length > 0 ? Math.round((jobs.filter(j => j.status === "accepted").length / jobs.length) * 100) : 0}%
+                      {jobs.length > 0 ? Math.round((jobs.filter(j => j.status === "ACCEPTED").length / jobs.length) * 100) : 0}%
                     </span>
                   </div>
                 </div>
@@ -287,6 +381,53 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
             </Card>
           </div>
         </div>
+      )}
+
+      {activeTab === "reports" && (
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-base font-semibold mb-4">Reports</h3>
+
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {data?.ReportedWorkers?.map((report: any) => (
+                  <TableRow key={report._id}>
+                    <TableCell>{report.reportType}</TableCell>
+                    <TableCell>{report.description}</TableCell>
+                    <TableCell>
+                      {new Date(report.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        defaultValue={report.status}
+                        onValueChange={(value) => updateReportStatus(report._id, value)}
+                      >
+                        <SelectTrigger className="w-[170px]">
+                          <SelectValue />
+                        </SelectTrigger>
+
+                        <SelectContent>
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Resolved">Resolved</SelectItem>
+                          <SelectItem value="Rejected">Rejected</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </main>
   );

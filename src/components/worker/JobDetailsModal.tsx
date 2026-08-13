@@ -17,6 +17,9 @@ import {
   Calendar,
   CheckCircle
 } from "lucide-react";
+import { Flag } from "lucide-react";
+import { useState } from "react";
+import ReportEmployerModal from "./ReportEmployerModal";
 
 interface Job {
   info: {
@@ -27,6 +30,7 @@ interface Job {
     salary: string;
     type: string;
     posted: {
+      _id: string;
       email: string;
     };
     description: string;
@@ -64,6 +68,8 @@ const JobDetailsModal = ({
   if (!job) return null;
 
   const extendedJob = getExtendedJobDetails(job);
+
+  const [reportOpen, setReportOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -193,19 +199,42 @@ const JobDetailsModal = ({
         </div>
 
         {/* Apply Button */}
-        <div className="pt-4">
+        <div className="pt-4 space-y-2">
+
+          <Button
+            variant="destructive"
+            className="w-full gap-2"
+            onClick={() => setReportOpen(true)}
+          >
+            <Flag className="w-4 h-4" />
+            Report Employer
+          </Button>
+
+
           {extendedJob.IsApplied ? (
             <Button disabled className="w-full gap-2">
               <CheckCircle className="w-4 h-4" />
               Already Applied
             </Button>
           ) : (
-            <Button className="w-full" size="lg" onClick={onApply}>
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={onApply}
+            >
               Apply Now
             </Button>
           )}
+
         </div>
       </DialogContent>
+
+      <ReportEmployerModal
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        employerId={extendedJob.info.posted._id}
+        jobId={extendedJob.info.id}
+      />
     </Dialog>
   );
 };

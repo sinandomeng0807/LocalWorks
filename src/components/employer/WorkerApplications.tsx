@@ -156,11 +156,13 @@ const WorkerApplications = () => {
       status,
       timeline,
       interviewDate,
+      application,
     }: {
       _id: string;
       status: string;
       timeline: string;
       interviewDate?: string;
+      application: Application;
     }) => {
       if (status === "Interview Scheduled" && interviewDate) {
         await axios.put("http://localhost:8920/api/pro/date", {
@@ -174,20 +176,48 @@ const WorkerApplications = () => {
         { _id, status, timeline }
       );
     },
-    onSuccess: () => {
+
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["ViewApplicationsEmployer"],
       });
-      setConfirmDialog({ open: false, type: "accept", application: null });
-      setDateInput("");
-      refetch()
 
-      queryClient.invalidateQueries({ queryKey: ['CompanyInfo'] })
+      queryClient.invalidateQueries({
+        queryKey: ["CompanyInfo"],
+      });
+
+      setConfirmDialog({
+        open: false,
+        type: "accept",
+        application: null,
+      });
+
+      setDateInput("");
+
+      const { application, status } = variables;
+
+      if (status === "Accepted") {
+        toast.success(`${application.worker.name} has been accepted!`, {
+          description: `They will be notified about the ${application.job.title} position.`,
+        });
+      } else if (status === "Interview Scheduled") {
+        toast.success(
+          `${application.worker.name} has been scheduled for an interview!`,
+          {
+            description: `They will be notified about the ${application.job.title} interview schedule.`,
+          }
+        );
+      } else {
+        toast.info(
+          `${application.worker.name}'s application has been declined.`
+        );
+      }
     },
+
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message ||
-          "Failed to update application status."
+        error?.response?.data?.message ??
+        "Failed to update application status."
       );
     },
   });
@@ -230,10 +260,7 @@ const WorkerApplications = () => {
         _id: application._id,
         status: "Accepted",
         timeline: "Final Decision",
-      });
-
-      toast.success(`${application.worker.name} has been accepted!`, {
-        description: `They will be notified about the ${application.job.title} position.`,
+        application
       });
     } else if (type === "interview") {
       if (!dateInput) {
@@ -246,24 +273,17 @@ const WorkerApplications = () => {
         status: "Interview Scheduled",
         timeline: "Interview",
         interviewDate: dateInput,
+        application,
       });
 
-      toast.success(
-        `${application.worker.name} has been scheduled for an interview!`,
-        {
-          description: `They will be notified about the ${application.job.title} interview schedule.`,
-        }
-      );
     } else {
       updateApplicationMutation.mutate({
         _id: application._id,
         status: "Not Selected",
         timeline: "Final Decision",
+        application
       });
 
-      toast.info(
-        `${application.worker.name}'s application has been declined.`
-      );
     }
   };
 
@@ -413,7 +433,23 @@ const WorkerApplications = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleConfirmAction}
+              onClick={(e) => {
+                if (confirmDialog.type === "interview") {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+
+                  const selected = new Date(dateInput);
+                  selected.setHours(0, 0, 0, 0);
+
+                  if (selected < today) {
+                    e.preventDefault(); // Don't let the dialog fade/close
+                    toast.error("Interview date cannot be before today.");
+                    return;
+                  }
+                }
+
+                handleConfirmAction();
+              }}
               disabled={updateApplicationMutation.isPending}
               className={
                 confirmDialog.type === "reject"

@@ -35,6 +35,7 @@ const FindWorkers = () => {
 
   const DisplayWorkers = async () => {
     const result = await axios.get("http://localhost:8920/api/auth/workers")
+    console.log(result.data)
     return result.data
   }
 
@@ -113,6 +114,8 @@ const FindWorkers = () => {
     marginTop: "21px"
   }
 
+  const displayedWorkers = filteredWorkers.slice(0, 10);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -176,11 +179,15 @@ const FindWorkers = () => {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <p className="text-muted-foreground mb-6">
-            Showing {Workers.length} workers
+            <h1 className="mb-6 text-xl font-bold text-foreground">
+            {filteredWorkers.length > 10
+              ? `Top 10 Workers`
+              : `Showing ${filteredWorkers.length} workers`}
+            </h1>
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {!filteredWorkers.length ? <div>No Workers</div> : filteredWorkers.map((worker) => (
+            {!displayedWorkers.length ? <div>No Workers</div> : displayedWorkers.map((worker) => (
               <Card key={worker._id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-2">
                   <div className="flex items-start gap-4">
@@ -193,11 +200,11 @@ const FindWorkers = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-lg">{worker.name}</CardTitle>
-                        {worker.status === "accepted" && (
+                        {worker.isVerified && (
                           <CheckCircle2 className="w-4 h-4 text-primary" />
                         )}
                       </div>
-                      <p className="text-muted-foreground text-sm">{worker.title}</p>
+                      <p className="text-muted-foreground text-sm">{worker.jobTitle}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                         <span className="text-sm font-medium">{worker.rating}</span>
@@ -210,17 +217,23 @@ const FindWorkers = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                    {worker.about_me}
+                    {worker.about_me.length > 15
+                      ? worker.about_me.substring(0, 15) + "..."
+                      : worker.about_me}
                   </p>
                   
                   <div className="flex flex-wrap gap-2 text-sm text-muted-foreground mb-4">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
-                      {worker.location}
+                        {worker.location.length > 15
+                        ? worker.location.substring(0, 15) + "..."
+                        : worker.location}
                     </div>
                     <div className="flex items-center gap-1">
                       <Briefcase className="w-3 h-3" />
-                      {worker.yearsOfExperience}
+                      {worker.yearsOfExperience.length > 15
+                        ? worker.yearsOfExperience.substring(0, 15) + "..."
+                        : worker.yearsOfExperience}
                     </div>
                   </div>
                   
@@ -254,7 +267,7 @@ const FindWorkers = () => {
             ))}
           </div>
 
-          {filteredWorkers.length === 0 && (
+          {displayedWorkers.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground">No workers found matching your criteria.</p>
             </div>

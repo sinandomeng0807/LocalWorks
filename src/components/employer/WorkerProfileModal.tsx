@@ -161,6 +161,33 @@ const WorkerProfileModal = ({
 
         <Separator />
 
+        <div>
+          <h3 className="font-semibold mb-3 flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Resume
+          </h3>
+
+          {extendedWorker.worker.resume ? (
+            <Button
+              variant="outline"
+              onClick={() =>
+                window.open(
+                  `http://localhost:8920/uploads/resumes/${extendedWorker.worker.resume}`,
+                  "_blank"
+                )
+              }
+            >
+              View Resume
+            </Button>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No resume uploaded
+            </p>
+          )}
+        </div>
+
+        <Separator />
+
         {/* Bio */}
         <div>
           <h3 className="font-semibold mb-3 flex items-center gap-2">

@@ -57,7 +57,7 @@ const CategoryDetails = ({ workers }: CategoryDetailsProps) => {
             {categories.map((cat, i) => (
               <div key={cat.name} className="flex items-center gap-3">
                 <div className={`w-2.5 h-2.5 rounded-full ${COLORS[i % COLORS.length]} shrink-0`} />
-                <span className="text-sm text-foreground min-w-[100px]">{cat.name}</span>
+                <span className="text-sm text-foreground min-w-[200px]">{cat.name}</span>
                 <Progress value={(cat.count / maxCount) * 100} className="h-2 flex-1" />
                 <span className="text-sm font-semibold text-muted-foreground w-8 text-right">{cat.count}</span>
               </div>

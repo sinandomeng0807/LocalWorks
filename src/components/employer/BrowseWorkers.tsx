@@ -8,6 +8,9 @@ import { Search, MapPin, Star, Briefcase, Filter, Mail, Phone } from "lucide-rea
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import ModalContact from "./ModalContact";
+import { CheckCircle2 } from "lucide-react";
+import { Flag } from "lucide-react";
+import ReportWorkerModal from "./ReportWorkerModal";
 
 axios.defaults.withCredentials = true
 
@@ -98,7 +101,9 @@ const BrowseWorkers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredWorkers, setFilteredWorkers] = useState([]);
   const [modalContact, setModalContact] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [worker, setWorker] = useState(null);
+  const [selectedWorkerId, setSelectedWorkerId] = useState("");
 
   const BrowseWorkersAx = async () => {
     const { data } = await axios.get("http://localhost:8920/api/pro/viewWorkers", { withCredentials: true })
@@ -168,8 +173,21 @@ const BrowseWorkers = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{worker.name}</CardTitle>
-                  <CardDescription className="text-base">{worker.jobTitle}</CardDescription>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg">
+                      {worker.name.length > 15
+                        ? worker.name.substring(0, 15) + "..."
+                        : worker.name}
+                    </CardTitle>
+                      {worker.isVerified && (
+                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                      )}
+                  </div>
+                  <CardDescription className="text-base">
+                    {worker.jobTitle.length > 15
+                      ? worker.jobTitle.substring(0, 15) + "..."
+                      : worker.jobTitle}
+                  </CardDescription>
                   <div className="flex items-center gap-1 mt-1">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                     <span className="text-sm font-medium">{worker.rating}</span>
@@ -181,32 +199,75 @@ const BrowseWorkers = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <MapPin className="w-4 h-4" />
-                  {worker.location}
+                    {worker.location.length > 15
+                      ? worker.location.substring(0, 15) + "..."
+                      : worker.location}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Briefcase className="w-4 h-4" />
-                  {worker.yearsOfExperience} experience
+                  {worker.yearsOfExperience}
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="mt-4 mb-6">
+                  <CardTitle className="text-base mb-3">Availability:</CardTitle>
                   <Badge variant="secondary">{worker.availability}</Badge>
-                  <span className="font-semibold text-primary">{worker.hourlyRate}</span>
+                  {/* <span className="font-semibold text-primary">{worker.hourlyRate}</span> */}
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-1 mt-4 mb-4">
-                {worker.skills.map((skill) => (
-                  <Badge key={skill} variant="outline" className="text-xs">
-                    {skill}
-                  </Badge>
-                ))}
+              <div className="mt-4 mb-6">
+                <CardTitle className="text-base mb-3">Skills:</CardTitle>
+
+                <div className="flex flex-wrap gap-1">
+                  {worker.skills.slice(0, 3).map((skill) => (
+                    <Badge key={skill} variant="outline" className="text-xs">
+                      {skill}
+                    </Badge>
+                  ))}
+                  {worker.skills.length > 3 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{worker.skills.length - 3}
+                      </Badge>
+                    )}
+                </div>
               </div>
 
               <div className="flex gap-2">
+                {worker.resume ? (
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      window.open(
+                        `http://localhost:8920/uploads/resumes/${worker.resume}`,
+                        "_blank"
+                      )
+                    }
+                  >
+                    View Resume
+                  </Button>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No resume uploaded
+                  </p>
+                )}
                 <Button onClick={() => { setModalContact(true); setWorker(worker._id) }} className="flex-1 gap-2" size="sm">
                   <Mail className="w-4 h-4" />
                   Contact
                 </Button>
                
+              </div>
+
+              <div className="flex gap-2 mt-[15px] mb-[36px]">
+                <Button
+                  variant="destructive"
+                  className="w-full gap-2"
+                  onClick={() => {
+                    setSelectedWorkerId(worker._id);
+                    setReportOpen(true);
+                  }}
+                >
+                  <Flag className="w-4 h-4" />
+                  Report Worker
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -214,6 +275,12 @@ const BrowseWorkers = () => {
       </div>
 
       <ModalContact open={modalContact} onOpenChange={setModalContact} worker={worker} />
+
+      <ReportWorkerModal
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        workerId={selectedWorkerId}
+      />
 
       {filteredWorkers.length === 0 && (
         <div className="text-center py-12">

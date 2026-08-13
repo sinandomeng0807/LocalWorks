@@ -28,6 +28,30 @@ const UTC_Converter = (createdAt) => {
 const UserProfileModal = ({ user, open, onOpenChange }: UserProfileModalProps) => {
   const queryClient = useQueryClient();
 
+  const VerifyWorker = async (worker: string) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:8920/api/admin/verify/worker",
+        { worker },
+        { withCredentials: true }
+      );
+
+      toast.success(response.data.message, {
+        description: "Worker has been verified successfully.",
+      });
+
+      onOpenChange(false);
+
+      await queryClient.invalidateQueries({
+        queryKey: ["AdminProfilesInfo"],
+      });
+    } catch (error: any) {
+      if (error.response) {
+        toast.info(error.response.data.message);
+      }
+    }
+  };
+
   const UpdateWorkerEmployer = async (_id, status, role) => {
     try {
       const response = await axios.put(
@@ -69,7 +93,7 @@ const UserProfileModal = ({ user, open, onOpenChange }: UserProfileModalProps) =
 
         onOpenChange(false);
 
-        // ✅ THIS IS THE IMPORTANT FIX
+        // THIS IS THE IMPORTANT FIX
         await queryClient.invalidateQueries({
           queryKey: ["AdminProfilesInfo"],
         });
@@ -198,9 +222,15 @@ const UserProfileModal = ({ user, open, onOpenChange }: UserProfileModalProps) =
                     <span>CV / Resume</span>
                   </div>
                   {user.resume ? (
-                    <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
-                      Uploaded
-                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        window.open(`http://localhost:8920/uploads/resumes/${user.resume}`, "_blank")
+                      }
+                    >
+                      View Resume
+                    </Button>
                   ) : (
                     <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
                       Missing
@@ -233,9 +263,15 @@ const UserProfileModal = ({ user, open, onOpenChange }: UserProfileModalProps) =
                   <span>Business / Company Permit</span>
                 </div>
                 {user.permit ? (
-                  <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
-                    Uploaded
-                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      window.open(`http://localhost:8920/uploads/permits/${user.permit}`, "_blank")
+                    }
+                  >
+                    View Permit
+                  </Button>
                 ) : (
                   <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
                     Missing
@@ -275,6 +311,22 @@ const UserProfileModal = ({ user, open, onOpenChange }: UserProfileModalProps) =
             >
               Delete
             </Button>
+
+            {user.role === "worker" && !user.isVerified && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => VerifyWorker(user._id)}
+              >
+                Verify Worker
+              </Button>
+            )}
+
+            {user.role === "worker" && user.isVerified && (
+              <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+                Verified
+              </Badge>
+            )}
           </div>
         </div>
       </DialogContent>

@@ -28,8 +28,9 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
 
   const [step, setStep] = useState<"form" | "otp">("form");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
-  
+    
   const [formData, setFormData] = useState({
     companyName: "",
     email: "",
@@ -37,6 +38,7 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
     confirmPassword: "",
     phone: "",
     industry: "",
+    industryTitle: "",
   });
   
   const [files, setFiles] = useState<{
@@ -62,10 +64,15 @@ const Register = async () => {
     formDataToSend.append("email", formData.email);
     formDataToSend.append("password", formData.password);
     formDataToSend.append("phone", `+63${formData.phone}`);
-    formDataToSend.append("industry", formData.industry);
-    formDataToSend.append("role", "employer");
 
-    // ONLY file (permit)
+    if (formData.industry === "others") {
+      formDataToSend.append("industry", "");
+      formDataToSend.append("industryTitle", formData.industryTitle);
+    } else {
+      formDataToSend.append("industry", formData.industry);
+    }
+
+    formDataToSend.append("role", "employer");
     formDataToSend.append("permit", files.permit);
 
     const response = await axios.post(
@@ -248,7 +255,7 @@ const Register = async () => {
           <Input
             id="employer-confirm-password"
             name="confirmPassword"
-            type={showPassword ? "text" : "password"}
+            type={showConfirmPassword ? "text" : "password"}
             placeholder="Confirm your password"
             value={formData.confirmPassword}
             onChange={handleChange}
@@ -257,10 +264,10 @@ const Register = async () => {
           />
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
           >
-            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
       </div>
@@ -281,14 +288,33 @@ const Register = async () => {
           <SelectTrigger id="employer-industry">
             <SelectValue placeholder="Select your industry" />
           </SelectTrigger>
-          <SelectContent defaultValue={"Choose an industry"}>
+          <SelectContent>
             {industryOptions.map((option) => (
-              <SelectItem key={option.title} value={option._id}>
+              <SelectItem key={option._id} value={option._id}>
                 {option.title}
               </SelectItem>
             ))}
+
+            <SelectItem value="others">
+              Others
+            </SelectItem>
           </SelectContent>
         </Select>
+        {formData.industry === "others" && (
+          <div className="space-y-2">
+            <Label>Industry Name</Label>
+            <Input
+              value={formData.industryTitle}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  industryTitle: e.target.value,
+                })
+              }
+              placeholder="Enter industry name"
+            />
+          </div>
+        )}
       </div>
 
       {/* Business Permit Upload */}

@@ -34,19 +34,36 @@ const AllPostedJobs = ({ jobs, onUpdateStatus, onDelete }: AllPostedJobsProps) =
   // Group jobs by company
   const companies = useMemo(() => {
     const grouped: Record<string, Job[]> = {};
+
     jobs.forEach((job) => {
       if (!grouped[job.company]) grouped[job.company] = [];
       grouped[job.company].push(job);
     });
+
     return Object.entries(grouped)
+      .map(([company, companyJobs]) => {
+        const filteredJobs =
+          filter === "all"
+            ? companyJobs
+            : companyJobs.filter((j) => j.status === filter);
+
+        return [company, filteredJobs] as [string, Job[]];
+      })
       .filter(([company, companyJobs]) => {
-        const matchesSearch = company.toLowerCase().includes(search.toLowerCase());
-        const matchesFilter = filter === "all" || companyJobs.some(j => j.status === filter);
-        return matchesSearch && matchesFilter;
+        const matchesSearch = company
+          .toLowerCase()
+          .includes(search.toLowerCase());
+
+        return matchesSearch && companyJobs.length > 0;
       })
       .sort((a, b) => {
-        const aMax = Math.max(...a[1].map(j => new Date(j.createdAt).getTime()));
-        const bMax = Math.max(...b[1].map(j => new Date(j.createdAt).getTime()));
+        const aMax = Math.max(
+          ...a[1].map((j) => new Date(j.createdAt).getTime())
+        );
+        const bMax = Math.max(
+          ...b[1].map((j) => new Date(j.createdAt).getTime())
+        );
+
         return sort === "newest" ? bMax - aMax : aMax - bMax;
       });
   }, [jobs, search, filter, sort]);
@@ -56,8 +73,12 @@ const AllPostedJobs = ({ jobs, onUpdateStatus, onDelete }: AllPostedJobsProps) =
     const accepted = companyJobs.filter(j => j.status === "ACCEPTED").length;
     if (pending > 0) return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 text-xs">{pending} Pending</Badge>;
     if (accepted === companyJobs.length) return <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">All Accepted</Badge>;
-    return <Badge className="bg-muted text-muted-foreground text-xs">{companyJobs.length} Jobs</Badge>;
-  };
+    return (
+      <Badge className="bg-muted text-muted-foreground text-xs">
+        {companyJobs.length} Job{companyJobs.length !== 1 ? "s" : ""}
+      </Badge>
+    );
+  }; // this doesn't change even after filtering
 
 
   const UTC_Converter = (createdAt) => {
@@ -176,7 +197,11 @@ const AllPostedJobs = ({ jobs, onUpdateStatus, onDelete }: AllPostedJobsProps) =
       {selectedCompany && (
         <CompanyDetailModal
           company={selectedCompany}
-          jobs={jobs.filter(j => j.company === selectedCompany)}
+          jobs={jobs.filter(
+            j =>
+              j.company === selectedCompany &&
+              (filter === "all" || j.status === filter)
+          )}
           open={companyModalOpen}
           onOpenChange={setCompanyModalOpen}
           onUpdateStatus={(id, status) => { onUpdateStatus(id, status); toast.success(`Job ${status}`); }}

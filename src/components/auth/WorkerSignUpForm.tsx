@@ -46,7 +46,11 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
 
   const [step, setStep] = useState<"form" | "otp">("form");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
+
+  const [customJobTitle, setCustomJobTitle] = useState("");
+  const [customSkillCategory, setCustomSkillCategory] = useState("");
 
   const [formData, setFormData] = useState<WorkerFormData>({
     name: "",
@@ -153,8 +157,19 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
         `+63${formData.phoneNumber}`
       );
       formDataToSend.append("role", "worker");
-      formDataToSend.append("skill", formData.skill);
-      formDataToSend.append("jobTitle", formData.jobTitle)
+      formDataToSend.append(
+        "jobTitle",
+        formData.jobTitle === "Others"
+          ? customJobTitle
+          : formData.jobTitle
+      );
+
+      formDataToSend.append(
+        "skill",
+        formData.skill === "Others"
+          ? customSkillCategory
+          : formData.skill
+      );
 
       // Append skills
       skills.forEach((skill) => {
@@ -350,18 +365,26 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
 
       {/* Confirm Password */}
       <div className="space-y-2">
-        <Label htmlFor="worker-confirm-password">
-          Confirm Password
-        </Label>
-        <Input
-          id="worker-confirm-password"
-          name="confirmPassword"
-          type={showPassword ? "text" : "password"}
-          placeholder="Confirm your password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          required
-        />
+        <Label htmlFor="worker-confirm-password">Confirm Password</Label>
+        <div className="relative">
+          <Input
+            id="worker-confirm-password"
+            name="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="Confirm your password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+            className="pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
 
       {/* Phone Number */}
@@ -373,19 +396,85 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
       />
 
       <div className="space-y-2">
-        <Label htmlFor="skill">Job Title</Label>
-        <Input
-          name="jobTitle"
-          placeholder="Enter your job title (e.g., Carpenter)"
+        <Label>Job Title</Label>
+
+        <Select
           value={formData.jobTitle}
-          onChange={handleChange}
-          required
-        />
+          onValueChange={(value) =>
+            setFormData({ ...formData, jobTitle: value })
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select Job Title" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value="Construction Laborer">Construction Laborer</SelectItem>
+            <SelectItem value="Carpenter">Carpenter</SelectItem>
+            <SelectItem value="Electrician">Electrician</SelectItem>
+            <SelectItem value="Plumber">Plumber</SelectItem>
+            <SelectItem value="Mason">Mason</SelectItem>
+            <SelectItem value="Painter">Painter</SelectItem>
+            <SelectItem value="Welder">Welder</SelectItem>
+            <SelectItem value="Pipe Fitter">Pipe Fitter</SelectItem>
+            <SelectItem value="Steel Fixer">Steel Fixer</SelectItem>
+            <SelectItem value="Roofer">Roofer</SelectItem>
+            <SelectItem value="Tile Setter">Tile Setter</SelectItem>
+            <SelectItem value="Drywall Installer">Drywall Installer</SelectItem>
+            <SelectItem value="Concrete Finisher">Concrete Finisher</SelectItem>
+            <SelectItem value="Scaffolder">Scaffolder</SelectItem>
+            <SelectItem value="Glazier">Glazier</SelectItem>
+            <SelectItem value="Insulation Worker">Insulation Worker</SelectItem>
+            <SelectItem value="Demolition Worker">Demolition Worker</SelectItem>
+            <SelectItem value="Heavy Equipment Operator">Heavy Equipment Operator</SelectItem>
+            <SelectItem value="Forklift Operator">Forklift Operator</SelectItem>
+            <SelectItem value="Crane Operator">Crane Operator</SelectItem>
+            <SelectItem value="Machine Operator">Machine Operator</SelectItem>
+            <SelectItem value="HVAC Technician">HVAC Technician</SelectItem>
+            <SelectItem value="Refrigeration Technician">Refrigeration Technician</SelectItem>
+            <SelectItem value="Maintenance Technician">Maintenance Technician</SelectItem>
+            <SelectItem value="Building Maintenance Worker">Building Maintenance Worker</SelectItem>
+            <SelectItem value="Mechanic">Mechanic</SelectItem>
+            <SelectItem value="Auto Mechanic">Auto Mechanic</SelectItem>
+            <SelectItem value="Motorcycle Mechanic">Motorcycle Mechanic</SelectItem>
+            <SelectItem value="Diesel Mechanic">Diesel Mechanic</SelectItem>
+            <SelectItem value="Fabricator">Fabricator</SelectItem>
+            <SelectItem value="Assembler">Assembler</SelectItem>
+            <SelectItem value="Production Worker">Production Worker</SelectItem>
+            <SelectItem value="Factory Worker">Factory Worker</SelectItem>
+            <SelectItem value="Warehouse Worker">Warehouse Worker</SelectItem>
+            <SelectItem value="Delivery Driver">Delivery Driver</SelectItem>
+            <SelectItem value="Truck Driver">Truck Driver</SelectItem>
+            <SelectItem value="Landscaper">Landscaper</SelectItem>
+            <SelectItem value="Gardener">Gardener</SelectItem>
+            <SelectItem value="Janitor">Janitor</SelectItem>
+            <SelectItem value="Cleaner">Cleaner</SelectItem>
+            <SelectItem value="Housekeeper">Housekeeper</SelectItem>
+            <SelectItem value="Security Guard">Security Guard</SelectItem>
+            <SelectItem value="Fire Safety Officer">Fire Safety Officer</SelectItem>
+            <SelectItem value="Solar Panel Installer">Solar Panel Installer</SelectItem>
+            <SelectItem value="Water Pump Technician">Water Pump Technician</SelectItem>
+            <SelectItem value="Foreman">Foreman</SelectItem>
+            <SelectItem value="Site Supervisor">Site Supervisor</SelectItem>
+            <SelectItem value="General Contractor">General Contractor</SelectItem>
+            <SelectItem value="Others">Others</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {formData.jobTitle === "Others" && (
+          <Input
+            placeholder="Enter Job Title"
+            value={customJobTitle}
+            onChange={(e) => setCustomJobTitle(e.target.value)}
+            required
+          />
+        )}
       </div>
 
       {/* Skill Category */}
       <div className="space-y-2">
-        <Label htmlFor="skill">Skill Category</Label>
+        <Label>Skill Category</Label>
+
         <Select
           value={formData.skill}
           onValueChange={(value) =>
@@ -395,14 +484,26 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
           <SelectTrigger>
             <SelectValue placeholder="Select a skill category" />
           </SelectTrigger>
+
           <SelectContent>
             {skillCategoryOptions.map((option) => (
-              <SelectItem key={option.title} value={option.title}>
+              <SelectItem key={option._id} value={option.title}>
                 {option.title}
               </SelectItem>
             ))}
+
+            <SelectItem value="Others">Others</SelectItem>
           </SelectContent>
         </Select>
+
+        {formData.skill === "Others" && (
+          <Input
+            placeholder="Enter Skill Category"
+            value={customSkillCategory}
+            onChange={(e) => setCustomSkillCategory(e.target.value)}
+            required
+          />
+        )}
       </div>
 
       {/* Skills */}

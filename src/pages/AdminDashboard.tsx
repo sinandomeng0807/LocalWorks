@@ -60,7 +60,7 @@ const AdminDashboard = () => {
   if (isLoading) return <div style={styleCenter}>Loading...</div>
   if (error) return <div>Error: {error.message}</div>
 
-  const { JOBS, WORKERS } = data 
+  const { JOBS, WORKERS, VERIFIED_WORKERS, REPORT_WORKERS } = data 
 
 
   const totalJobs = JOBS.length;
@@ -134,7 +134,7 @@ const AdminDashboard = () => {
           rejectedJobs={rejectedJobs}
         />
 
-        <AdminCharts jobs={JOBS} workers={WORKERS} />
+        <AdminCharts jobs={JOBS} workers={WORKERS} verifiedWorkers={VERIFIED_WORKERS} reportedWorkers={REPORT_WORKERS} />
 
         <PostedJobsTable
           jobs={JOBS}

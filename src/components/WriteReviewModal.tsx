@@ -33,6 +33,9 @@ const WriteReviewModal = ({
 
   const WorkerProfile = async () => {
     const result = await axios.get("http://localhost:8920/api/pro/worker/profile", { withCredentials: true })
+
+    console.log(result.data)
+    
     return result.data
   }
 

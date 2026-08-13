@@ -52,7 +52,7 @@ const WorkerProfile = ({ onEdit }: WorkerProfileProps) => {
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-start gap-6">
             <Avatar className="w-24 h-24">
-              <AvatarImage src={`http://localhost:8920${WorkerProf.photo}`} />
+              <AvatarImage src={`http://localhost:8920/uploads/profile/${WorkerProf.photo}`} />
               <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                 {WorkerProf.name.split(" ").map(n => n[0]).join("")}
               </AvatarFallback>
@@ -146,6 +146,29 @@ const WorkerProfile = ({ onEdit }: WorkerProfileProps) => {
               </Badge>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Resume</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          {WorkerProf.resume ? (
+            <a
+              href={`http://localhost:8920/uploads/resumes/${WorkerProf.resume}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline"
+            >
+              View Resume
+            </a>
+          ) : (
+            <p className="text-muted-foreground">
+              No resume uploaded
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

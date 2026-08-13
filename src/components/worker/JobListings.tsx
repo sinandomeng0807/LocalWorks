@@ -44,6 +44,7 @@ const JobListings = () => {
   const [selectedMatchFilter, setSelectedMatchFilter] = useState("all");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState("all");
   const [selectedAppliedFilter, setSelectedAppliedFilter] = useState("all");
+  const [showAllRecommended, setShowAllRecommended] = useState(false);
 
 
   // Match score:
@@ -186,6 +187,9 @@ const JobListings = () => {
   );
 
 
+  const displayedRecommended = showAllRecommended
+    ? recommendedJobs
+    : recommendedJobs.slice(0, 2);
 
 
 
@@ -355,11 +359,11 @@ const JobListings = () => {
               </div>
             </div>
 
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {recommendedJobs.map((job: any) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {displayedRecommended.map((job: any) => (
                 <Card
                   key={`recommended-${job.info._id}`}
-                  className="w-1/2 min-w-[50%] flex-shrink-0 hover:shadow-md transition-shadow flex flex-col"
+                  className="hover:shadow-md transition-shadow flex flex-col"
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
@@ -430,6 +434,21 @@ const JobListings = () => {
             </div>
           </div>
         )}
+
+        {recommendedJobs.length > 2 && (
+          <div className="mt-4 flex justify-center">
+            <Button
+              variant="outline"
+              onClick={() => setShowAllRecommended(!showAllRecommended)}
+            >
+              {showAllRecommended
+                ? "Show Less"
+                : `View ${recommendedJobs.length - 2} More Jobs`}
+            </Button>
+          </div>
+        )}
+
+        
         {filteredJobs.map((job: any) => {
           return (
             <Card key={job.info._id} className="hover:shadow-md transition-shadow">

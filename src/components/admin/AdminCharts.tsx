@@ -17,10 +17,15 @@ const PIE_COLORS = [
 interface AdminChartsProps {
   jobs: Job[];
   workers;
+  verifiedWorkers;
+  reportedWorkers;
 }
 
-const AdminCharts = ({ jobs, workers }: AdminChartsProps) => {
+const AdminCharts = ({ jobs, workers, verifiedWorkers, reportedWorkers }: AdminChartsProps) => {
   const totalWorkers = workers.length;
+  const verified = verifiedWorkers.length;
+  const reported = reportedWorkers.length;
+
   const active = workers.filter((j) => j.status === "active").length;
   const pending = workers.filter((j) => j.status === "pending").length;
   const not_active = workers.filter((j) => j.status === "not_active").length;
@@ -29,7 +34,7 @@ const AdminCharts = ({ jobs, workers }: AdminChartsProps) => {
     { name: "Total\nWorkers", value: totalWorkers },
     { name: "Verified\nWorkers", value: active },
     { name: "Pending\nVerification", value: pending },
-    { name: "Report\nAccounts", value: not_active },
+    { name: "Report\nAccounts", value: reported },
   ];
 
   // Skills/category distribution from job tags
@@ -47,7 +52,7 @@ const AdminCharts = ({ jobs, workers }: AdminChartsProps) => {
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
 
-  const TOP_N = 5;
+  const TOP_N = 3;
 
   const topSkills = sortedSkills.slice(0, TOP_N);
 
@@ -107,9 +112,9 @@ const AdminCharts = ({ jobs, workers }: AdminChartsProps) => {
             </div>
             <div className="space-y-2 text-sm pt-4 min-w-[140px]">
               <p className="text-muted-foreground">Total Workers: <span className="font-semibold text-foreground">{totalWorkers}</span></p>
-              <p className="text-muted-foreground">Verified Workers: <span className="font-semibold text-foreground">{active}</span></p>
-              <p className="text-muted-foreground">Pending Verification: <span className="font-semibold text-foreground">{pending}</span></p>
-              <p className="text-muted-foreground">Report Accounts: <span className="font-semibold text-foreground">{not_active}</span></p>
+              <p className="text-muted-foreground">Verified Workers: <span className="font-semibold text-foreground">{verified}</span></p>
+              <p className="text-muted-foreground">Pending Verification: <span className="font-semibold text-foreground">{totalWorkers - verified}</span></p>
+              <p className="text-muted-foreground">Report Accounts: <span className="font-semibold text-foreground">{reported}</span></p>
             </div>
           </div>
         </CardContent>
@@ -122,7 +127,7 @@ const AdminCharts = ({ jobs, workers }: AdminChartsProps) => {
           <CardDescription>Distribution of worker skills</CardDescription>
         </CardHeader>
         <CardContent className="p-5 pt-2">
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={240}>
             <PieChart>
               <Pie
                 data={categoryData}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Briefcase, User, FileText, UserCircle, Star, Phone } from "lucide-react";
+import { LogOut, Briefcase, User, FileText, UserCircle, Star, Phone, Flag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import WorkerProfile from "@/components/worker/WorkerProfile";
 import EditProfileModal from "@/components/worker/EditProfileModal";
@@ -22,6 +22,7 @@ import Contacts from "@/components/worker/Contacts";
 import { Bell } from "lucide-react";
 import WorkerNotifications from "@/components/worker/WorkerNotifications";
 import axios from "axios";
+import WorkerAssignment from "@/components/worker/WorkerAssignments";
 
 axios.defaults.withCredentials = true
 
@@ -115,7 +116,7 @@ const WorkerDashboard = () => {
               <div className="relative flex flex-col items-center gap-1 cursor-pointer">
                 <Avatar className="h-10 w-10">
                   <AvatarImage
-                    src={`http://localhost:8920${data?.WorkerProf?.photo}`}
+                    src={`http://localhost:8920/uploads/profile/${data?.WorkerProf?.photo}`}
                   />
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     <UserCircle className="h-6 w-6" />
@@ -177,6 +178,11 @@ const WorkerDashboard = () => {
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Notifications</span>
             </TabsTrigger>
+
+            <TabsTrigger value="workerAssignments" className="gap-2">
+              <Flag className="w-4 h-4" />
+              <span className="hidden sm:inline">Worker Assignments</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="jobs">
@@ -197,6 +203,10 @@ const WorkerDashboard = () => {
 
           <TabsContent value="profile">
             <WorkerProfile onEdit={() => setEditProfileOpen(true)} />
+          </TabsContent>
+
+          <TabsContent value="workerAssignments">
+            <WorkerAssignment />
           </TabsContent>
         </Tabs>
       </main>
