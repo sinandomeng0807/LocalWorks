@@ -3,20 +3,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2 } from "lucide-react";
+import axios from "axios";
+import { useToast } from "@/components/ui/use-toast";
 
 interface OTPVerificationProps {
   email: string;
+  otpFromEmail: string;
+  newDate: Date;
   onVerified: () => void;
   onResend: () => void;
 }
 
-const OTPVerification = ({ email, onVerified, onResend }: OTPVerificationProps) => {
+const OTPVerification = ({ email, otpFromEmail, newDate, onVerified, onResend }: OTPVerificationProps) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [isReset, setIsReset] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [OtpFromEmail, setOtpFromEmail] = useState(null);
+  const [NewDate, setNewDate] = useState(null);
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(60);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const { toast } = useToast();
 
   useEffect(() => {
     if (countdown > 0 && !isVerified) {
@@ -57,23 +66,77 @@ const OTPVerification = ({ email, onVerified, onResend }: OTPVerificationProps) 
     setOtp(newOtp);
   };
 
-  const handleVerify = () => {
-    const otpValue = otp.join("");
-    if (otpValue.length !== 6) {
-      setError("Please enter all 6 digits");
+  const handleVerify = async () => {
+    try {      
+      const otpValue = otp.join("");
+      if (otpValue.length !== 6) {
+        setError("Please enter all 6 digits");
+        return;
+      }
+
+      if (isReset) {
+        if (NewDate < new Date()) {
+          alert(`${NewDate} ${new Date()}`)
+          setError("OTP is already expired");
+          return;
+        }
+
+        if (otpValue !== OtpFromEmail) {
+          alert(`${otpValue} ${OtpFromEmail}`)
+          setError("OTP doesn't match");
+          return;
+        }
+
+      } else {
+        
+        if (newDate < new Date()) {
+          alert(`${newDate} ${new Date()}`)
+          setError("OTP is already expired");
+          return;
+        }
+        
+        if (otpValue !== otpFromEmail) {
+          alert(`${otpValue} ${otpFromEmail}`)
+          setError("OTP doesn't match");
+          return;
+        }
+      }
+
+      alert(otpValue)
+
+      setIsVerifying(true);
+      // Simulate OTP verification
+      setTimeout(() => {
+        setIsVerifying(false);
+        setIsVerified(true);
+        onVerified();
+      }, 1500);
+    } catch (error) {
+      alert(error)
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email.includes("@")) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
       return;
     }
 
-    setIsVerifying(true);
-    // Simulate OTP verification
-    setTimeout(() => {
-      setIsVerifying(false);
-      setIsVerified(true);
-      onVerified();
-    }, 1500);
-  };
+    setIsReset(true)
 
-  const handleResend = () => {
+    try {
+      const res = await axios.get(`http://localhost:8920/api/auth/otp/${email}`)
+
+      setNewDate(res.data.newDate)
+      setOtpFromEmail(res.data.otp)
+    } catch (error) {
+      alert(error)
+    }
+
     setCountdown(60);
     setOtp(["", "", "", "", "", ""]);
     setError("");

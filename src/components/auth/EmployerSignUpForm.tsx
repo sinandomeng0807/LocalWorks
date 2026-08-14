@@ -29,7 +29,12 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
   const [step, setStep] = useState<"form" | "otp">("form");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
+
+  const [newDate, setnewDate] = useState(null);
+  const [otpFromEmail, setOtpFromEmail] = useState(null);
     
   const [formData, setFormData] = useState({
     companyName: "",
@@ -133,11 +138,29 @@ const Register = async () => {
     }
   };
 
-  const handleSendOTP = () => {
-    if (formData.email && formData.email.includes("@")) {
-      setStep("otp");
-      // Simulate sending OTP to email
-      console.log("OTP sent to " + formData.email);
+  const handleSendOTP = async () => {
+    if (!formData.email.includes("@")) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setStep("otp");
+    setIsButtonDisabled(true);
+
+    try {
+      const res = await axios.get(`http://localhost:8920/api/auth/otp/${formData.email}`)
+
+      setnewDate(res.data.newDate)
+      setOtpFromEmail(res.data.otp)
+
+      console.log(otpFromEmail)
+      console.log(step)
+    } catch (error) {
+      alert(error)
     }
   };
 
@@ -209,6 +232,8 @@ const Register = async () => {
         {step === "otp" && !isEmailVerified && (
           <OTPVerification
             email={formData.email}
+            otpFromEmail={otpFromEmail}
+            newDate={newDate}
             onVerified={() => {
               setIsEmailVerified(true);
               setStep("form");

@@ -49,6 +49,10 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
 
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  const [newDate, setnewDate] = useState(null);
+  const [otpFromEmail, setOtpFromEmail] = useState(null);
   const [customJobTitle, setCustomJobTitle] = useState("");
   const [customSkillCategory, setCustomSkillCategory] = useState("");
 
@@ -122,7 +126,7 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
   };
 
   // Send OTP
-  const handleSendOTP = () => {
+  const handleSendOTP = async () => {
     if (!formData.email.includes("@")) {
       toast({
         title: "Invalid Email",
@@ -131,7 +135,21 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
       });
       return;
     }
+
     setStep("otp");
+    setIsButtonDisabled(true);
+
+    try {
+      const res = await axios.get(`http://localhost:8920/api/auth/otp/${formData.email}`)
+
+      setnewDate(res.data.newDate)
+      setOtpFromEmail(res.data.otp)
+
+      console.log(otpFromEmail)
+      console.log(step)
+    } catch (error) {
+      alert(error)
+    }
   };
 
   // Submit form
@@ -299,6 +317,7 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
 
         {!isEmailVerified && (
           <Button
+            disabled={isButtonDisabled}
             type="button"
             variant="secondary"
             onClick={handleSendOTP}
@@ -311,6 +330,8 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
         {step === "otp" && !isEmailVerified && (
           <OTPVerification
             email={formData.email}
+            otpFromEmail={otpFromEmail}
+            newDate={newDate}
             onVerified={() => {
               setIsEmailVerified(true);
               setStep("form");

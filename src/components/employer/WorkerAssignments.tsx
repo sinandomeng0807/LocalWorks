@@ -104,12 +104,15 @@ const statusColors: Record<string, string> = {
 const WorkerAssignments = () => {
   const [assignments, setAssignments] = useState<WorkerAssignment[]>([]);
   const [submittedJobs, setSubmittedJobs] = useState<SubmittedJob[]>([]);
+  
+  const [workerAssignment, setWorkerAssignment] = useState("")
+  const [workerID, setWorkerID] = useState("")
 
   const [selectedAssignment, setSelectedAssignment] =
-    useState<SubmittedJob | null>(null);
+    useState<WorkerAssignment>();
 
   const [submittedAssignment, setSubmittedAssignment] =
-    useState<SubmittedAssignmentResponse | null>(null);
+    useState<SubmittedAssignmentResponse[]>([]);
 
   const [submittedModalOpen, setSubmittedModalOpen] = useState(false);
 
@@ -154,17 +157,52 @@ const WorkerAssignments = () => {
   const fetchSubmittedAssignment = async (workerId: string, employerId: string, workerAssignment: string) => {
     try {
       const res = await axios.get(
-        `http://localhost:8920/api/pro/jobs/worker/assignment/${workerId}/${employerId}/${workerAssignment}`,
+        `http://localhost:8920/api/pro/worker/assignment/${workerId}/${employerId}/${workerAssignment}`,
         {
           withCredentials: true,
         }
       );
 
+      setWorkerID(res.data.WorkerInfo._id)
+      setSelectedAssignment(res.data.WorkerAssignmentInfo)
       setSubmittedAssignment(res.data.SubmittedJobs);
     } catch (err: any) {
       console.error(err.response);
     }
   };
+
+  const MarkAsCompletedRejected = async (
+    workerAssignment: string,
+    workerId: string,
+    status: string
+  ) => {
+    try {
+      const res = await axios.patch(
+        "http://localhost:8920/api/pro/update/worker/job/employer",
+        {
+          workerAssignment,
+          workerId,
+          status
+        },
+        { withCredentials: true }
+      )
+
+      console.log(res.data)
+
+      // Refetch the updated data
+      await fetchSubmittedJobs();
+
+      // Refetch the assignment data as well
+      await fetchAssignments();
+
+      // Close the modal
+      setSubmittedModalOpen(false);
+
+    } catch (error) {
+      console.log(workerAssignment)
+      console.log(error.response.data)
+    }
+  }
 
   const submittedJobsFilter = submittedJobs.filter((submittedJob) => submittedJob.status !== "COMPLETED")
   const completedJobs = submittedJobs.filter((submittedJob) => submittedJob.status === "COMPLETED")
@@ -330,6 +368,12 @@ const WorkerAssignments = () => {
                   <button
                     type="button"
                     className="mt-6 w-full rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+                    onClick={
+                      () => {
+                        fetchSubmittedAssignment(job.workerId._id, job.employerId._id, job.workerAssignment._id)
+                        setSubmittedModalOpen(true)
+                      }
+                    }
                   >
                     View Details
                   </button>
@@ -417,32 +461,47 @@ const WorkerAssignments = () => {
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedAssignment?.workerAssignment.title ?? "Submitted Assignments"}
+              {selectedAssignment?.title}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div
-              key={selectedAssignment._id}
-              className="rounded-lg border p-4"
+          <div className="mt-6 flex gap-3">
+            <button
+              type="button"
+              className="flex-1 rounded-md bg-black px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+              onClick={() => {
+                MarkAsCompletedRejected(selectedAssignment._id, workerID, "completed")
+              }}
             >
-              {/* {submittedAssignment.WorkerAssignments._id} */}
-              <p className="font-semibold">{selectedAssignment.workerAssignment.title}</p>
+              Mark as Completed
+            </button>
 
-              {activeTab === "submitted" ? <div>
-                <button
-                  
-                >
-                  Complete
-                </button>
+            <button
+              type="button"
+              className="flex-1 rounded-md bg-black px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+              onClick={() => MarkAsCompletedRejected(selectedAssignment._id, workerID, "rejected")}
+            >
+              Mark as Rejected
+            </button>
+          </div>
 
-                <button
-                  
-                >
-                  Reject
-                </button>
-              </div> : <div></div>}
-            </div>
+          <div className="space-y-4">
+            {submittedAssignment.map((submitted) => (
+              <div>
+                <strong className="block mb-1">{submitted.workerDescription}</strong>
+                
+                {submitted.workerUpload.map((workerUpload) => (
+                  <a
+                    href={`http://localhost:8920/uploads/workerJobsCompleted/${workerUpload.name}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block h-10 mb-1 min-w-0 flex-1 truncate rounded-md bg-gray-100 px-3 py-2 text-sm text-blue-600 underline transition-colors hover:bg-gray-200 hover:text-blue-800"
+                  >
+                    {workerUpload.name}
+                  </a>
+                ))}
+              </div>
+            ))}
           </div>
         </DialogContent>
       </Dialog>
