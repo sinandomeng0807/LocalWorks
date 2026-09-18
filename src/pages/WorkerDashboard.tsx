@@ -23,6 +23,7 @@ import { Bell } from "lucide-react";
 import WorkerNotifications from "@/components/worker/WorkerNotifications";
 import axios from "axios";
 import WorkerAssignment from "@/components/worker/WorkerAssignments";
+import Reports from "@/components/worker/Reports";
 
 axios.defaults.withCredentials = true
 
@@ -169,9 +170,19 @@ const WorkerDashboard = () => {
               <span className="hidden sm:inline">Find Jobs</span>
             </TabsTrigger>
 
+            <TabsTrigger value="applications" className="gap-2">
+              <Briefcase className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">My Applications</span>
+            </TabsTrigger>
+
             <TabsTrigger value="contacts" className="gap-2">
               <Phone className="w-4 h-4" />
               <span className="hidden sm:inline">Contacts</span>
+            </TabsTrigger>
+
+            <TabsTrigger value="reports" className="gap-2">
+              <Flag className="w-4 h-4" />
+              <span className="hidden sm:inline">Reports</span>
             </TabsTrigger>
 
             <TabsTrigger value="notifications" className="gap-2">
@@ -195,6 +206,10 @@ const WorkerDashboard = () => {
 
           <TabsContent value="contacts">
             <Contacts />
+          </TabsContent>
+
+          <TabsContent value="reports">
+            <Reports />
           </TabsContent>
 
           <TabsContent value="notifications">

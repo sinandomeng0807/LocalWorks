@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { EmployerReportModal } from "./ReportWorkerModal";
+import { WorkerReportModal } from "./ReportEmployerModal";
 
 import {
   Dialog,
@@ -29,75 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { toast } from "sonner";
-
 const Reports = () => {
   const queryClient = useQueryClient();
-
-  const updateStatus = async ({
-    report,
-    status,
-    recipientId,
-  }: {
-    report: string;
-    status: string;
-    recipientId: string;
-  }) => {
-    const res = await axios.patch(
-      "http://localhost:8920/api/pro/employer/report",
-      {
-        report,
-        status,
-        recipientId,
-      },
-      {
-        withCredentials: true,
-      }
-    );
-
-    return res.data;
-  };
-
-  const deleteReport = async ({
-    _id,
-    type,
-  }: {
-    _id?: string;
-    type: "deleteAll" | "deleteById";
-  }) => {
-    const res = await axios.delete(
-      "http://localhost:8920/api/pro/delete/report",
-      {
-        data: {
-          _id,
-          type,
-        },
-        withCredentials: true,
-      }
-    );
-
-    return res.data;
-  };
-
-  const updateStatusMutation = useMutation({
-    mutationFn: updateStatus,
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["employerReports"],
-      });
-    },
-  });
-
-  const deleteReportMutation = useMutation({
-    mutationFn: deleteReport,
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["employerReports"],
-      });
-    },
-  });
 
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
@@ -108,14 +41,14 @@ const Reports = () => {
   const [reportType, setReportType] = useState("");
 
   const [description, setDescription] = useState("");
-
+  const [submitEvidence, setEvidence] = useState(null);
+  const [Evidences, SetEvidences] = useState(null);
 
 
   const fetchReports = async () => {
-    const res = await axios.get(
-      "http://localhost:8920/api/pro/reports",
-      { withCredentials: true }
-    );
+    const res = await axios.get("http://localhost:8920/api/pro/reports", { 
+      withCredentials: true 
+    });
 
     return res.data;
   };
@@ -126,7 +59,7 @@ const Reports = () => {
     refetch,
     error,
   } = useQuery({
-    queryKey: ["employerReports"],
+    queryKey: ["workerReports"],
     queryFn: fetchReports,
   });
 
@@ -151,11 +84,12 @@ const Reports = () => {
   });
 
 
-  const updateReport = async (reportId: string, reportType: string, description: string) => {
+  const updateReport = async (reportId: string, reportType: string, description: string, evidences: []) => {
     setReportOpen(true)
     setReportId(reportId)
     setReportType(reportType)
     setDescription(description)
+    SetEvidences(evidences)
   }
 
   const handleSubmit = async (reportId: string, reportType: string, description: string) => {
@@ -168,6 +102,9 @@ const Reports = () => {
     setReportOpen(false)
     refetch()
   }
+
+
+
 
   return (
     <div className="space-y-4">
@@ -241,9 +178,9 @@ const Reports = () => {
 
           if (!confirmed) return;
 
-          deleteReportMutation.mutate({
-            type: "deleteAll",
-          });
+          // deleteReportMutation.mutate({
+          //   type: "deleteAll",
+          // });
         }}
         className="border rounded-md px-4 py-2"
       >
@@ -280,7 +217,7 @@ const Reports = () => {
               </p>
 
               <div>
-                <button className="border rounded-md px-3 py-1 mt-4" onClick={() => updateReport(report._id, report.reportType, report.description)}>Update Report</button>
+                <button className="border rounded-md px-3 py-1 mt-4" onClick={() => updateReport(report._id, report.reportType, report.description, report.submitEvidence)}>Update Report</button>
                 <button className="border rounded-md px-3 py-1 mt-4">Delete Report</button>
               </div>
 
@@ -289,7 +226,7 @@ const Reports = () => {
         ))
       )}
 
-      <Dialog
+     <Dialog
         open={reportOpen}
         onOpenChange={setReportOpen}
           >
@@ -336,7 +273,21 @@ const Reports = () => {
                   defaultValue={description}
                   onChange={(Event) => setDescription(Event.target.value)}
                 />
-      
+
+                {/* https://phppot.com/react/multi-file-upload-in-react-js/ */}
+                <Input 
+                  type="file"
+                  onChange={(Event) => setEvidence(Event.target.files)}
+                  multiple
+                />
+
+
+                {Evidences !== null ? Evidences.map((evidence) => {
+                  return (
+                    <div className="">{evidence.fileName}</div>
+                  )
+                }) : <div>No evidences</div>}
+
       
                 <Button
                   className="w-full"
@@ -350,6 +301,8 @@ const Reports = () => {
             </DialogContent>
           </Dialog>
     </div>
+
+    
   );
 };
 

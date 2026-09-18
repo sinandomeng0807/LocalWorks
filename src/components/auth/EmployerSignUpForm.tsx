@@ -37,13 +37,13 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
   const [otpFromEmail, setOtpFromEmail] = useState(null);
     
   const [formData, setFormData] = useState({
-    companyName: "",
+    company: "",
     email: "",
     password: "",
     confirmPassword: "",
     phone: "",
     industry: "",
-    industryTitle: "",
+    industryTitle: "No Industry Title Provided",
   });
   
   const [files, setFiles] = useState<{
@@ -53,66 +53,62 @@ const EmployerSignUpForm = ({ onClose }: EmployerSignUpFormProps) => {
   });
 
 const Register = async () => {
-  try {
-    if (!files.permit || files.permit.size === 0) {
+  if (!files.permit || files.permit.size === 0) {
+    toast({
+      title: "No Business Permit Included",
+      description: "Please enter a valid business permit",
+      variant: "destructive"
+    })
+    return;
+  }
+
+  const formDataToSend = new FormData();
+  
+  formDataToSend.append("permit", files.permit)
+
+  alert(formData.industryTitle)
+
+  const PermitPost = await axios.post("http://localhost:8920/api/auth/upload/permit", formDataToSend, {
+    withCredentials: true
+  })
+    .catch(function (error) {
       toast({
-        title: "No Business Permit Included",
-        description: "Please enter a valid business permit",
+        title: "An error occured",
+        description: "Failed to upload the Permit.",
         variant: "destructive"
       })
-      return;
+    })
+
+  const response = await axios.post(
+    "http://localhost:8920/api/auth/employer/register",
+    {
+      company: formData.company,
+      email: formData.email,
+      password: formData.password,
+      phone: `+63${formData.phone}`,
+      industry: formData.industry,
+      industryTitle: formData.industryTitle,
+      permit: files.permit.name
+    },
+    {
+      withCredentials: true
     }
+  )
+    .then(function (response) {
+      toast({
+        title: "Success",
+        description: response.data.message
+      });
 
-    const formDataToSend = new FormData();
-
-    formDataToSend.append("company", formData.companyName);
-    formDataToSend.append("email", formData.email);
-    formDataToSend.append("password", formData.password);
-    formDataToSend.append("phone", `+63${formData.phone}`);
-
-    if (formData.industry === "others") {
-      formDataToSend.append("industry", "");
-      formDataToSend.append("industryTitle", formData.industryTitle);
-    } else {
-      formDataToSend.append("industry", formData.industry);
-    }
-
-    formDataToSend.append("role", "employer");
-    formDataToSend.append("permit", files.permit);
-
-    const response = await axios.post(
-      "http://localhost:8920/api/auth/employer/register",
-      formDataToSend,
-      {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    toast({
-      title: "Success",
-      description: response.data.message
-    });
-
-    onClose()
-  } catch (error: any) {
-    if (error.response) {
+      onClose()
+    })
+    .catch(function (error) {
       toast({
         title: "An error occured",
         description: error.response.data.message,
         variant: "destructive"
       })
-    } else {
-      
-      toast({
-        title: "An error occured",
-        description: error.message,
-        variant: "destructive"
-      })
-    }
-  }
+    })
 };
 
   const IndustryInfo = async () => {
@@ -198,10 +194,10 @@ const Register = async () => {
         <Label htmlFor="company-name">Company/Business Name</Label>
         <Input
           id="company-name"
-          name="companyName"
+          name="company"
           type="text"
           placeholder="Enter your company or business name"
-          value={formData.companyName}
+          value={formData.company}
           onChange={handleChange}
           required
         />

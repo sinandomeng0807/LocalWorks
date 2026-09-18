@@ -107,7 +107,7 @@ const BrowseWorkers = () => {
 
   const BrowseWorkersAx = async () => {
     const { data } = await axios.get("http://localhost:8920/api/pro/viewWorkers", { withCredentials: true })
-    setFilteredWorkers(data.Workers)
+    setFilteredWorkers(data.workers)
     return data
   }
 
@@ -119,12 +119,12 @@ const BrowseWorkers = () => {
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>Error: {error.message}</div>
 
-  if (!data.Workers.length) return <div>No Workers</div>
-  const { Workers } = data
+  if (!data.workers.length) return <div>No Workers</div>
+  const { workers } = data
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const filtered = data.Workers.filter(
+    const filtered = data.workers.filter(
       (worker) =>
         worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         worker.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -285,7 +285,7 @@ const BrowseWorkers = () => {
       {filteredWorkers.length === 0 && (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">No workers found matching your search.</p>
-          <Button variant="link" onClick={() => { setSearchTerm(""); setFilteredWorkers(data.Workers); }}>
+          <Button variant="link" onClick={() => { setSearchTerm(""); setFilteredWorkers(data.workers); }}>
             Clear search
           </Button>
         </div>

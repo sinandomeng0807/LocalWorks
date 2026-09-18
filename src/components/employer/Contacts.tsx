@@ -210,9 +210,7 @@ const Contacts = () => {
                   <div className="flex justify-between">
                     <div>
                       <CardTitle>{c.title}</CardTitle>
-
                       <CardDescription className="flex items-center gap-2 text-xs mt-3">
-                        {c.unreadCountEmployer > 0 && <span className="h-2 w-2 rounded-full bg-primary" />}
 
                         <span>
                           Employer email: {c.employerId.email}
@@ -220,7 +218,7 @@ const Contacts = () => {
                       </CardDescription>
                     </div>
 
-                    {c.unreadCountEmployer > 0 && (
+                    {c.unreadCountEmployer <= 0 && (
                       <Badge>
                         {c.unreadCountEmployer} new
                       </Badge>

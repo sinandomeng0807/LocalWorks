@@ -44,6 +44,8 @@ const WorkerAssignment = () => {
   const [submittedFiles, setSubmittedFiles] = useState([]);
   const [deletedFiles, setDeletedFiles] = useState([]);
 
+  const [jobCompleted, setJobCompleted] = useState();
+
   const newFilesInputRef = useRef<HTMLInputElement>(null);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [addingNewFiles, setAddingNewFiles] = useState(false);
@@ -88,12 +90,15 @@ const WorkerAssignment = () => {
     (assignment) => assignment.completed
   );
 
-  const handleAddNewFilesClick = () => {
+  const handleAddNewFilesClick = (submission) => {
+    setJobCompleted(submission._id)
+    alert(submission._id)
     newFilesInputRef.current?.click();
   };
 
   const handleAddNewFiles = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
+    jobCompleted: string
   ) => {
     const files = Array.from(event.target.files ?? []);
 
@@ -128,9 +133,6 @@ const WorkerAssignment = () => {
       );
 
       const uploadedFiles = uploadRes.data.filename;
-
-      // Add each uploaded filename to the existing JobsCompleted document
-      const jobCompleted = submittedFiles[0]._id;
 
       for (const file of uploadedFiles) {
         await axios.post(
@@ -325,12 +327,14 @@ const WorkerAssignment = () => {
     }
   };
 
-  const handleAssignmentSubmit = async (workerAssignment: string) => {
+  const handleAssignmentSubmit = async (workerAssignment: string, employerId: string, employerEmail: string) => {
     try {
       await axios.patch(
         "http://localhost:8920/api/pro/update/worker/job/worker",
         {
           workerAssignment,
+          employerId,
+          email: employerEmail,
           status: "submitted",
         },
         {
@@ -549,7 +553,7 @@ const WorkerAssignment = () => {
                       </button>
 
                       <button
-                        onClick={() => handleAssignmentSubmit(assignment.workerAssignment._id)}
+                        onClick={() => handleAssignmentSubmit(assignment.workerAssignment._id, assignment.workerAssignment.employerId._id, assignment.workerAssignment.employerId.email)}
                         className="mt-2 w-full rounded-lg bg-black py-2 text-white transition hover:bg-neutral-800"
                       >
                         Submit Assignment
@@ -849,7 +853,7 @@ const WorkerAssignment = () => {
                       {activeTab === "assignments" ? (
                         <button
                           type="button"
-                          onClick={handleAddNewFilesClick}
+                          onClick={() => handleAddNewFilesClick(submission)}
                           disabled={addingNewFiles}
                           className="rounded-md bg-black px-3 py-2 ml-2 text-sm text-white transition hover:bg-neutral-800 disabled:opacity-50"
                         >
@@ -863,7 +867,7 @@ const WorkerAssignment = () => {
                         type="file"
                         multiple
                         className="hidden"
-                        onChange={handleAddNewFiles}
+                        onChange={(Event) => handleAddNewFiles(Event, jobCompleted)}
                       />
 
                       {submission.workerUpload.map((workerUpload) => (

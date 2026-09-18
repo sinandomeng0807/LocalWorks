@@ -107,6 +107,7 @@ const WorkerAssignments = () => {
   
   const [workerAssignment, setWorkerAssignment] = useState("")
   const [workerID, setWorkerID] = useState("")
+  const [workerNAME, setWorkerNAME] = useState("")
 
   const [selectedAssignment, setSelectedAssignment] =
     useState<WorkerAssignment>();
@@ -164,6 +165,7 @@ const WorkerAssignments = () => {
       );
 
       setWorkerID(res.data.WorkerInfo._id)
+      setWorkerNAME(res.data.WorkerInfo.name)
       setSelectedAssignment(res.data.WorkerAssignmentInfo)
       setSubmittedAssignment(res.data.SubmittedJobs);
     } catch (err: any) {
@@ -174,6 +176,7 @@ const WorkerAssignments = () => {
   const MarkAsCompletedRejected = async (
     workerAssignment: string,
     workerId: string,
+    workerName: string,
     status: string
   ) => {
     try {
@@ -182,6 +185,7 @@ const WorkerAssignments = () => {
         {
           workerAssignment,
           workerId,
+          workerName,
           status
         },
         { withCredentials: true }
@@ -200,7 +204,6 @@ const WorkerAssignments = () => {
 
     } catch (error) {
       console.log(workerAssignment)
-      console.log(error.response.data)
     }
   }
 
@@ -470,7 +473,7 @@ const WorkerAssignments = () => {
               type="button"
               className="flex-1 rounded-md bg-black px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
               onClick={() => {
-                MarkAsCompletedRejected(selectedAssignment._id, workerID, "completed")
+                MarkAsCompletedRejected(selectedAssignment._id, workerID, workerNAME, "completed")
               }}
             >
               Mark as Completed
@@ -479,7 +482,7 @@ const WorkerAssignments = () => {
             <button
               type="button"
               className="flex-1 rounded-md bg-black px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
-              onClick={() => MarkAsCompletedRejected(selectedAssignment._id, workerID, "rejected")}
+              onClick={() => MarkAsCompletedRejected(selectedAssignment._id, workerID, workerNAME, "rejected")}
             >
               Mark as Rejected
             </button>

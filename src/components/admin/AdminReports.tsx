@@ -399,7 +399,7 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
               </TableHeader>
 
               <TableBody>
-                {data?.ReportedWorkers?.map((report: any) => (
+                {data.ReportedWorkers.map((report: any) => (
                   <TableRow key={report._id}>
                     <TableCell>{report.reportType}</TableCell>
                     <TableCell>{report.description}</TableCell>

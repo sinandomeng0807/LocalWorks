@@ -36,6 +36,15 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import axios from "axios";
+import { Textarea } from "../ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+import { Input } from "@/components/ui/input";
 
 axios.defaults.withCredentials = true;
 
@@ -45,6 +54,7 @@ axios.defaults.withCredentials = true;
 interface Application {
   _id: string;
   worker: {
+    _id: string;
     name: string;
     yearsOfExperience: string;
     rating: string;
@@ -52,6 +62,7 @@ interface Application {
     photo: string;
   };
   job: {
+    _id: string;
     title: string;
     location: string;
     createdAt: string;
@@ -117,6 +128,13 @@ const getStatusBadge = (status: string) => {
 const WorkerApplications = () => {
   const queryClient = useQueryClient();
   const [dateInput, setDateInput] = useState("");
+  const [SubmitReason, SetSubmitReason] = useState(false);
+  const [StateReason, SetStateReason] = useState("");
+  const [workerId, setWorkerId] = useState("")
+  const [jobId, setJobId] = useState("")
+  const [applicationId, setApplicationId] = useState("")
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -250,7 +268,7 @@ const WorkerApplications = () => {
   );
 
   /* ----------------------------- Handlers -------------------------------- */
-  const handleConfirmAction = () => {
+  const handleConfirmAction = async () => {
     if (!confirmDialog.application) return;
 
     const { type, application } = confirmDialog;
@@ -277,12 +295,43 @@ const WorkerApplications = () => {
       });
 
     } else {
-      updateApplicationMutation.mutate({
-        _id: application._id,
-        status: "Not Selected",
-        timeline: "Final Decision",
-        application
-      });
+      SetSubmitReason(true)
+
+      if (title.length && description.length) {
+
+        await axios.post("http://localhost:8920/api/pro/application/reason", { 
+          workerId: application.worker._id, 
+          jobId: application.job._id, 
+          applicationId: application._id, 
+          title, 
+          description
+         }, { withCredentials: true })
+          .then(function (response) {
+            if (response.data.success) {
+              updateApplicationMutation.mutate({
+                _id: application._id,
+                status: "Not Selected",
+                timeline: "Final Decision",
+                application
+              });
+
+              alert("Success")
+
+              setTitle("")
+              setDescription("")
+              SetSubmitReason(false)
+            }
+          })
+          .catch(function (error) {
+            alert("Failed to upload the reason")
+          })
+      }
+      // updateApplicationMutation.mutate({
+      //   _id: application._id,
+      //   status: "Not Selected",
+      //   timeline: "Final Decision",
+      //   application
+      // });
 
     }
   };
@@ -468,6 +517,25 @@ const WorkerApplications = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={SubmitReason}
+        onOpenChange={SetSubmitReason}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              <div className="font-600">Please State the reason:</div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Guide: https://support.granicus.com/s/article/text-fields?language=en_US */}
+          <Input placeholder="Enter the title" onChange={(Event) => setTitle(Event.target.value)} />
+          <Textarea placeholder="Please state your reason." onChange={(Event) => setDescription(Event.target.value)}></Textarea>
+
+          <button onClick={handleConfirmAction}>Submit Reason</button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -605,7 +673,9 @@ const ApplicationSection = ({
                         variant="outline"
                         size="sm"
                         className="flex-1 gap-2"
-                        onClick={() => onReject(application)}
+                        onClick={() => {
+                          onReject(application)
+                        }}
                       >
                         <X className="w-4 h-4" />
                         Reject

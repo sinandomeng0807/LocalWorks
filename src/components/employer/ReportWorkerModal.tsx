@@ -29,6 +29,104 @@ interface ReportWorkerModalProps {
   workerId: string;
 }
 
+
+
+
+
+export const EmployerReportModal = (val: { open: boolean, onOpenChange: (open: boolean) => void, reportId: string, reportType: string, description: string }) => {
+  const [ReportType, SetReportType] = useState(null)
+  const [Description, SetDescription] = useState(null)
+  const [OnOpen, OnOpenChange] = useState(true)
+  const [Reason, SetReason] = useState(null)
+
+  const handleSubmit = async () => {
+    await axios.put("http://localhost:8920/api/pro/report", {
+      reportId: val.reportId,
+      reportType: Reason === null ? ReportType === null ? val.reportType : ReportType : Reason,
+      description: Description === null ? val.description : Description
+    })
+  }
+
+  return (
+    <Dialog
+      open={OnOpen ? val.open : false}
+      onOpenChange={val.onOpenChange}
+    >
+      <DialogContent>
+
+        <DialogHeader>
+          <DialogTitle>
+            Report Employer
+          </DialogTitle>
+        </DialogHeader>
+
+
+        <div className="space-y-4">
+
+          <Select
+            defaultValue={val.reportType !== "Fake Job" && val.reportType !== "No Payment" && val.reportType !== "Harassment" && val.reportType !== "Fraud" ? "Others" : val.reportType}
+            onValueChange={SetReportType}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select reason" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="Fake Job">Fake Job</SelectItem>
+              <SelectItem value="No Payment">No Payment</SelectItem>
+              <SelectItem value="Harassment">Harassment</SelectItem>
+              <SelectItem value="Fraud">Fraud</SelectItem>
+              <SelectItem value="Others">Others</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {val.reportType !== "Fake Job" && val.reportType !== "No Payment" && val.reportType !== "Harassment" && val.reportType !== "Fraud" ? (
+            <Input
+              placeholder={"Enter Report"}
+              defaultValue={val.reportType}
+              onChange={(Event) => {
+                SetReason(Event.target.value)
+                SetReportType("Others")
+              }}
+              className={ReportType === null || ReportType === "Others" ? "display" : "hidden"}
+            />
+          ) : (
+            <Input
+              placeholder={"Enter Report"}
+              defaultValue={val.reportType}
+              onChange={(Event) => {
+                SetReason(Event.target.value)
+                SetReportType("Others")
+              }}
+              className={ReportType === null || ReportType !== "Others" ? "hidden" : "display"}
+            />
+          )}
+
+          <Textarea
+            placeholder="Explain the issue..."
+            defaultValue={val.description}
+            onChange={(Event) => SetDescription(Event.target.value)}
+          />
+
+
+          <Button
+            className="w-full"
+            onClick={() => {
+              handleSubmit()
+              OnOpenChange(false)
+            }}
+          >
+            Submit Changes
+          </Button>
+
+        </div>
+
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+
 const ReportWorkerModal = ({
   open,
   onOpenChange,
@@ -57,7 +155,7 @@ const ReportWorkerModal = ({
       setLoading(true);
 
       await axios.post(
-        "http://localhost:8920/api/pro/report/worker", // or your employer endpoint
+        "http://localhost:8920/api/pro/report/employer", // or your employer endpoint
         {
           workerId,
           reportType:
@@ -65,6 +163,7 @@ const ReportWorkerModal = ({
               ? otherReason
               : reportType,
           description,
+          reportCategory: "Default Category"
         },
         {
           withCredentials: true,
@@ -79,6 +178,7 @@ const ReportWorkerModal = ({
 
       onOpenChange(false);
     } catch (error) {
+      alert(error)
       toast.error("Failed to submit report");
     } finally {
       setLoading(false);

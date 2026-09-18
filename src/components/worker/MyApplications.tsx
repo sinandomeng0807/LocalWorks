@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import ApplicationDetailsModal from "./ApplicationDetailsModal";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import EmployerConversationModal from "./EmployerConversationModal";
 
 interface Application {
   id: number;
@@ -95,7 +96,9 @@ const UTC_Converter = (createdAt) => {
 const MyApplications = () => {
   const [applications, setApplications] = useState<Application[]>(initialApplications);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [employerConversation, setEmployerConversation] = useState<Application | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [detailsEmployerModalOpen, setDetailsEmployerModalOpen] = useState(false);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [applicationToWithdraw, setApplicationToWithdraw] = useState(null);
 
@@ -104,10 +107,16 @@ const MyApplications = () => {
     setDetailsModalOpen(true);
   };
 
+  const handleViewEmployerConversation = (application: Application) => {
+    setEmployerConversation(application);
+    setDetailsEmployerModalOpen(true);
+  };
+
   const handleWithdrawClick = (application: Application) => {
     setApplicationToWithdraw(application);
     setWithdrawDialogOpen(true);
     setDetailsModalOpen(false);
+    setDetailsEmployerModalOpen(false);
   };
 
   const WithdrawApplication = async (id: any) => {
@@ -210,6 +219,15 @@ const MyApplications = () => {
                   <Eye className="w-4 h-4" />
                   View Details
                 </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={() => handleViewEmployerConversation(application)}
+                >
+                  <Eye className="w-4 h-4" />
+                  View Employer Responses
+                </Button>
                 {application.status === "Pending Review" && (
                   <Button 
                     variant="ghost" 
@@ -239,6 +257,13 @@ const MyApplications = () => {
         onOpenChange={setDetailsModalOpen}
         application={selectedApplication}
         onWithdraw={() => selectedApplication && handleWithdrawClick(selectedApplication)}
+      />
+
+      <EmployerConversationModal
+        open={detailsEmployerModalOpen}
+        onOpenChange={setDetailsEmployerModalOpen}
+        application={employerConversation}
+        onWithdraw={() => employerConversation && handleWithdrawClick(employerConversation)}
       />
 
       {/* Withdraw Confirmation Dialog */}
