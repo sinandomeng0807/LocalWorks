@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import WorkerProfileModal from "./WorkerProfileModal";
+import EmployerConversationModal from "./EmployerConversationModal";
 import {
   useQuery,
   useMutation,
@@ -533,7 +534,7 @@ const WorkerApplications = () => {
           <Input placeholder="Enter the title" onChange={(Event) => setTitle(Event.target.value)} />
           <Textarea placeholder="Please state your reason." onChange={(Event) => setDescription(Event.target.value)}></Textarea>
 
-          <button onClick={handleConfirmAction}>Submit Reason</button>
+          <Button className="w-full" onClick={handleConfirmAction}>Submit Reason</Button>
         </DialogContent>
       </Dialog>
     </div>
@@ -563,8 +564,37 @@ const ApplicationSection = ({
   onInterview,
   onReject,
   isReadonly = false,
-}: ApplicationSectionProps) => (
-  <div>
+}: ApplicationSectionProps) => {
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [ReasonsList, SetReasonsList] = useState(null);
+  const [detailsEmployerModalOpen, setDetailsEmployerModalOpen] = useState(false);
+
+  
+  const [employerConversation, setEmployerConversation] = useState<Application | null>(null);
+
+  const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
+  const [applicationToWithdraw, setApplicationToWithdraw] = useState(null);
+
+  const handleViewEmployerConversation = async (application) => {
+    await axios.get("http://localhost:8920/api/pro/responses/" + application._id)
+      .then(function (response) {
+        setEmployerConversation(application);
+        SetReasonsList(response.data.EmployerResponses);
+        setDetailsEmployerModalOpen(true);
+      })
+  };
+
+  
+  const handleWithdrawClick = (application) => {
+    setApplicationToWithdraw(application);
+    setWithdrawDialogOpen(true);
+    setDetailsModalOpen(false);
+    setDetailsEmployerModalOpen(false);
+  };
+
+
+  return (
+      <div>
     <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
       {icon}
       {title} ({applications.length})
@@ -646,6 +676,16 @@ const ApplicationSection = ({
                   View Profile
                 </Button>
 
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => handleViewEmployerConversation(application)}
+                >
+                  <Eye className="w-4 h-4" />
+                  View Conversations
+                </Button>
+
                 {!isReadonly && (
                   <>
                     {onAccept && (
@@ -689,7 +729,17 @@ const ApplicationSection = ({
         ))}
       </div>
     )}
+
+    <EmployerConversationModal
+      open={detailsEmployerModalOpen}
+      onOpenChange={setDetailsEmployerModalOpen}
+      application={employerConversation}
+      SetReasonsList={SetReasonsList}
+      ReasonsList={ReasonsList}
+      onWithdraw={() => employerConversation && handleWithdrawClick(employerConversation)}
+    />
   </div>
-);
+  )
+};
 
 export default WorkerApplications;

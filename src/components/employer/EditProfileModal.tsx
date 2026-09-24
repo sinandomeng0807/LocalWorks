@@ -74,7 +74,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
     console.log("Industries:", data.Industries);
 
     const industryExists = data.Industries?.find(
-      (item: any) => item._id === employer.industry
+      (item: any) => item._id === employer.industry._id
     );
 
     console.log("Found Industry:", industryExists);
@@ -93,7 +93,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
         email: employer.email,
         phone: employer.phone,
         industry: "others",
-        industryTitle: employer.industry?.title ?? "",
+        industryTitle: employer.industry.title,
       });
     }
   }, [data]);
@@ -210,7 +210,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
             {/* Existing photo from server */}
             {!preview && currentProfile && (
               <img
-                src={`http://localhost:8920${currentProfile}`}
+                src={`http://localhost:8920/uploads/profile/${currentProfile}`}
                 className="w-24 h-24 rounded-full object-cover"
                 alt="photo"
               />

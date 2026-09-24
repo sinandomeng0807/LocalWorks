@@ -98,6 +98,7 @@ const MyApplications = () => {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [employerConversation, setEmployerConversation] = useState<Application | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [ReasonsList, SetReasonsList] = useState(null);
   const [detailsEmployerModalOpen, setDetailsEmployerModalOpen] = useState(false);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [applicationToWithdraw, setApplicationToWithdraw] = useState(null);
@@ -107,9 +108,13 @@ const MyApplications = () => {
     setDetailsModalOpen(true);
   };
 
-  const handleViewEmployerConversation = (application: Application) => {
-    setEmployerConversation(application);
-    setDetailsEmployerModalOpen(true);
+  const handleViewEmployerConversation = async (application) => {
+    await axios.get("http://localhost:8920/api/pro/responses/" + application._id)
+      .then(function (response) {
+        setEmployerConversation(application);
+        SetReasonsList(response.data.EmployerResponses);
+        setDetailsEmployerModalOpen(true);
+      })
   };
 
   const handleWithdrawClick = (application: Application) => {
@@ -263,6 +268,8 @@ const MyApplications = () => {
         open={detailsEmployerModalOpen}
         onOpenChange={setDetailsEmployerModalOpen}
         application={employerConversation}
+        SetReasonsList={SetReasonsList}
+        ReasonsList={ReasonsList}
         onWithdraw={() => employerConversation && handleWithdrawClick(employerConversation)}
       />
 

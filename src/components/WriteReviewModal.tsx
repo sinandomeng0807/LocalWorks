@@ -148,17 +148,10 @@ const WriteReviewModal = ({
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full overflow-hidden bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
-                  {data?.WorkerProf?.photo ? (
-                    <img
-                      src={`http://localhost:8920${data?.WorkerProf?.photo}`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    data?.WorkerProf?.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                  )}
+                  <img
+                    src={`http://localhost:8920/uploads/profile/${data.WorkerProf.photo}`}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div>
                   <p className="text-sm font-semibold">{data.WorkerProf.name}</p>

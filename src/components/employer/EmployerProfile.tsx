@@ -4,12 +4,15 @@ import { MapPin, Phone, Mail, Briefcase, Calendar } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/employer/DashboardHeader";
 import EditProfileModal from "./EditProfileModal";
+import { Button } from "../ui/button";
 axios.defaults.withCredentials = true;
 
 
 const EmployerProfile = () => {
+  const nav = useNavigate()
   const [editProfileOpen, setEditProfileOpen] = useState(false)
   
 
@@ -39,6 +42,8 @@ const EmployerProfile = () => {
         {/* Company Profile Section */}
         <div className="mb-8">
 
+        <Button className="mb-9" onClick={() => nav(-1)}>Back to Employer Dashboard</Button>
+
         {/* Tabs for Applications and Browse Workers */}
         <div className="space-y-6">
       {/* Profile Header */}
@@ -46,7 +51,7 @@ const EmployerProfile = () => {
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-start gap-6">
             <Avatar className="w-24 h-24">
-              <AvatarImage src={`http://localhost:8920${EmployerProf.profile}` || ""} />
+              <AvatarImage src={`http://localhost:8920/uploads/profile/${EmployerProf.profile}` || ""} />
 
               <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                 {EmployerProf.email
@@ -82,7 +87,7 @@ const EmployerProfile = () => {
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Briefcase className="w-4 h-4" />
-                  {EmployerProf.industry}
+                  {EmployerProf.industry.title}
                 </div>
               </div>
             </div>

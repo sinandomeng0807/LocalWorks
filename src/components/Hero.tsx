@@ -77,7 +77,7 @@ const Hero = () => {
             </div>
             <div className="w-px h-8 bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-foreground">2{data.jobs}</span>
+              <span className="text-2xl font-bold text-foreground">{data.jobs}</span>
               <span className="text-sm">Jobs Completed</span>
             </div>
             <div className="w-px h-8 bg-border hidden sm:block" />

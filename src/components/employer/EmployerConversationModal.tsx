@@ -23,7 +23,11 @@ import axios from "axios";
 
 interface Application {
   _id: string;
-  worker: string;
+  worker: {
+    _id: string;
+    email: string;
+    phoneNumber: string;
+  };
   job: {
     _id: string;
     title: string;
@@ -147,7 +151,7 @@ const EmployerConversationModal = ({
       title,
       description,
       jobId: extendedApp.job._id,
-      employerId: extendedApp.job.posted,
+      workerId: extendedApp.worker._id,
       applicationId: extendedApp._id,
      }, {
       withCredentials: true
@@ -161,6 +165,7 @@ const EmployerConversationModal = ({
           })
       })
       .catch(function (error) {
+        alert(extendedApp.worker)
         alert(error.response.data.success)
       })
   }
@@ -213,36 +218,36 @@ const EmployerConversationModal = ({
               if (response.sentBy === "employer") {
                 return (
                   <div className="mb-8">
-                    <div className="flex">
+                    <div className="flex flex-row-reverse">
                       <div >
                         <img src={`http://localhost:8920/uploads/profile/${response.employerId.profile}`} alt="Profile" className="h-20 w-20" />
                       </div>
-                      <div className="flex flex-col ml-3">
+                      <div className="flex flex-col mr-3">
                         <span className="font-bold">Employer Email: {response.employerId.email}</span>
                         <span className="flex-col">{response.employerId.company}</span>
                       </div>
                     </div>
-                    <div className="pr-19 mt-3">
-                      <h1 className="text-xl font-bold">{response.title}</h1>
-                      <span>{response.description}</span>
+                    <div className="pr-19 flex flex-col mt-3">
+                      <h1 className="text-xl font-bold text-right">{response.title}</h1>
+                      <span className="text-right">{response.description}</span>
                     </div>
                   </div>
                 )
               } else {
                 return (
                   <div className="mb-8">
-                    <div className="flex flex-row-reverse">
+                    <div className="flex">
                       <div >
                         <img src={`http://localhost:8920/uploads/profile/${response.workerId.photo === null ? "default.png" : response.workerId.photo}`} alt="Profile" className="h-20 w-20" />
                       </div>
-                      <div className="flex flex-col mr-3">
+                      <div className="flex flex-col ml-3">
                         <span className="font-bold">Worker Email: {response.workerId.email}</span>
                         <span className="flex-col">{response.workerId.skill}</span>
                       </div>
                     </div>
                     <div className="pl-19 flex flex-col mt-3">
-                      <h1 className="text-xl font-bold text-right">{response.title}</h1>
-                      <span className="text-right">{response.description}</span>
+                      <h1 className="text-xl font-bold">{response.title}</h1>
+                      <span>{response.description}</span>
                     </div>
                   </div>
                 )
@@ -251,7 +256,7 @@ const EmployerConversationModal = ({
             <div className="relative">
               <input type="text" className="w-full mt-6 p-2 border-2 border-solid" placeholder="Enter a title." value={title} onChange={(Event) => setTitle(Event.target.value)} />
               <textarea name="response" id="response" placeholder="Enter a repsonse." className="w-full mt-2 mb-12 p-2 border-2 border-solid" value={description} onChange={(Event) => setDescription(Event.target.value)} />
-              <button className="absolute right-0 bottom-0 bg-[#505050] text-white py-2 px-3" onClick={submitResponse}>Submit response</button>
+              <Button className="absolute right-0 bottom-0 bg-[#505050] text-white py-2 px-3" onClick={submitResponse}>Submit response</Button>
             </div>
           </div>
         </div>
@@ -260,15 +265,15 @@ const EmployerConversationModal = ({
 
         {/* Contact Information */}
         <div>
-          <h3 className="font-semibold mb-3">Employer Contact</h3>
+          <h3 className="font-semibold mb-3">Worker Contact</h3>
           <div className="space-y-2 text-sm">
             <p>
               <span className="text-muted-foreground">Email:</span>{" "}
-              <span className="font-medium">{extendedApp.job.email}</span>
+              <span className="font-medium">{extendedApp.worker.email}</span>
             </p>
             <p>
               <span className="text-muted-foreground">Phone:</span>{" "}
-              <span className="font-medium">{extendedApp.job.phone}</span>
+              <span className="font-medium">{extendedApp.worker.phoneNumber}</span>
             </p>
           </div>
         </div>

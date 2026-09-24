@@ -135,10 +135,67 @@ const ReportWorkerModal = ({
 
   const [reportType, setReportType] = useState("");
   const [description, setDescription] = useState("");
+  const [submitEvidence, setEvidence] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [otherReason, setOtherReason] = useState("");
 
+  const handleSubmitReport = async () => {
+    // Source: https://medium.com/@hassaanistic/image-handeling-using-multer-in-react-d7fea28e8dc6
+    const formData = new FormData()
+    const submittedExpected = submitEvidence.length;
+
+    let fullStorage = false;
+    let EvidenceArray = []
+
+    for (let submitIndex = 0; submitIndex < submitEvidence.length; submitIndex++) {
+      formData.append("submitEvidence", submitEvidence[submitIndex])
+
+      EvidenceArray.push({
+        fileName: submitEvidence[submitIndex].name,
+        fileType: submitEvidence[submitIndex].type
+      })
+      
+      if (submitEvidence[submitIndex].size > 1 * 1024 * 1024) {
+        fullStorage = true
+      }
+    }
+
+    if (fullStorage) {
+      alert("Some of the files you were sending are too large.")
+    } else {
+      // Source: https://axios.rest/pages/advanced/error-handling:
+      await axios.post("http://localhost:8920/api/pro/report/employer", {
+        workerId,
+        reportType: reportType === "Others" ? otherReason : reportType,
+        description,
+        submitEvidence: EvidenceArray,
+        reportCategory: "Default Category"
+      }, { withCredentials: true })
+        .catch(function (error) {
+          console.log(`Error: ${error.message}`);
+        });
+
+      // Source: https://axios.rest/pages/advanced/error-handling:
+      await axios.post("http://localhost:8920/api/pro/report/submit/evidence", formData, {
+        withCredentials: true
+      })
+        .catch(function (error) {
+          alert(`Error has occured`)
+        })
+
+      toast.success("Successfully reported employer.", {
+        description: "You have successfully reported the employer"
+      })
+
+      setReportType("");
+      setOtherReason("");
+      setDescription("");
+      setEvidence(null);
+
+      onOpenChange(false);
+    }
+  }
 
   const submitReport = async () => {
     if (!reportType || !description) {
@@ -154,29 +211,7 @@ const ReportWorkerModal = ({
     try {
       setLoading(true);
 
-      await axios.post(
-        "http://localhost:8920/api/pro/report/employer", // or your employer endpoint
-        {
-          workerId,
-          reportType:
-            reportType === "Other"
-              ? otherReason
-              : reportType,
-          description,
-          reportCategory: "Default Category"
-        },
-        {
-          withCredentials: true,
-        }
-      );
-
-      toast.success("Report submitted");
-
-      setReportType("");
-      setOtherReason("");
-      setDescription("");
-
-      onOpenChange(false);
+      handleSubmitReport()
     } catch (error) {
       alert(error)
       toast.error("Failed to submit report");
@@ -249,6 +284,14 @@ const ReportWorkerModal = ({
               setDescription(e.target.value)
             }
           />
+
+          {/* https://phppot.com/react/multi-file-upload-in-react-js/ */}
+          <Input 
+            type="file"
+            onChange={(Event) => setEvidence(Event.target.files)}
+            multiple
+          />
+          
 
 
           <Button

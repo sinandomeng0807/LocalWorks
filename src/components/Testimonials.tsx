@@ -92,18 +92,11 @@ const Testimonials = () => {
             <div className="relative z-10 text-center">
               {/* Avatar */}
               <div className="w-20 h-20 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 overflow-hidden">
-                {current.worker.photo ? (
                   <img
-                    src={`http://localhost:8920${current.worker.photo}`}
+                    src={`http://localhost:8920/uploads/profile/${current.worker.photo}`}
                     alt="worker"
                     className="w-full h-full object-cover"
                   />
-                ) : (
-                  current.worker.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                )}
               </div>
               
               {/* Rating */}

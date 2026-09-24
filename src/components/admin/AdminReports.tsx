@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useQueryClient } from "@tanstack/react-query";
+import ReportDetailsModal from "./ReportDetailsModal";
 
 
 const BAR_COLORS = [
@@ -50,6 +51,15 @@ const categoryTable = [
 const AdminReports = ({ jobs }: AdminReportsProps) => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("worker");
+  const [reportDetails, setReportDetails] = useState(false);
+  const [Worker, SetWorker] = useState(null)
+  const [Employer, SetEmployer] = useState(null)
+  const [Type, SetType] = useState(null)
+  const [Description, SetDescription] = useState(null)
+  const [Status, SetStatus] = useState(null)
+  const [SubmitEvidence, SetSubmitEvidence] = useState(null)
+  const [Sender, SetSender] = useState(null)
+  const [ID, SetID] = useState(null)
 
   const fetchReports = async () => {
     const res = await axios.get(
@@ -395,6 +405,7 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
                   <TableHead>Description</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Details</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -422,11 +433,39 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
                         </SelectContent>
                       </Select>
                     </TableCell>
+                    <TableCell>
+                      <Button onClick={() => {
+                        setReportDetails(true)
+                        SetWorker(report.workerId.email)
+                        SetEmployer(report.employerId.email)
+                        SetDescription(report.description)
+                        SetType(report.reportType)
+                        SetStatus(report.status)
+                        SetSender(report.sentBy)
+                        SetSubmitEvidence(report.SubmitEvidence)
+                        SetID(report._id)
+                      }}>View Details</Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </CardContent>
+
+          
+      <ReportDetailsModal
+        open={reportDetails}
+        onOpenChange={setReportDetails}
+        Worker={Worker}
+        Employer={Employer}
+        Description={Description}
+        Type={Type}
+        SubmitEvidence={SubmitEvidence}
+        Sender={Sender}
+        Status={Status}
+        SetStatus={SetStatus}
+        ID={ID}
+      />      
         </Card>
       )}
     </main>
