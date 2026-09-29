@@ -4,6 +4,7 @@ import { Calendar, ClipboardList } from "lucide-react";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, Upload } from "lucide-react";
 import CreateAssignmentModal from "./CreateAssignmentModal";
+import { Button } from "../ui/button";
 
 import {
   Dialog,
@@ -232,9 +233,9 @@ const WorkerAssignments = () => {
         </p>
       </div>
 
-      <button onClick={() => setOpen(true)}>
+      <Button onClick={() => setOpen(true)}>
         Create Assignment
-      </button>
+      </Button>
 
       <Tabs
         value={activeTab}

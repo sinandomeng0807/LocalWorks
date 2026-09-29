@@ -169,7 +169,7 @@ const ReportEmployerModal = ({
     }
 
     if (fullStorage) {
-      alert("Some of the files you were sending are too large.")
+      toast.error("Some of the files you were sending are too large.")
     } else {
       // Source: https://axios.rest/pages/advanced/error-handling:
       await axios.post("http://localhost:8920/api/pro/report/worker", {
@@ -179,28 +179,30 @@ const ReportEmployerModal = ({
         submitEvidence: EvidenceArray,
         reportCategory: "Default Category"
       }, { withCredentials: true })
+        .then(async function (response) {
+          // Source: https://axios.rest/pages/advanced/error-handling:
+          await axios.post("http://localhost:8920/api/pro/report/submit/evidence", formData, {
+            withCredentials: true
+          })
+            .then(function (response) {
+              toast.success("Successfully reported employer.", {
+                description: "You have successfully reported the employer"
+              })
+
+              setReportType("");
+              setOtherReason("");
+              setDescription("");
+              setEvidence(null);
+
+              onOpenChange(false);
+            })
+            .catch(function (error) {
+              toast.error(`Error has occured`)
+            })
+        })
         .catch(function (error) {
           console.log(`Error: ${error.message}`);
         });
-
-      // Source: https://axios.rest/pages/advanced/error-handling:
-      await axios.post("http://localhost:8920/api/pro/report/submit/evidence", formData, {
-        withCredentials: true
-      })
-        .catch(function (error) {
-          alert(`Error has occured`)
-        })
-
-      toast.success("Successfully reported employer.", {
-        description: "You have successfully reported the employer"
-      })
-
-      setReportType("");
-      setOtherReason("");
-      setDescription("");
-      setEvidence(null);
-
-      onOpenChange(false);
     }
   }
 

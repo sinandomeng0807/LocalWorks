@@ -14,6 +14,8 @@ interface Props {
   onSuccess: () => void;
 }
 
+import { Button } from "../ui/button";
+
 interface Worker {
   _id: string;
   name: string;
@@ -22,13 +24,17 @@ interface Worker {
 
 import { toast } from "sonner";
 
+import { Input } from "../ui/input";
+
+import { Textarea } from "../ui/textarea";
+
 const CreateAssignmentModal = ({
   open,
   onOpenChange,
   onSuccess,
 }: Props) => {
   const [workers, setWorkers] = useState<Worker[]>([]);
-  const [selectedWorkers, setSelectedWorkers] = useState<string[]>([]);
+  const [selectedWorkers, setSelectedWorkers] = useState([]);
   const [search, setSearch] = useState("");
 
   const [title, setTitle] = useState("");
@@ -79,11 +85,17 @@ const CreateAssignmentModal = ({
       return;
     }
 
+    let workers = []
+
+    for (let index = 0; index < selectedWorkers.length; index++) {
+      workers.push({ _id: selectedWorkers[index] })
+    }
+
     try {
       const res = await axios.post(
         "http://localhost:8920/api/pro/worker/assignment",
         {
-          targetWorkers: selectedWorkers,
+          targetWorkers: workers,
           title,
           description,
           submitBefore,
@@ -121,15 +133,13 @@ const CreateAssignmentModal = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          <input
-            className="w-full rounded border p-2"
+          <Input
             placeholder="Assignment Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
 
-          <textarea
-            className="w-full rounded border p-2"
+          <Textarea
             placeholder="Description"
             rows={4}
             value={description}
@@ -141,9 +151,8 @@ const CreateAssignmentModal = ({
               Submit Before
             </label>
 
-            <input
+            <Input
               type="datetime-local"
-              className="w-full rounded border p-2"
               value={submitBefore}
               onChange={(e) => setSubmitBefore(e.target.value)}
             />
@@ -154,7 +163,7 @@ const CreateAssignmentModal = ({
               Assign Workers
             </label>
 
-            <div className="rounded border p-2">
+            <div>
               <div className="mb-2 flex flex-wrap gap-2">
                 {selectedWorkers.map((id) => {
                   const worker = workers.find((w) => w._id === id);
@@ -180,8 +189,7 @@ const CreateAssignmentModal = ({
                   );
                 })}
 
-                <input
-                  className="flex-1 border-none outline-none"
+                <Input
                   placeholder="Search workers..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -229,7 +237,7 @@ const CreateAssignmentModal = ({
 
           <button
             onClick={createAssignment}
-            className="w-full rounded bg-black p-2 text-white"
+            className="w-full rounded-md bg-black p-2 text-white"
           >
             Create Assignment
           </button>

@@ -10,6 +10,8 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { WorkerReportModal } from "./ReportEmployerModal";
 
+import { toast } from "sonner";
+
 import {
   Dialog,
   DialogContent,
@@ -103,6 +105,68 @@ const Reports = () => {
     refetch()
   }
 
+  const handleEvidences = async (reportId: string, submitEvidence) => {
+    let ArraySubmit = []
+    for (let SubmitIndex = 0; SubmitIndex < submitEvidence.length; SubmitIndex++) {
+      ArraySubmit.push({
+        fileName: submitEvidence[SubmitIndex].name,
+        fileType: submitEvidence[SubmitIndex].type
+      })
+    }
+    await axios.put("http://localhost:8920/api/pro/update/evidences", {
+      reportId,
+      submitEvidence: ArraySubmit
+    }, { withCredentials: true })
+      .then(function (response) {
+        SetEvidences(response.data.ArraySubmit)
+        toast.success(response.data.info)
+      })
+      .catch(function (error) {
+        toast.error(error.response.data.info)
+      })
+  }
+
+  
+  const handleSubmitReport = async (SubmitEvidence) => {
+    // Source: https://medium.com/@hassaanistic/image-handeling-using-multer-in-react-d7fea28e8dc6
+    const formData = new FormData()
+    const submittedExpected = SubmitEvidence.length;
+
+    let fullStorage = false;
+    let EvidenceArray = []
+
+    for (let submitIndex = 0; submitIndex < SubmitEvidence.length; submitIndex++) {
+      formData.append("submitEvidence", SubmitEvidence[submitIndex])
+
+      EvidenceArray.push({
+        fileName: SubmitEvidence[submitIndex].name,
+        fileType: SubmitEvidence[submitIndex].type
+      })
+      
+      if (submitEvidence[submitIndex].size > 1 * 1024 * 1024) {
+        fullStorage = true
+      }
+    }
+
+    if (fullStorage) {
+      alert("Some of the files you were sending are too large.")
+    } else {
+
+      // Source: https://axios.rest/pages/advanced/error-handling:
+      await axios.post("http://localhost:8920/api/pro/report/submit/evidence", formData, {
+        withCredentials: true
+      })
+        .catch(function (error) {
+          alert(`Error has occured`)
+        })
+
+      toast.success("Successfully reported employer.", {
+        description: "You have successfully reported the employer"
+      })
+
+      setEvidence(null);
+    }
+  }
 
 
 
@@ -217,8 +281,8 @@ const Reports = () => {
               </p>
 
               <div>
-                <button className="border rounded-md px-3 py-1 mt-4" onClick={() => updateReport(report._id, report.reportType, report.description, report.submitEvidence)}>Update Report</button>
-                <button className="border rounded-md px-3 py-1 mt-4">Delete Report</button>
+                <Button className="border rounded-md px-3 py-1 mt-4" onClick={() => updateReport(report._id, report.reportType, report.description, report.submitEvidence)}>Update Report</Button>
+                <Button className="border rounded-md px-3 py-1 mt-4 ml-1">Delete Report</Button>
               </div>
 
             </CardContent>
@@ -275,16 +339,66 @@ const Reports = () => {
                 />
 
                 {/* https://phppot.com/react/multi-file-upload-in-react-js/ */}
+
+                {/** // Source - https://stackoverflow.com/a/67325576
+// Posted by buzatto
+// Retrieved 2026-09-28, License - CC BY-SA 4.0
+
+  const [inputVal, setInputVal] = useState("");
+
+  const updateInput = (e) => {
+    const val = e.target.value;
+    setInputVal(val);
+  }
+
+  const sendData = async () => {
+    //handle async backend processing with inputVal
+    setInputVal("");
+    //rerender
+  }
+
+  return (
+    <>
+      <button className="input-button" onClick={sendData}>Send Data</button>
+      <input className="input-field" onChange={updateInput} placeHolder="Input name." value={inputVal}/>
+    </>
+  );
+ */}
                 <Input 
                   type="file"
-                  onChange={(Event) => setEvidence(Event.target.files)}
+                  onChange={(Event) => {
+                    setEvidence(Event.target.files)
+                    handleSubmitReport(Event.target.files)
+                    handleEvidences(reportId, Event.target.files)
+                  }}
                   multiple
                 />
 
 
+                {/** Sa line na ito, ang nangyayari is parang if marami kang nagsusubmit ng file, eh di, ang result is yung list ay nagtatake over ng buong screen */}
                 {Evidences !== null ? Evidences.map((evidence) => {
                   return (
-                    <div className="">{evidence.fileName}</div>
+                    <div
+                      key={evidence.name}
+                      className="mt-2 flex items-center gap-2"
+                    >
+                      <a
+                        href={`http://localhost:8920/uploads/reports/${evidence.fileName}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block h-10 min-w-0 flex-1 truncate rounded-md bg-gray-100 px-3 py-2 text-sm text-blue-600 underline transition-colors hover:bg-gray-200 hover:text-blue-800"
+                      >
+                        {evidence.fileName}
+                      </a>
+
+                      {/** Wala pa ang delete function, ibig sabihin pag napindot mo ito, hindi siya magdedelete, kaya dapat meron siyang attribute na onClick={deleteReport(evidence.fileName)} */}
+                      <button
+                        type="button"
+                        className="h-10 w-10 rounded-md bg-red-100 text-red-600 transition-colors hover:bg-red-200 hover:text-red-800"
+                      >
+                        X
+                      </button>
+                    </div>
                   )
                 }) : <div>No evidences</div>}
 

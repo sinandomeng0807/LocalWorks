@@ -213,11 +213,11 @@ const Reports = () => {
           onChange={(e) => setTypeFilter(e.target.value)}
         >
           <option value="All">All Types</option>
-          <option value="Fake Job">
-            Fake Job
+          <option value="Fake Resume">
+            Fake Resume
           </option>
-          <option value="No Payment">
-            No Payment
+          <option value="No Work">
+            No Work
           </option>
           <option value="Harassment">
             Harassment
@@ -280,8 +280,8 @@ const Reports = () => {
               </p>
 
               <div>
-                <button className="border rounded-md px-3 py-1 mt-4" onClick={() => updateReport(report._id, report.reportType, report.description)}>Update Report</button>
-                <button className="border rounded-md px-3 py-1 mt-4">Delete Report</button>
+                <Button className="border rounded-md px-3 py-1 mt-4" onClick={() => updateReport(report._id, report.reportType, report.description)}>Update Report</Button>
+                <Button className="border rounded-md px-3 py-1 mt-4 ml-1">Delete Report</Button>
               </div>
 
             </CardContent>

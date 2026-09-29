@@ -13,6 +13,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import axios from "axios";
+import { toast } from "sonner";
 
 interface LoginModalProps {
   open: boolean;
@@ -33,16 +34,16 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
       ...workerCredentials, role: "worker"
     })
       .then(function (response) {
-        alert(response.data.message)
+        toast.success(response.data.message)
         navigate("/worker-dashboard");
       })
       .catch(function (error: any) {
         if (error.response) {
-          alert(error.response.data.message)
+          toast.error(error.response.data.message)
         } else if (error.request) {
-          console.error(error.request)
+          toast.error(error.request)
         } else {
-          console.error(error)
+          toast.error(error)
         }
       })
   }
@@ -52,12 +53,12 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
       ...employerCredentials, role: "employer"
     })
       .then(function (response) {
-        alert(response.data.message)
+        toast.success(response.data.message)
         navigate("/employer-dashboard")
       })
       .catch(function (error: any) {
         if (error.response) {
-          alert(error.response.data.message)
+          toast.error(error.response.data.message)
         }
       })
   }

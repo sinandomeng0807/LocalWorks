@@ -5,6 +5,8 @@ import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Assignment {
   workerAssignment: {
@@ -12,6 +14,7 @@ interface Assignment {
     title?: string;
     description?: string;
     submitBefore?: string;
+    rejectLate: boolean;
     employerId?: {
       _id: string;
       email: string;
@@ -189,46 +192,50 @@ const WorkerAssignment = () => {
         formData.append("workerUpload", file);
       });
 
-      const uploadRes = await axios.post(
-        "http://localhost:8920/api/pro/upload/worker/jobFile",
-        formData,
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "multipart/form-data",
+      if (isLate && selectedAssignment.workerAssignment.rejectLate) {
+        alert("This doesn't accept late submissions.")
+      } else {
+        const uploadRes = await axios.post(
+          "http://localhost:8920/api/pro/upload/worker/jobFile",
+          formData,
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        const uploadedFiles = uploadRes.data.filename.map((file: any) => ({
+          name: file.filename,
+        }));
+
+        // this doesn't even execute:
+        console.log(`Employer ID: ${selectedAssignment.workerAssignment.employerId._id}`)
+        console.log(`Worker Assignment: ${selectedAssignment.workerAssignment._id}`)
+        console.log(`Worker Description: ${remarks}`)
+
+        // Create one JobsCompleted document per uploaded file
+        await axios.post(
+          `http://localhost:8920/api/pro/upload/worker/job/${selectedAssignment.workerAssignment.employerId._id}`,
+          {
+            workerAssignment: selectedAssignment.workerAssignment._id,
+            workerUpload: uploadedFiles,
+            workerDescription: remarks,
+            isLate
           },
-        }
-      );
+          {
+            withCredentials: true,
+          }
+        );
 
-      const uploadedFiles = uploadRes.data.filename.map((file: any) => ({
-        name: file.filename,
-      }));
+        alert("Files successfully added!");
 
-      // this doesn't even execute:
-      console.log(`Employer ID: ${selectedAssignment.workerAssignment.employerId._id}`)
-      console.log(`Worker Assignment: ${selectedAssignment.workerAssignment._id}`)
-      console.log(`Worker Description: ${remarks}`)
-
-      // Create one JobsCompleted document per uploaded file
-      await axios.post(
-        `http://localhost:8920/api/pro/upload/worker/job/${selectedAssignment.workerAssignment.employerId._id}`,
-        {
-          workerAssignment: selectedAssignment.workerAssignment._id,
-          workerUpload: uploadedFiles,
-          workerDescription: remarks,
-          isLate
-        },
-        {
-          withCredentials: true,
-        }
-      );
-
-      alert("Files successfully added!");
-
-      setIsModalOpen(false);
-      setRemarks("");
-      setSelectedFiles([]);
-      setSelectedAssignment(null);
+        setIsModalOpen(false);
+        setRemarks("");
+        setSelectedFiles([]);
+        setSelectedAssignment(null);
+      }
     } catch (err: any) {
       console.error("Upload error:", err);
 
@@ -789,6 +796,131 @@ const WorkerAssignment = () => {
         </div>
 
       {isModalOpen && selectedAssignment && (
+        // Source: https://stackoverflow.com/questions/450903/how-can-i-make-a-div-not-larger-than-its-contents
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="inline-block">
+            <DialogHeader>
+              <DialogTitle>
+                <h2 className="text-xl font-bold">
+                  {selectedAssignment.workerAssignment.title}
+                </h2>
+              </DialogTitle>
+            </DialogHeader>
+
+            <p className="mt-2 text-sm text-gray-600">
+              {selectedAssignment.workerAssignment.description}
+            </p>
+
+            {activeTab === "assignments" ? (
+              <div>
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm font-medium">
+                    Remarks
+                  </label>
+
+                  <Textarea
+                    rows={4}
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    placeholder="Enter remarks..."
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm font-medium">
+                    Upload File
+                  </label>
+
+                  <input
+                    type="file"
+                    multiple
+                    onChange={(e) =>
+                      setSelectedFiles(Array.from(e.target.files ?? []))
+                    }
+                  />
+                </div>
+              </div>
+            ) : (
+              <div></div>
+            )}
+
+            {submittedFiles.length > 0 && (
+              <div className="mt-6">
+                <h3 className="mb-2 font-semibold">Previous Submissions</h3>
+
+                <div className="max-h-64 overflow-y-auto rounded-lg border">
+                  {submittedFiles.map((submitted) => (
+                    <div
+                      key={submitted._id}
+                      className="border-b p-3 last:border-b-0"
+                    >
+                      <div className="flex justify-between items-start"> 
+                        <p className="text-sm">
+                          <strong>Remarks:</strong> {submitted.workerDescription}
+                        </p>
+
+                        {activeTab === "assignments" ? <button onClick={() => removeFile(submitted._id)}>
+                          X
+                        </button> : <div></div>}
+                      </div>
+
+                      <br />
+                      <strong>Links:</strong>
+
+                      {activeTab === "assignments" ? (
+                        <button
+                          type="button"
+                          onClick={() => handleAddNewFilesClick(submitted)}
+                          disabled={addingNewFiles}
+                          className="rounded-md bg-black px-3 py-2 ml-2 text-sm text-white transition hover:bg-neutral-800 disabled:opacity-50"
+                        >
+                          {addingNewFiles ? "Adding..." : "Add New Files"}
+                        </button>
+                      ) : <div></div>}
+
+                      <input
+                        ref={newFilesInputRef}
+                        type="file"
+                        multiple
+                        className="hidden"
+                        onChange={(Event) => handleAddNewFiles(Event, jobCompleted)}
+                      />
+
+                      {submitted.workerUpload.map((workerUpload) => (
+                        <div
+                          key={workerUpload.name}
+                          className="mt-2 flex items-center gap-2"
+                        >
+                          <a
+                            href={`http://localhost:8920/uploads/workerJobsCompleted/${workerUpload.name}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block h-10 min-w-0 flex-1 truncate rounded-md bg-gray-100 px-3 py-2 text-sm text-blue-600 underline transition-colors hover:bg-gray-200 hover:text-blue-800"
+                          >
+                            {workerUpload.name}
+                          </a>
+
+                          {activeTab === "assignments" ? (
+                            <button
+                              type="button"
+                              onClick={() => removeFileFromJobCompleted(workerUpload.name, submitted._id)}
+                              className="h-10 w-10 rounded-md bg-red-100 text-red-600 transition-colors hover:bg-red-200 hover:text-red-800"
+                            >
+                              X
+                            </button>
+                          ) : <div />}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* {isModalOpen && selectedAssignment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-lg">
             <h2 className="text-xl font-bold">
@@ -920,7 +1052,7 @@ const WorkerAssignment = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
