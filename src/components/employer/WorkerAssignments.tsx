@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 interface Worker {
   _id: string;
@@ -122,6 +123,8 @@ const WorkerAssignments = () => {
   const [open, setOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState("assignments")
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [workStatus, setWorkerStatus] = useState("")
 
   const fetchAssignments = async () => {
     try {
@@ -202,6 +205,10 @@ const WorkerAssignments = () => {
 
       // Close the modal
       setSubmittedModalOpen(false);
+
+      setConfirmOpen(false);
+
+      toast.success(`Successfully marked the job as ${workStatus}`)
 
     } catch (error) {
       console.log(workerAssignment)
@@ -474,7 +481,14 @@ const WorkerAssignments = () => {
               type="button"
               className="flex-1 rounded-md bg-black px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
               onClick={() => {
-                MarkAsCompletedRejected(selectedAssignment._id, workerID, workerNAME, "completed")
+                // MarkAsCompletedRejected(selectedAssignment._id, workerID, workerNAME, "completed")
+
+                setConfirmOpen(true)
+                setWorkerStatus("completed")
+
+                setWorkerAssignment(selectedAssignment._id)
+                setWorkerID(workerID)
+                setWorkerNAME(workerNAME)
               }}
             >
               Mark as Completed
@@ -483,7 +497,16 @@ const WorkerAssignments = () => {
             <button
               type="button"
               className="flex-1 rounded-md bg-black px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
-              onClick={() => MarkAsCompletedRejected(selectedAssignment._id, workerID, workerNAME, "rejected")}
+              onClick={() => {
+                // MarkAsCompletedRejected(selectedAssignment._id, workerID, workerNAME, "rejected")
+
+                setConfirmOpen(true)
+                setWorkerStatus("rejected")
+
+                setWorkerAssignment(selectedAssignment._id)
+                setWorkerID(workerID)
+                setWorkerNAME(workerNAME)
+              }}
             >
               Mark as Rejected
             </button>
@@ -506,6 +529,21 @@ const WorkerAssignments = () => {
                 ))}
               </div>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you sure you wanted to mark as {workStatus}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2">
+            <Button>Cancel</Button>
+            <Button onClick={() => MarkAsCompletedRejected(workerAssignment, workerID, workerNAME, workStatus)}>Mark as {workStatus}</Button>
           </div>
         </DialogContent>
       </Dialog>

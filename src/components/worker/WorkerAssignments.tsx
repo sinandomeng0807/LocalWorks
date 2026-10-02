@@ -56,6 +56,12 @@ const WorkerAssignment = () => {
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [addingNewFiles, setAddingNewFiles] = useState(false);
 
+  const [assignmentId, setAssignmentId] = useState(null);
+  const [employerId, setEmployerId] = useState(null);
+  const [employerEmail, setEmployerEmail] = useState(null);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   const filteredAssignments = assignments.filter((assignment) =>
     assignment.workerAssignment.title?.toLowerCase().includes(search.toLowerCase()) ||
     assignment.workerAssignment.description?.toLowerCase().includes(search.toLowerCase()) ||
@@ -228,10 +234,8 @@ const WorkerAssignment = () => {
 
         toast.success("Files successfully added!");
 
-        setIsModalOpen(false);
         setRemarks("");
         setSelectedFiles([]);
-        setSelectedAssignment(null);
       }
     } catch (err: any) {
       console.error("Upload error:", err);
@@ -248,6 +252,7 @@ const WorkerAssignment = () => {
       toast.error("Failed to submit job.");
     }
   };
+  
 
   const fetchAssignments = async () => {
     try {
@@ -344,9 +349,13 @@ const WorkerAssignment = () => {
         {
           withCredentials: true,
         }
-      );
+      )
+        .then(function (response) {
+          fetchAssignments();
+          toast.success("Successfully submitted the assignment.")
 
-      fetchAssignments();
+          setConfirmOpen(false);
+        })
     } catch (err) {
       toast.error(err.response.data.message);
     }
@@ -557,7 +566,14 @@ const WorkerAssignment = () => {
                       </button>
 
                       <button
-                        onClick={() => handleAssignmentSubmit(assignment.workerAssignment._id, assignment.workerAssignment.employerId._id, assignment.workerAssignment.employerId.email)}
+                        onClick={() => {
+                          // handleAssignmentSubmit(assignment.workerAssignment._id, assignment.workerAssignment.employerId._id, assignment.workerAssignment.employerId.email)
+                          setAssignmentId(assignment.workerAssignment._id)
+                          setEmployerId(assignment.workerAssignment.employerId._id)
+                          setEmployerEmail(assignment.workerAssignment.employerId.email)
+
+                          setConfirmOpen(true)
+                        }}
                         className="mt-2 w-full rounded-lg bg-black py-2 text-white transition hover:bg-neutral-800"
                       >
                         Submit Assignment
@@ -934,6 +950,21 @@ const WorkerAssignment = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you sure you want to submit the assignment?</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button onClick={() => handleAssignmentSubmit(assignmentId, employerId, employerEmail)}>Submit Assignment</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* {isModalOpen && selectedAssignment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

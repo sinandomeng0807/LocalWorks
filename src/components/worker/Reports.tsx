@@ -46,6 +46,10 @@ const Reports = () => {
   const [submitEvidence, setEvidence] = useState(null);
   const [Evidences, SetEvidences] = useState(null);
 
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [DeleteContent, setDeleteContent] = useState("")
+  const [Id, setId] = useState("No ID specified")
+
 
   const fetchReports = async () => {
     const res = await axios.get("http://localhost:8920/api/pro/reports", { 
@@ -104,10 +108,14 @@ const Reports = () => {
     await axios.put("http://localhost:8920/api/pro/report", { reportId, reportType, description }, {
       withCredentials: true
     })
-
-    alert("Success")
-    setReportOpen(false)
-    refetch()
+      .then(function (response) {
+        toast.success("Successfully updated the report.")
+        setReportOpen(false)
+        refetch()
+      })
+      .catch(function (error) {
+        toast.error("An error has occured.")
+      })
   }
 
   // Only will work if the files were updated from the uploads and the MongoDB:
@@ -170,7 +178,7 @@ const Reports = () => {
           handleEvidences(reportId, response.data.filename)
         })
         .catch(function (error) {
-          alert(`Error has occured`)
+          toast.error(`Error has occured`)
         })
     }
   }
@@ -202,6 +210,7 @@ const Reports = () => {
   const DeleteReports = async () => {
     await axios.delete("http://localhost:8920/api/pro/delete/reports", { withCredentials: true })
       .then(function (response) {
+        refetch()
         toast.success(response.data.info)
       })
       .catch(function (error) {
@@ -213,11 +222,25 @@ const Reports = () => {
   const DeleteReport = async (reportId) => {
     await axios.delete(`http://localhost:8920/api/pro/delete/report/${reportId}`, { withCredentials: true })
       .then(function (response) {
+        refetch()
         toast.success(response.data.info)
       })
       .catch(function (error) {
         toast.error(error.response.data.info)
       })
+  }
+
+  // Confirmation about deleting the reports:
+  const DeleteConfirm = async (confirm: boolean, type: string, reportId: string) => {
+    if (confirm) {
+      if (type === "Delete Report") {
+        DeleteReport(reportId)
+      } else {
+        DeleteReports()
+      }
+
+      setConfirmOpen(false)
+    }
   }
 
 
@@ -287,7 +310,10 @@ const Reports = () => {
 
 
       <button
-        onClick={() => DeleteReports()}
+        onClick={() => {
+          setConfirmOpen(true)
+          setDeleteContent("Delete All Reports")
+        }}
         className="border rounded-md px-4 py-2"
       >
         Delete All Reports
@@ -324,7 +350,11 @@ const Reports = () => {
 
               <div>
                 <Button className="border rounded-md px-3 py-1 mt-4" onClick={() => updateReport(report._id, report.reportType, report.description, report.submitEvidence)}>Update Report</Button>
-                <Button className="border rounded-md px-3 py-1 mt-4 ml-1" onClick={() => DeleteReport(report._id)}>Delete Report</Button>
+                <Button className="border rounded-md px-3 py-1 mt-4 ml-1" onClick={() => {
+                  setDeleteContent("Delete Report")
+                  setConfirmOpen(true)
+                  setId(report._id)
+                }}>Delete Report</Button>
               </div>
 
             </CardContent>
@@ -456,6 +486,21 @@ const Reports = () => {
       
             </DialogContent>
           </Dialog>
+
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you sure you want to proceed with this action?</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button onClick={() => DeleteConfirm(true, DeleteContent, Id)}>{DeleteContent}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
 
     
