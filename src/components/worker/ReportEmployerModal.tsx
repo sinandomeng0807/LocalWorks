@@ -172,22 +172,63 @@ const ReportEmployerModal = ({
       toast.error("Some of the files you were sending are too large.")
     } else {
       // Source: https://axios.rest/pages/advanced/error-handling:
-      await axios.post("http://localhost:8920/api/pro/report/worker", {
-        employerId,
-        reportType: reportType === "Others" ? otherReason : reportType,
-        description,
-        submitEvidence: EvidenceArray,
-        reportCategory: "Default Category"
-      }, { withCredentials: true })
+      // await axios.post("http://localhost:8920/api/pro/report/worker", {
+      //   employerId,
+      //   reportType: reportType === "Others" ? otherReason : reportType,
+      //   description,
+      //   submitEvidence: EvidenceArray,
+      //   reportCategory: "Default Category"
+      // }, { withCredentials: true })
+      //   .then(async function (response) {
+      //     // Source: https://axios.rest/pages/advanced/error-handling:
+      //     await axios.post("http://localhost:8920/api/pro/report/submit/evidence", formData, {
+      //       withCredentials: true
+      //     })
+      //       .then(function (response) {
+      //         toast.success("Successfully reported employer.", {
+      //           description: "You have successfully reported the employer"
+      //         })
+
+      //         setReportType("");
+      //         setOtherReason("");
+      //         setDescription("");
+      //         setEvidence(null);
+
+      //         onOpenChange(false);
+      //       })
+      //       .catch(function (error) {
+      //         toast.error(`Error has occured`)
+      //       })
+      //   })
+      //   .catch(function (error) {
+      //     console.log(`Error: ${error.message}`);
+      //   });
+
+      // Source: https://axios.rest/pages/advanced/error-handling:
+      await axios.post("http://localhost:8920/api/pro/report/submit/evidence", formData, {
+        withCredentials: true
+      })
         .then(async function (response) {
-          // Source: https://axios.rest/pages/advanced/error-handling:
-          await axios.post("http://localhost:8920/api/pro/report/submit/evidence", formData, {
-            withCredentials: true
-          })
+          let SubmitEvidence = [];
+          const submitEvidence = response.data.filename
+
+          for (let submit = 0; submit < submitEvidence.length; submit++) {
+            SubmitEvidence.push({
+              fileName: submitEvidence[submit].filename,
+              fileType: submitEvidence[submit].mimetype
+            })
+          }
+          await axios.post("http://localhost:8920/api/pro/report/worker", {
+            employerId,
+            reportType: reportType === "Others" ? otherReason : reportType,
+            description,
+            submitEvidence: SubmitEvidence,
+            reportCategory: "Default Category"
+          }, { withCredentials: true })
             .then(function (response) {
               toast.success("Successfully reported employer.", {
                 description: "You have successfully reported the employer"
-              })
+              });
 
               setReportType("");
               setOtherReason("");
@@ -197,12 +238,12 @@ const ReportEmployerModal = ({
               onOpenChange(false);
             })
             .catch(function (error) {
-              toast.error(`Error has occured`)
+              toast.error("An error occured")
             })
         })
         .catch(function (error) {
-          console.log(`Error: ${error.message}`);
-        });
+          toast.error("This didn't work")
+        })
     }
   }
 

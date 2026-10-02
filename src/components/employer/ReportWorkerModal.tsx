@@ -39,6 +39,8 @@ export const EmployerReportModal = (val: { open: boolean, onOpenChange: (open: b
   const [OnOpen, OnOpenChange] = useState(true)
   const [Reason, SetReason] = useState(null)
 
+  const [submitEvidence, setEvidence] = useState(null)
+
   const handleSubmit = async () => {
     await axios.put("http://localhost:8920/api/pro/report", {
       reportId: val.reportId,
@@ -56,7 +58,7 @@ export const EmployerReportModal = (val: { open: boolean, onOpenChange: (open: b
 
         <DialogHeader>
           <DialogTitle>
-            Report Employer
+            Report Worker
           </DialogTitle>
         </DialogHeader>
 
@@ -64,7 +66,7 @@ export const EmployerReportModal = (val: { open: boolean, onOpenChange: (open: b
         <div className="space-y-4">
 
           <Select
-            defaultValue={val.reportType !== "Fake Job" && val.reportType !== "No Payment" && val.reportType !== "Harassment" && val.reportType !== "Fraud" ? "Others" : val.reportType}
+            defaultValue={val.reportType !== "Fake Resume" && val.reportType !== "No Work" && val.reportType !== "Harassment" && val.reportType !== "Fraud" ? "Others" : val.reportType}
             onValueChange={SetReportType}
           >
             <SelectTrigger>
@@ -72,15 +74,15 @@ export const EmployerReportModal = (val: { open: boolean, onOpenChange: (open: b
             </SelectTrigger>
 
             <SelectContent>
-              <SelectItem value="Fake Job">Fake Job</SelectItem>
-              <SelectItem value="No Payment">No Payment</SelectItem>
+              <SelectItem value="Fake Resume">Fake Resume</SelectItem>
+              <SelectItem value="No Work">No Work</SelectItem>
               <SelectItem value="Harassment">Harassment</SelectItem>
               <SelectItem value="Fraud">Fraud</SelectItem>
               <SelectItem value="Others">Others</SelectItem>
             </SelectContent>
           </Select>
 
-          {val.reportType !== "Fake Job" && val.reportType !== "No Payment" && val.reportType !== "Harassment" && val.reportType !== "Fraud" ? (
+          {val.reportType !== "Fake Resume" && val.reportType !== "No Work" && val.reportType !== "Harassment" && val.reportType !== "Fraud" ? (
             <Input
               placeholder={"Enter Report"}
               defaultValue={val.reportType}
@@ -108,13 +110,17 @@ export const EmployerReportModal = (val: { open: boolean, onOpenChange: (open: b
             onChange={(Event) => SetDescription(Event.target.value)}
           />
 
+          {/* https://phppot.com/react/multi-file-upload-in-react-js/ */}
+          <Input 
+            type="file"
+            onChange={(Event) => setEvidence(Event.target.files)}
+            multiple
+          />
+
 
           <Button
             className="w-full"
-            onClick={() => {
-              handleSubmit()
-              OnOpenChange(false)
-            }}
+            onClick={handleSubmit}
           >
             Submit Changes
           </Button>
@@ -162,38 +168,49 @@ const ReportWorkerModal = ({
     }
 
     if (fullStorage) {
-      alert("Some of the files you were sending are too large.")
+      toast.error("Some of the files you were sending are too large.")
     } else {
-      // Source: https://axios.rest/pages/advanced/error-handling:
-      await axios.post("http://localhost:8920/api/pro/report/employer", {
-        workerId,
-        reportType: reportType === "Others" ? otherReason : reportType,
-        description,
-        submitEvidence: EvidenceArray,
-        reportCategory: "Default Category"
-      }, { withCredentials: true })
-        .catch(function (error) {
-          console.log(`Error: ${error.message}`);
-        });
-
-      // Source: https://axios.rest/pages/advanced/error-handling:
       await axios.post("http://localhost:8920/api/pro/report/submit/evidence", formData, {
         withCredentials: true
       })
-        .catch(function (error) {
-          alert(`Error has occured`)
+        .then(async function (response) {
+          let SubmitEvidence = [];
+          const submitEvidence = response.data.filename
+
+          for (let submit = 0; submit < submitEvidence.length; submit++) {
+            SubmitEvidence.push({
+              fileName: submitEvidence[submit].filename,
+              fileType: submitEvidence[submit].mimetype
+            })
+          }
+
+          // Source: https://axios.rest/pages/advanced/error-handling:
+          await axios.post("http://localhost:8920/api/pro/report/employer", {
+            workerId,
+            reportType: reportType === "Others" ? otherReason : reportType,
+            description,
+            submitEvidence: SubmitEvidence,
+            reportCategory: "Default Category"
+          }, { withCredentials: true })
+                      .then(function (response) {
+                        toast.success("Successfully reported employer.", {
+                          description: "You have successfully reported the employer"
+                        });
+          
+                        setReportType("");
+                        setOtherReason("");
+                        setDescription("");
+                        setEvidence(null);
+          
+                        onOpenChange(false);
+                      })
+            .catch(function (error) {
+              console.log(`An error occured`);
+            });
         })
-
-      toast.success("Successfully reported employer.", {
-        description: "You have successfully reported the employer"
-      })
-
-      setReportType("");
-      setOtherReason("");
-      setDescription("");
-      setEvidence(null);
-
-      onOpenChange(false);
+        .catch(function (error) {
+          toast.error("This didn't work")
+        })
     }
   }
 
@@ -213,7 +230,6 @@ const ReportWorkerModal = ({
 
       handleSubmitReport()
     } catch (error) {
-      alert(error)
       toast.error("Failed to submit report");
     } finally {
       setLoading(false);
@@ -246,12 +262,12 @@ const ReportWorkerModal = ({
             </SelectTrigger>
 
             <SelectContent>
-              <SelectItem value="Fake Job">
-                Fake Job
+              <SelectItem value="Fake Resume">
+                Fake Resume
               </SelectItem>
 
-              <SelectItem value="No Payment">
-                No Payment
+              <SelectItem value="No Work">
+                No Work
               </SelectItem>
 
               <SelectItem value="Harassment">

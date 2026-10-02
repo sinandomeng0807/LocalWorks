@@ -73,6 +73,10 @@ const Reports = () => {
     return <p>Loading reports...</p>;
   }
 
+  const ContentStyle = {
+    height: "400px"
+  }
+
   const filteredReports = data.reports.filter((report) => {
     const statusMatch =
       statusFilter === "All" ||
@@ -94,6 +98,7 @@ const Reports = () => {
     SetEvidences(evidences)
   }
 
+  // Create new Report:
   const handleSubmit = async (reportId: string, reportType: string, description: string) => {
 
     await axios.put("http://localhost:8920/api/pro/report", { reportId, reportType, description }, {
@@ -105,12 +110,13 @@ const Reports = () => {
     refetch()
   }
 
+  // Only will work if the files were updated from the uploads and the MongoDB:
   const handleEvidences = async (reportId: string, submitEvidence) => {
     let ArraySubmit = []
     for (let SubmitIndex = 0; SubmitIndex < submitEvidence.length; SubmitIndex++) {
       ArraySubmit.push({
-        fileName: submitEvidence[SubmitIndex].name,
-        fileType: submitEvidence[SubmitIndex].type
+        fileName: submitEvidence[SubmitIndex].filename,
+        fileType: submitEvidence[SubmitIndex].mimetype
       })
     }
     await axios.put("http://localhost:8920/api/pro/update/evidences", {
@@ -119,7 +125,11 @@ const Reports = () => {
     }, { withCredentials: true })
       .then(function (response) {
         SetEvidences(response.data.ArraySubmit)
-        toast.success(response.data.info)
+        toast.success("Successfully reported employer.", {
+          description: "You have successfully reported the employer"
+        })
+
+        setEvidence(null);
       })
       .catch(function (error) {
         toast.error(error.response.data.info)
@@ -127,7 +137,7 @@ const Reports = () => {
   }
 
   
-  const handleSubmitReport = async (SubmitEvidence) => {
+  const handleSubmitReport = async (reportId, SubmitEvidence) => {
     // Source: https://medium.com/@hassaanistic/image-handeling-using-multer-in-react-d7fea28e8dc6
     const formData = new FormData()
     const submittedExpected = SubmitEvidence.length;
@@ -139,33 +149,75 @@ const Reports = () => {
       formData.append("submitEvidence", SubmitEvidence[submitIndex])
 
       EvidenceArray.push({
-        fileName: SubmitEvidence[submitIndex].name,
-        fileType: SubmitEvidence[submitIndex].type
+        fileName: SubmitEvidence[submitIndex].filename,
+        fileType: SubmitEvidence[submitIndex].mimetype
       })
       
-      if (submitEvidence[submitIndex].size > 1 * 1024 * 1024) {
+      if (SubmitEvidence[submitIndex].size > 1 * 1024 * 1024) {
         fullStorage = true
       }
     }
 
     if (fullStorage) {
-      alert("Some of the files you were sending are too large.")
+      toast.error("Some of the files you were sending are too large.")
     } else {
 
       // Source: https://axios.rest/pages/advanced/error-handling:
       await axios.post("http://localhost:8920/api/pro/report/submit/evidence", formData, {
         withCredentials: true
       })
+        .then(function (response) {
+          handleEvidences(reportId, response.data.filename)
+        })
         .catch(function (error) {
           alert(`Error has occured`)
         })
-
-      toast.success("Successfully reported employer.", {
-        description: "You have successfully reported the employer"
-      })
-
-      setEvidence(null);
     }
+  }
+
+
+  // Delete the evidence:
+  const DeleteReportX = async (reportId, fileName, fileID) => {
+    await axios.delete(`http://localhost:8920/api/pro/delete/report/x/${reportId}/${fileName}/${fileID}`, {
+      withCredentials: true
+    })
+      .then(function (response) {
+        let Delete = []
+
+        for (let deleteIndex = 0; deleteIndex < response.data.submitEvidence.length; deleteIndex++) {
+          Delete.push({
+            _id: response.data.submitEvidence[deleteIndex]._id,
+            fileName: response.data.submitEvidence[deleteIndex].fileName,
+            fileType: response.data.submitEvidence[deleteIndex].fileType
+          })
+        }
+        SetEvidences(Delete)
+        toast.success(response.data.info)
+      }).catch(function (error) {
+        toast.error(error.response.data.info)
+      })
+  }
+
+  // Delete Reports:
+  const DeleteReports = async () => {
+    await axios.delete("http://localhost:8920/api/pro/delete/reports", { withCredentials: true })
+      .then(function (response) {
+        toast.success(response.data.info)
+      })
+      .catch(function (error) {
+        toast.error("Failed to Delete all Reports")
+      })
+  }
+  
+  // Delete Report:
+  const DeleteReport = async (reportId) => {
+    await axios.delete(`http://localhost:8920/api/pro/delete/report/${reportId}`, { withCredentials: true })
+      .then(function (response) {
+        toast.success(response.data.info)
+      })
+      .catch(function (error) {
+        toast.error(error.response.data.info)
+      })
   }
 
 
@@ -235,17 +287,7 @@ const Reports = () => {
 
 
       <button
-        onClick={() => {
-          const confirmed = window.confirm(
-            "Are you sure you want to delete all reports?"
-          );
-
-          if (!confirmed) return;
-
-          // deleteReportMutation.mutate({
-          //   type: "deleteAll",
-          // });
-        }}
+        onClick={() => DeleteReports()}
         className="border rounded-md px-4 py-2"
       >
         Delete All Reports
@@ -282,7 +324,7 @@ const Reports = () => {
 
               <div>
                 <Button className="border rounded-md px-3 py-1 mt-4" onClick={() => updateReport(report._id, report.reportType, report.description, report.submitEvidence)}>Update Report</Button>
-                <Button className="border rounded-md px-3 py-1 mt-4 ml-1">Delete Report</Button>
+                <Button className="border rounded-md px-3 py-1 mt-4 ml-1" onClick={() => DeleteReport(report._id)}>Delete Report</Button>
               </div>
 
             </CardContent>
@@ -294,7 +336,7 @@ const Reports = () => {
         open={reportOpen}
         onOpenChange={setReportOpen}
           >
-            <DialogContent>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
       
               <DialogHeader>
                 <DialogTitle>
@@ -368,8 +410,7 @@ const Reports = () => {
                   type="file"
                   onChange={(Event) => {
                     setEvidence(Event.target.files)
-                    handleSubmitReport(Event.target.files)
-                    handleEvidences(reportId, Event.target.files)
+                    handleSubmitReport(reportId, Event.target.files)
                   }}
                   multiple
                 />
@@ -388,13 +429,14 @@ const Reports = () => {
                         rel="noreferrer"
                         className="block h-10 min-w-0 flex-1 truncate rounded-md bg-gray-100 px-3 py-2 text-sm text-blue-600 underline transition-colors hover:bg-gray-200 hover:text-blue-800"
                       >
-                        {evidence.fileName}
+                        {evidence.fileName.split("_x24-0025-30-0000x41")[1]}
                       </a>
 
                       {/** Wala pa ang delete function, ibig sabihin pag napindot mo ito, hindi siya magdedelete, kaya dapat meron siyang attribute na onClick={deleteReport(evidence.fileName)} */}
                       <button
                         type="button"
                         className="h-10 w-10 rounded-md bg-red-100 text-red-600 transition-colors hover:bg-red-200 hover:text-red-800"
+                        onClick={() => DeleteReportX(reportId, evidence.fileName, evidence._id)}
                       >
                         X
                       </button>

@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "../ui/button";
+
+import { toast } from "sonner";
 
 interface Assignment {
   workerAssignment: {
@@ -95,7 +98,6 @@ const WorkerAssignment = () => {
 
   const handleAddNewFilesClick = (submission) => {
     setJobCompleted(submission._id)
-    alert(submission._id)
     newFilesInputRef.current?.click();
   };
 
@@ -110,7 +112,7 @@ const WorkerAssignment = () => {
     }
 
     if (submittedFiles.length === 0) {
-      alert("No existing submission found.");
+      toast.error("No existing submission found.");
       return;
     }
 
@@ -155,7 +157,7 @@ const WorkerAssignment = () => {
         await getSubmittedFiles(selectedAssignment.workerAssignment._id);
       }
 
-      alert("New files successfully added!");
+      toast.success("New files successfully added!");
 
     } catch (err: any) {
       console.error("Add new files error:", err);
@@ -165,7 +167,7 @@ const WorkerAssignment = () => {
         console.log("Response:", err.response.data);
       }
 
-      alert("Failed to add new files.");
+      toast.error("Failed to add new files.");
     } finally {
       setAddingNewFiles(false);
 
@@ -193,7 +195,7 @@ const WorkerAssignment = () => {
       });
 
       if (isLate && selectedAssignment.workerAssignment.rejectLate) {
-        alert("This doesn't accept late submissions.")
+        toast.error("This doesn't accept late submissions.")
       } else {
         const uploadRes = await axios.post(
           "http://localhost:8920/api/pro/upload/worker/jobFile",
@@ -210,11 +212,6 @@ const WorkerAssignment = () => {
           name: file.filename,
         }));
 
-        // this doesn't even execute:
-        console.log(`Employer ID: ${selectedAssignment.workerAssignment.employerId._id}`)
-        console.log(`Worker Assignment: ${selectedAssignment.workerAssignment._id}`)
-        console.log(`Worker Description: ${remarks}`)
-
         // Create one JobsCompleted document per uploaded file
         await axios.post(
           `http://localhost:8920/api/pro/upload/worker/job/${selectedAssignment.workerAssignment.employerId._id}`,
@@ -229,7 +226,7 @@ const WorkerAssignment = () => {
           }
         );
 
-        alert("Files successfully added!");
+        toast.success("Files successfully added!");
 
         setIsModalOpen(false);
         setRemarks("");
@@ -248,7 +245,7 @@ const WorkerAssignment = () => {
         console.log("Error:", err.message);
       }
 
-      alert("Failed to submit job.");
+      toast.error("Failed to submit job.");
     }
   };
 
@@ -310,7 +307,7 @@ const WorkerAssignment = () => {
       }
     } catch (err) {
       console.error(err.response);
-      alert("Failed to delete file.");
+      toast.error("Failed to delete file.");
     }
   };
 
@@ -330,7 +327,7 @@ const WorkerAssignment = () => {
       }
     } catch (err) {
       console.error(err.response);
-      alert("Failed to delete file.");
+      toast.error("Failed to delete file.");
     }
   };
 
@@ -351,7 +348,7 @@ const WorkerAssignment = () => {
 
       fetchAssignments();
     } catch (err) {
-      alert(err.response.data.message);
+      toast.error(err.response.data.message);
     }
   };
 
@@ -838,6 +835,24 @@ const WorkerAssignment = () => {
                       setSelectedFiles(Array.from(e.target.files ?? []))
                     }
                   />
+                </div>
+
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="rounded-lg border px-4 py-2"
+                  >
+                    Cancel
+                  </button>
+
+                  {activeTab === "assignments" ? (
+                    <button
+                      onClick={handleSubmit}
+                      className="rounded-lg bg-black px-4 py-2 text-white"
+                    >
+                      Add files
+                    </button>
+                  ) : <div></div>}
                 </div>
               </div>
             ) : (

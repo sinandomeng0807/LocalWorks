@@ -108,6 +108,8 @@ const Reports = () => {
   const [reportType, setReportType] = useState("");
 
   const [description, setDescription] = useState("");
+  const [submitEvidence, setEvidence] = useState(null);
+  const [Evidences, SetEvidences] = useState(null);
 
 
 
@@ -138,6 +140,8 @@ const Reports = () => {
     return <p>Loading reports...</p>;
   }
 
+  const Refetch = refetch()
+
   const filteredReports = data.reports.filter((report) => {
     const statusMatch =
       statusFilter === "All" ||
@@ -151,11 +155,12 @@ const Reports = () => {
   });
 
 
-  const updateReport = async (reportId: string, reportType: string, description: string) => {
+  const updateReport = async (reportId: string, reportType: string, description: string, evidences: []) => {
     setReportOpen(true)
     setReportId(reportId)
     setReportType(reportType)
     setDescription(description)
+    SetEvidences(evidences)
   }
 
   const handleSubmit = async (reportId: string, reportType: string, description: string) => {
@@ -167,6 +172,117 @@ const Reports = () => {
     alert("Success")
     setReportOpen(false)
     refetch()
+  }
+
+  // Only will work if the files were updated from the uploads and the MongoDB:
+  const handleEvidences = async (reportId: string, submitEvidence) => {
+    let ArraySubmit = []
+    for (let SubmitIndex = 0; SubmitIndex < submitEvidence.length; SubmitIndex++) {
+      ArraySubmit.push({
+        fileName: submitEvidence[SubmitIndex].filename,
+        fileType: submitEvidence[SubmitIndex].mimetype
+      })
+    }
+    await axios.put("http://localhost:8920/api/pro/update/evidences", {
+      reportId,
+      submitEvidence: ArraySubmit
+    }, { withCredentials: true })
+      .then(function (response) {
+        SetEvidences(response.data.ArraySubmit)
+        toast.success("Successfully reported employer.", {
+          description: "You have successfully reported the employer"
+        })
+
+        setEvidence(null);
+      })
+      .catch(function (error) {
+        toast.error(error.response.data.info)
+      })
+  }
+
+  const handleSubmitReport = async (reportId, SubmitEvidence) => {
+    // Source: https://medium.com/@hassaanistic/image-handeling-using-multer-in-react-d7fea28e8dc6
+    const formData = new FormData()
+    const submittedExpected = SubmitEvidence.length;
+
+    let fullStorage = false;
+    let EvidenceArray = []
+
+    for (let submitIndex = 0; submitIndex < SubmitEvidence.length; submitIndex++) {
+      formData.append("submitEvidence", SubmitEvidence[submitIndex])
+
+      EvidenceArray.push({
+        fileName: SubmitEvidence[submitIndex].filename,
+        fileType: SubmitEvidence[submitIndex].mimetype
+      })
+      
+      if (SubmitEvidence[submitIndex].size > 1 * 1024 * 1024) {
+        fullStorage = true
+      }
+    }
+
+    if (fullStorage) {
+      toast.error("Some of the files you were sending are too large.")
+    } else {
+
+      // Source: https://axios.rest/pages/advanced/error-handling:
+      await axios.post("http://localhost:8920/api/pro/report/submit/evidence", formData, {
+        withCredentials: true
+      })
+        .then(function (response) {
+          handleEvidences(reportId, response.data.filename)
+        })
+        .catch(function (error) {
+          alert(`Error has occured`)
+        })
+    }
+  }
+
+
+  // Delete the evidence:
+  const DeleteReportX = async (reportId, fileName, fileID) => {
+    await axios.delete(`http://localhost:8920/api/pro/delete/report/x/${reportId}/${fileName}/${fileID}`, {
+      withCredentials: true
+    })
+      .then(function (response) {
+        let Delete = []
+
+        for (let deleteIndex = 0; deleteIndex < response.data.submitEvidence.length; deleteIndex++) {
+          Delete.push({
+            _id: response.data.submitEvidence[deleteIndex]._id,
+            fileName: response.data.submitEvidence[deleteIndex].fileName,
+            fileType: response.data.submitEvidence[deleteIndex].fileType
+          })
+        }
+        SetEvidences(Delete)
+        toast.success(response.data.info)
+      }).catch(function (error) {
+        toast.error(error.response.data.info)
+      })
+  }
+
+  // Delete Reports:
+  const DeleteReports = async () => {
+    await axios.delete("http://localhost:8920/api/pro/delete/reports", { withCredentials: true })
+      .then(function (response) {
+        Refetch
+        toast.success(response.data.info)
+      })
+      .catch(function (error) {
+        toast.error("Failed to Delete all Reports")
+      })
+  }
+
+  // Delete Report:
+  const DeleteReport = async (reportId) => {
+    await axios.delete(`http://localhost:8920/api/pro/delete/report/${reportId}`, { withCredentials: true })
+      .then(function (response) {
+        Refetch
+        toast.success(response.data.info)
+      })
+      .catch(function (error) {
+        toast.error(error.response.data.info)
+      })
   }
 
   return (
@@ -234,17 +350,7 @@ const Reports = () => {
 
 
       <button
-        onClick={() => {
-          const confirmed = window.confirm(
-            "Are you sure you want to delete all reports?"
-          );
-
-          if (!confirmed) return;
-
-          deleteReportMutation.mutate({
-            type: "deleteAll",
-          });
-        }}
+        onClick={() => DeleteReports()}
         className="border rounded-md px-4 py-2"
       >
         Delete All Reports
@@ -280,8 +386,8 @@ const Reports = () => {
               </p>
 
               <div>
-                <Button className="border rounded-md px-3 py-1 mt-4" onClick={() => updateReport(report._id, report.reportType, report.description)}>Update Report</Button>
-                <Button className="border rounded-md px-3 py-1 mt-4 ml-1">Delete Report</Button>
+                <Button className="border rounded-md px-3 py-1 mt-4" onClick={() => updateReport(report._id, report.reportType, report.description, report.submitEvidence)}>Update Report</Button>
+                <Button className="border rounded-md px-3 py-1 mt-4 ml-1" onClick={() => DeleteReport(report._id)}>Delete Report</Button>
               </div>
 
             </CardContent>
@@ -293,7 +399,7 @@ const Reports = () => {
         open={reportOpen}
         onOpenChange={setReportOpen}
           >
-            <DialogContent>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
       
               <DialogHeader>
                 <DialogTitle>
@@ -305,7 +411,7 @@ const Reports = () => {
               <div className="space-y-4">
       
                 <Select
-                  defaultValue={reportType !== "Fake Job" && reportType !== "No Payment" && reportType !== "Harassment" && reportType !== "Fraud" ? "Others" : reportType}
+                  defaultValue={reportType !== "Fake Resume" && reportType !== "No Work" && reportType !== "Harassment" && reportType !== "Fraud" ? "Others" : reportType}
                   onValueChange={setReportType}
                 >
                   <SelectTrigger>
@@ -313,15 +419,15 @@ const Reports = () => {
                   </SelectTrigger>
       
                   <SelectContent>
-                    <SelectItem value="Fake Job">Fake Job</SelectItem>
-                    <SelectItem value="No Payment">No Payment</SelectItem>
+                    <SelectItem value="Fake Resume">Fake Resume</SelectItem>
+                    <SelectItem value="No Work">No Work</SelectItem>
                     <SelectItem value="Harassment">Harassment</SelectItem>
                     <SelectItem value="Fraud">Fraud</SelectItem>
                     <SelectItem value="Others">Others</SelectItem>
                   </SelectContent>
                 </Select>
       
-                {reportType !== "Fake Job" && reportType !== "No Payment" && reportType !== "Harassment" && reportType !== "Fraud" ? (
+                {reportType !== "Fake Resume" && reportType !== "No Work" && reportType !== "Harassment" && reportType !== "Fraud" ? (
                   <Input
                     placeholder={"Enter Report"}
                     defaultValue={reportType === "Others" ? "" : reportType}
@@ -336,6 +442,49 @@ const Reports = () => {
                   defaultValue={description}
                   onChange={(Event) => setDescription(Event.target.value)}
                 />
+
+                {/* https://phppot.com/react/multi-file-upload-in-react-js/ */}
+
+                {/** // Source - https://stackoverflow.com/a/67325576 */}
+                {/* // Posted by buzatto
+// Retrieved 2026-09-28, License - CC BY-SA 4.0 */}
+                <Input 
+                  type="file"
+                  onChange={(Event) => {
+                    setEvidence(Event.target.files)
+                    handleSubmitReport(reportId, Event.target.files)
+                  }}
+                  multiple
+                />
+
+
+                {/** Sa line na ito, ang nangyayari is parang if marami kang nagsusubmit ng file, eh di, ang result is yung list ay nagtatake over ng buong screen */}
+                {Evidences !== null ? Evidences.map((evidence) => {
+                  return (
+                    <div
+                      key={evidence.name}
+                      className="mt-2 flex items-center gap-2"
+                    >
+                      <a
+                        href={`http://localhost:8920/uploads/reports/${evidence.fileName}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block h-10 min-w-0 flex-1 truncate rounded-md bg-gray-100 px-3 py-2 text-sm text-blue-600 underline transition-colors hover:bg-gray-200 hover:text-blue-800"
+                      >
+                        {evidence.fileName.split("_x24-0025-30-0000x41")[1]}
+                      </a>
+
+                      {/** Wala pa ang delete function, ibig sabihin pag napindot mo ito, hindi siya magdedelete, kaya dapat meron siyang attribute na onClick={deleteReport(evidence.fileName)} */}
+                      <button
+                        type="button"
+                        className="h-10 w-10 rounded-md bg-red-100 text-red-600 transition-colors hover:bg-red-200 hover:text-red-800"
+                        onClick={() => DeleteReportX(reportId, evidence.fileName, evidence._id)}
+                      >
+                        X
+                      </button>
+                    </div>
+                  )
+                }) : <div>No evidences</div>}
       
       
                 <Button
