@@ -224,15 +224,18 @@ const MyApplications = () => {
                   <Eye className="w-4 h-4" />
                   View Details
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2"
-                  onClick={() => handleViewEmployerConversation(application)}
-                >
-                  <Eye className="w-4 h-4" />
-                  View Employer Responses
-                </Button>
+                {application.status === "Not Selected" && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-2"
+                    onClick={() => handleViewEmployerConversation(application)}
+                  >
+                    <Eye className="w-4 h-4" />
+                    View Reason
+                  </Button>
+                )}
+
                 {application.status === "Pending Review" && (
                   <Button 
                     variant="ghost" 

@@ -42,6 +42,7 @@ interface CompanyDetailModalProps {
   Status;
   SetStatus;
   ID;
+  RefetchData;
 }
 
 const ReportDetailsModal = ({
@@ -55,7 +56,8 @@ const ReportDetailsModal = ({
   Sender,
   Status,
   SetStatus,
-  ID
+  ID,
+  RefetchData
 }: CompanyDetailModalProps) => {
     const queryClient = useQueryClient();
   
@@ -72,20 +74,22 @@ const ReportDetailsModal = ({
         }
       );
 
-      await queryClient.invalidateQueries({
-        queryKey: ["Reports"],
-      });
+      RefetchData()
 
       toast.success("Report status updated");
     } catch (error) {
       toast.error("Failed to update report status");
     }
   };
+
+  const divStyle = {
+    marginTop: "-09px"
+  }
   
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl">{Type}</DialogTitle>
           </DialogHeader>
@@ -103,6 +107,30 @@ const ReportDetailsModal = ({
               </div>
             )}
           </div>
+          
+          <Separator></Separator>
+
+          <div className="">
+            <strong>Submitted Evidences:</strong>
+          </div>
+          {SubmitEvidence.map((report) => {
+            return (
+              <div
+                style={divStyle}
+                key={report._id}
+                className="flex items-center gap-2"
+              >
+                <a
+                  href={`http://localhost:8920/uploads/reports/${report.fileName}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block h-10 min-w-0 flex-1 truncate rounded-md bg-gray-100 px-3 py-2 text-sm text-blue-600 underline transition-colors hover:bg-gray-200 hover:text-blue-800"
+                >
+                  {report.fileName.split("_x24-0025-30-0000x41")[1]}
+                </a>
+              </div>
+            )
+          })}
 
           <Select
             defaultValue={Status}

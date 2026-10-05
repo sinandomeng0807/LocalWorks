@@ -316,7 +316,7 @@ const WorkerApplications = () => {
                 application
               });
 
-              alert("Success")
+              toast.success("Successfully uploaded the reason.")
 
               setTitle("")
               setDescription("")
@@ -324,7 +324,7 @@ const WorkerApplications = () => {
             }
           })
           .catch(function (error) {
-            alert("Failed to upload the reason")
+            toast.error("Failed to upload the reason")
           })
       }
       // updateApplicationMutation.mutate({
@@ -676,15 +676,19 @@ const ApplicationSection = ({
                   View Profile
                 </Button>
 
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => handleViewEmployerConversation(application)}
-                >
-                  <Eye className="w-4 h-4" />
-                  View Conversations
-                </Button>
+                {application.status === "Not Selected" ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => handleViewEmployerConversation(application)}
+                  >
+                    <Eye className="w-4 h-4" />
+                    View Reason
+                  </Button>
+                ) : (
+                  <div></div>
+                )}
 
                 {!isReadonly && (
                   <>

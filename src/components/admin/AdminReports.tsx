@@ -57,7 +57,7 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
   const [Type, SetType] = useState(null)
   const [Description, SetDescription] = useState(null)
   const [Status, SetStatus] = useState(null)
-  const [SubmitEvidence, SetSubmitEvidence] = useState(null)
+  const [SubmitEvidence, SetSubmitEvidence] = useState([])
   const [Sender, SetSender] = useState(null)
   const [ID, SetID] = useState(null)
 
@@ -111,7 +111,8 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
   const {
     data,
     isLoading,
-    error
+    error,
+    refetch
   } = useQuery({
     queryKey: ["Reports"],
     queryFn: fetchReports
@@ -442,7 +443,7 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
                         SetType(report.reportType)
                         SetStatus(report.status)
                         SetSender(report.sentBy)
-                        SetSubmitEvidence(report.SubmitEvidence)
+                        SetSubmitEvidence(report.submitEvidence)
                         SetID(report._id)
                       }}>View Details</Button>
                     </TableCell>
@@ -465,6 +466,7 @@ const AdminReports = ({ jobs }: AdminReportsProps) => {
         Status={Status}
         SetStatus={SetStatus}
         ID={ID}
+        RefetchData={refetch}
       />      
         </Card>
       )}

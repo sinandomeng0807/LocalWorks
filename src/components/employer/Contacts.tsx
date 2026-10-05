@@ -26,7 +26,13 @@ import { MessageSquare } from "lucide-react";
 type Contact = {
   _id: string;
 
-  worker: string;
+  worker: {
+    _id: string;
+    email: string;
+    name: string;
+    jobTitle: string;
+    status: string;
+  };
 
   employerId: {
     _id: string;
@@ -129,7 +135,7 @@ const Contacts = () => {
         `http://localhost:8920/api/pro/message/${selectedChat._id}`,
         {
           content: message.trim(),
-          recipient: selectedChat.worker,
+          recipient: selectedChat.worker._id,
         },
         { withCredentials: true }
       );
@@ -198,7 +204,7 @@ const Contacts = () => {
           <h2 className="text-2xl font-bold">Contacts</h2>
 
           <p className="text-muted-foreground">
-            Conversations with employers
+            Conversations with workers
           </p>
         </div>
 
@@ -213,7 +219,7 @@ const Contacts = () => {
                       <CardDescription className="flex items-center gap-2 text-xs mt-3">
 
                         <span>
-                          Employer email: {c.employerId.email}
+                          Worker email: {c.worker.email}
                         </span>
                       </CardDescription>
                     </div>
@@ -260,7 +266,7 @@ const Contacts = () => {
                         setSelectedEmployer(c)
                       }
                     >
-                      View Employer
+                      View Worker
                     </Button>
                   </div>
                 </CardContent>
@@ -292,7 +298,7 @@ const Contacts = () => {
       </DialogTitle>
 
       <DialogDescription>
-        {selectedChat?.employerId.email}
+        {selectedChat?.worker.email}
       </DialogDescription>
     </DialogHeader>
 
@@ -361,11 +367,11 @@ const Contacts = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Employer Details
+              Worker Details
             </DialogTitle>
 
             <DialogDescription>
-              Information about this employer
+              Information about this worker
             </DialogDescription>
           </DialogHeader>
 
@@ -373,22 +379,22 @@ const Contacts = () => {
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium">
-                  Company
+                  Worker Email
                 </p>
 
                 <p className="text-muted-foreground">
-                  {selectedEmployer.employerId.company ||
+                  {selectedEmployer.worker.email ||
                     "N/A"}
                 </p>
               </div>
 
               <div>
                 <p className="text-sm font-medium">
-                  Employer Industry
+                  Job Title
                 </p>
 
                 <p className="text-muted-foreground">
-                  {selectedEmployer.employerId.industry.title ||
+                  {selectedEmployer.worker.jobTitle ||
                     "N/A"}
                 </p>
               </div>
@@ -399,7 +405,7 @@ const Contacts = () => {
                 </p>
 
                 <p className="text-muted-foreground">
-                  {selectedEmployer.employerId.email}
+                  {selectedEmployer.worker.email}
                 </p>
               </div>
 
@@ -409,7 +415,7 @@ const Contacts = () => {
                 </p>
 
                 <Badge>
-                  {selectedEmployer.status}
+                  {selectedEmployer.worker.status}
                 </Badge>
               </div>
             </div>

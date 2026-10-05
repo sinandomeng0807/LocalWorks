@@ -760,34 +760,6 @@ const WorkerAssignment = () => {
                         </div>
                       </div>
 
-                      {submittedFiles.length > 0 && (
-                        <div className="mt-6">
-                          <h3 className="mb-2 font-semibold">Previous Submissions</h3>
-
-                          <div className="max-h-64 overflow-y-auto rounded-lg border">
-                            {submittedFiles.map((submission) => (
-                              <div
-                                key={submission._id}
-                                className="border-b p-3 last:border-b-0"
-                              >
-                                <p className="text-sm">
-                                  <strong>Remarks:</strong> {submission.workerDescription}
-                                </p>
-
-                                <a
-                                  href={`http://localhost:8920/uploads/workerJobsCompleted/${submission.workerUpload}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="block text-blue-600 underline"
-                                >
-                                  {submission.workerUpload}
-                                </a>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
                       <button
                         onClick={() => {
                           setSelectedAssignment(assignment);
@@ -909,14 +881,6 @@ const WorkerAssignment = () => {
                         </button>
                       ) : <div></div>}
 
-                      <input
-                        ref={newFilesInputRef}
-                        type="file"
-                        multiple
-                        className="hidden"
-                        onChange={(Event) => handleAddNewFiles(Event, jobCompleted)}
-                      />
-
                       {submitted.workerUpload.map((workerUpload) => (
                         <div
                           key={workerUpload.name}
@@ -942,6 +906,14 @@ const WorkerAssignment = () => {
                           ) : <div />}
                         </div>
                       ))}
+
+                      <input
+                        ref={newFilesInputRef}
+                        type="file"
+                        multiple
+                        className="hidden"
+                        onChange={(Event) => handleAddNewFiles(Event, jobCompleted)}
+                      />
                     </div>
                   ))}
                 </div>

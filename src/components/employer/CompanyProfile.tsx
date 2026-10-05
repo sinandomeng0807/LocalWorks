@@ -92,13 +92,13 @@ const CompanyProfile = () => {
 
         <div className="grid grid-cols-2 gap-4">
           <Card className="bg-primary/5 border-primary/20">
-            <CardContent style={styles} onClick={() => navigate("/open-positions")} className="p-4 text-center">
+            <CardContent className="p-4 text-center">
               <div className="text-3xl font-bold text-primary">{data.OpenPositionsLength}</div>
               <div className="text-sm text-muted-foreground">Open Positions</div>
             </CardContent>
           </Card>
           <Card className="bg-primary/5 border-primary/20">
-            <CardContent style={styles} onClick={() => navigate("/total-applications")} className="p-4 text-center">
+            <CardContent className="p-4 text-center">
               <div className="text-3xl font-bold text-primary">{data.TotalApplications}</div>
               <div className="text-sm text-muted-foreground">Total Applications</div>
             </CardContent>

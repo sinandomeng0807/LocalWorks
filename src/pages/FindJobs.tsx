@@ -132,17 +132,15 @@ const FindJobs = () => {
     if (selectedJobId) {
       setAppliedJobs([...appliedJobs, selectedJobId]);
       const job = jobs.find(j => j.info._id === selectedJobId);
-      await axios.post("http://localhost:8920/api/pro/createApplication", { job: job.info._id, location: job.info.location._id }, { withCredentials: true })
+      await axios.post("http://localhost:8920/api/pro/createApplication", { job: job.info._id, location: job.info.location }, { withCredentials: true })
         .then(function (response) {
           if (response.data) {
-            toast.success(`Application submitted for ${job?.info.title}!`, {
-              description: `Your application to ${job?.info.company} has been sent.`,
-            });
+            toast.success(response.data.info)
           }
         })
         .catch(function (error) {
           if (error.response) {
-            toast.error(error.response.data.message)
+            toast.error(error.response.data.info)
           }
         })
     }

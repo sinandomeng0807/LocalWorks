@@ -21,6 +21,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import axios from "axios";
 
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+
+
 interface Application {
   _id: string;
   worker: {
@@ -165,8 +169,8 @@ const EmployerConversationModal = ({
           })
       })
       .catch(function (error) {
-        alert(extendedApp.worker)
-        alert(error.response.data.success)
+        alert(extendedApp.worker._id)
+        alert(error.response.data.info)
       })
   }
 
@@ -217,35 +221,35 @@ const EmployerConversationModal = ({
             {ReasonsList.map((response) => {
               if (response.sentBy === "employer") {
                 return (
-                  <div className="mb-8">
-                    <div className="flex flex-row-reverse">
+                  <div className="mb-4">
+                    <div className="flex">
                       <div >
                         <img src={`http://localhost:8920/uploads/profile/${response.employerId.profile}`} alt="Profile" className="h-20 w-20" />
                       </div>
-                      <div className="flex flex-col mr-3">
+                      <div className="flex flex-col ml-3">
                         <span className="font-bold">Employer Email: {response.employerId.email}</span>
                         <span className="flex-col">{response.employerId.company}</span>
                       </div>
                     </div>
                     <div className="pr-19 flex flex-col mt-3">
-                      <h1 className="text-xl font-bold text-right">{response.title}</h1>
-                      <span className="text-right">{response.description}</span>
+                      <h1 className="text-xl font-bold">{response.title}</h1>
+                      <span className="">{response.description}</span>
                     </div>
                   </div>
                 )
               } else {
                 return (
-                  <div className="mb-8">
+                  <div className="mb-4">
                     <div className="flex">
                       <div >
-                        <img src={`http://localhost:8920/uploads/profile/${response.workerId.photo === null ? "default.png" : response.workerId.photo}`} alt="Profile" className="h-20 w-20" />
+                        <img src={`http://localhost:8920/uploads/profile/${response.employerId.profile}`} alt="Profile" className="h-20 w-20" />
                       </div>
                       <div className="flex flex-col ml-3">
-                        <span className="font-bold">Worker Email: {response.workerId.email}</span>
-                        <span className="flex-col">{response.workerId.skill}</span>
+                        <span className="font-bold">Employer Email: {response.employerId.email}</span>
+                        <span className="flex-col">{response.employerId.company}</span>
                       </div>
                     </div>
-                    <div className="pl-19 flex flex-col mt-3">
+                    <div className="pr-19 mt-3">
                       <h1 className="text-xl font-bold">{response.title}</h1>
                       <span>{response.description}</span>
                     </div>
@@ -253,11 +257,6 @@ const EmployerConversationModal = ({
                 )
               }
             })}
-            <div className="relative">
-              <input type="text" className="w-full mt-6 p-2 border-2 border-solid" placeholder="Enter a title." value={title} onChange={(Event) => setTitle(Event.target.value)} />
-              <textarea name="response" id="response" placeholder="Enter a repsonse." className="w-full mt-2 mb-12 p-2 border-2 border-solid" value={description} onChange={(Event) => setDescription(Event.target.value)} />
-              <Button className="absolute right-0 bottom-0 bg-[#505050] text-white py-2 px-3" onClick={submitResponse}>Submit response</Button>
-            </div>
           </div>
         </div>
 
