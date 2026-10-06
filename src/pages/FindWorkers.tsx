@@ -155,20 +155,16 @@ const FindWorkers = () => {
                     className="pl-10"
                   />
                 </div>
-                <Select value={skill} onValueChange={setSkill}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Skill Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Skills</SelectItem>
-                    <SelectItem value="Construction">Construction</SelectItem>
-                    <SelectItem value="Electrical">Electrical</SelectItem>
-                    <SelectItem value="Plumbing">Plumbing</SelectItem>
-                    <SelectItem value="Carpentry">Carpentry</SelectItem>
-                    <SelectItem value="Welding">Welding</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  
+                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search skills..."
+                    value={skill}
+                    onChange={(e) => setSkill(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -234,6 +234,7 @@ const WorkerAssignment = () => {
 
         toast.success("Files successfully added!");
 
+        setIsModalOpen(false);
         setRemarks("");
         setSelectedFiles([]);
       }
