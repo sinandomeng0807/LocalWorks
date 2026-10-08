@@ -130,6 +130,7 @@ const MyApplications = () => {
     }, { withCredentials: true })
       .then(function (response) {
         if (response.data) {
+          refetch()
           setApplications(prev => prev.filter(app => app.id !== applicationToWithdraw._id));
           toast.success("Application withdrawn", {
             description: `Your application to ${applicationToWithdraw.job.company} has been withdrawn.`,
@@ -156,7 +157,7 @@ const MyApplications = () => {
     return data
   }
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, refetch, error } = useQuery({
     queryKey: ['ViewApplications'],
     queryFn: Applications
   })

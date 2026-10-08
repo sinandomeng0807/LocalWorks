@@ -83,7 +83,7 @@ const DashboardHeader = () => {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center p-1 overflow-hidden">
-            <img src={`http://localhost:8920/uploads/profile/${profile}`} alt="LocalWorks" className="h-full w-full object-cover rounded-full" />
+            <img src={logo} alt="LocalWorks" className="h-full w-full object-cover rounded-full" />
           </div>
           <span className="text-xl font-bold text-foreground">LocalWorks</span>
         </div>

@@ -312,7 +312,9 @@ const Register = async () => {
         <Label htmlFor="employer-industry">Industry</Label>
         <Select
           value={formData.industry}
-          onValueChange={(value) => setFormData({ ...formData, industry: value })}
+          onValueChange={(value) => {
+            setFormData({ ...formData, industryTitle: "No Industry Title Provided", industry: value })
+          }}
         >
           <SelectTrigger id="employer-industry">
             <SelectValue placeholder="Select your industry" />

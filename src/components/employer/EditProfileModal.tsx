@@ -40,7 +40,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
     email: "",
     phone: "",
     industry: "",
-    industryTitle: ""
+    industryTitle: "No Industry Title Provided"
   });
 
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
@@ -158,7 +158,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
       onOpenChange(false);
     } catch (error: any) {
       if (error.response) {
-        toast.info(error.response.data.message);
+        toast.info(error.response.data.info);
       }
     }
   };
@@ -212,9 +212,10 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               <img
                 src={`http://localhost:8920/uploads/profile/${currentProfile}`}
                 className="w-24 h-24 rounded-full object-cover"
-                alt="photo"
+                alt=""
               />
             )}
+            
 
             {/* New selected file preview */}
             {preview && (
@@ -257,7 +258,8 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
                     onValueChange={(value) =>
                       setFormData(prev => ({
                         ...prev,
-                        industry: value
+                        industry: value,
+                        industryTitle: "No Industry Title Provided"
                       }))
                     }
                   >
@@ -303,7 +305,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
               <Input
                 id="permit"
                 type="file"
-                accept=".pdf,image/*"
+                accept="image/*"
                 onChange={(e) => {
                   if (e.target.files?.[0]) {
                     setPermitFile(e.target.files[0]);

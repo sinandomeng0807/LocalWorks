@@ -93,7 +93,71 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
   if (isLoading) return <div>Loading...</div>;
   if (error instanceof Error) return <div>Error: {error.message}</div>;
 
-  const skillCategoryOptions: SkillCategory[] = data.skills;
+  // Backup Code in case if there is an error with using the array:
+  // const skillCategoryOptions: SkillCategory[] = data.skills;
+
+  const skillCategoryOptions = [
+    {
+      _id: "021",
+      title: "Construction"
+    },
+    {
+      _id: "022",
+      title: "Electrical"
+    },
+    {
+      _id: "023",
+      title: "Plumbing"
+    },
+    {
+      _id: "024",
+      title: "Farmer"
+    },
+    {
+      _id: "025",
+      title: "Janitor"
+    },
+    {
+      _id: "026",
+      title: "Food"
+    },
+    {
+      _id: "027",
+      title: "Furniture"
+    },
+    {
+      _id: "028",
+      title: "Sales Clerk"
+    },
+    {
+      _id: "029",
+      title: "Photographer"
+    },
+    {
+      _id: "030",
+      title: "Cook"
+    },
+    {
+      _id: "031",
+      title: "Waiter"
+    },
+    {
+      _id: "032",
+      title: "Retail Workers"
+    },
+    {
+      _id: "033",
+      title: "Home-Based"
+    },
+    {
+      _id: "034",
+      title: "Technology"
+    },
+    {
+      _id: "035",
+      title: "Office Work"
+    }
+  ];
 
   // Add skill
   const handleAddSkill = () => {
