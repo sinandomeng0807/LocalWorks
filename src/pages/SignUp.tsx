@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { User, Briefcase, Upload, Image, FileText, ArrowLeft, Send } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 const SignUp = () => {
   const [workerForm, setWorkerForm] = useState({

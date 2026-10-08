@@ -148,7 +148,11 @@ const WorkerSignUpForm = ({ onClose }: WorkerSignUpFormProps) => {
       console.log(otpFromEmail)
       console.log(step)
     } catch (error) {
-      alert(error)
+      toast({
+        title: "OTP Failed",
+        description: "Failed to send OTP",
+        variant: "destructive",
+      });
     }
   };
 

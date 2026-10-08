@@ -66,46 +66,50 @@ const Register = async () => {
   
   formDataToSend.append("permit", files.permit)
 
-  alert(formData.industryTitle)
-
-  const PermitPost = await axios.post("http://localhost:8920/api/auth/upload/permit", formDataToSend, {
+  await axios.post("http://localhost:8920/api/auth/upload/permit", formDataToSend, {
     withCredentials: true
   })
+    .then(async function (response) {
+      await axios.post(
+        "http://localhost:8920/api/auth/employer/register",
+        {
+          company: formData.company,
+          email: formData.email,
+          password: formData.password,
+          phone: `+63${formData.phone}`,
+          industry: formData.industry,
+          industryTitle: formData.industryTitle,
+          permit: response.data.filename.filename
+        },
+        {
+          withCredentials: true
+        }
+      )
+        .then(function (response) {
+          toast({
+            title: "Success",
+            description: response.data.message
+          });
+
+          onClose()
+        })
+        .catch(function (error) {
+          toast({
+            title: "An error occured",
+            description: error.response.data.message,
+            variant: "destructive"
+          })
+        })
+    })
     .catch(function (error) {
+      let description = ""
+      if (error.response.data.errors.code === "LIMIT_FILE_SIZE") {
+        description = "The file you are sending is too large, it should be a maximum of 15 MB"
+      }
+
       toast({
         title: "An error occured",
-        description: "Failed to upload the Permit.",
-        variant: "destructive"
-      })
-    })
-
-  const response = await axios.post(
-    "http://localhost:8920/api/auth/employer/register",
-    {
-      company: formData.company,
-      email: formData.email,
-      password: formData.password,
-      phone: `+63${formData.phone}`,
-      industry: formData.industry,
-      industryTitle: formData.industryTitle,
-      permit: files.permit.name
-    },
-    {
-      withCredentials: true
-    }
-  )
-    .then(function (response) {
-      toast({
-        title: "Success",
-        description: response.data.message
-      });
-
-      onClose()
-    })
-    .catch(function (error) {
-      toast({
-        title: "An error occured",
-        description: error.response.data.message,
+        description,
         variant: "destructive"
       })
     })
@@ -156,7 +160,11 @@ const Register = async () => {
       console.log(otpFromEmail)
       console.log(step)
     } catch (error) {
-      alert(error)
+      toast({
+        title: "OTP Failed",
+        description: "Failed to send OTP",
+        variant: "destructive",
+      });
     }
   };
 
@@ -340,15 +348,15 @@ const Register = async () => {
 
       {/* Business Permit Upload */}
       <FileUpload
-      label="Business/Company Permit"
-      accept="image/*,.pdf"
-      file={files.permit}   // ✅ REQUIRED
-      onChange={(file) =>
-        setFiles((prev) => ({ ...prev, permit: file }))
-      }
-      helpText="Upload a photo or scan of your business permit"
-      type="image"
-    />
+        label="Business/Company Permit"
+        accept="image/*"
+        file={files.permit}   // ✅ REQUIRED
+        onChange={(file) =>
+          setFiles((prev) => ({ ...prev, permit: file }))
+        }
+        helpText="Upload a photo or scan of your business permit. Maximum of 15 MB."
+        type="image"
+      />
 
       <Button type="submit" className="w-full" size="lg" disabled={!isEmailVerified}>
         Sign Up as Employer

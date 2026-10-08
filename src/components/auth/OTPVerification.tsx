@@ -76,13 +76,11 @@ const OTPVerification = ({ email, otpFromEmail, newDate, onVerified, onResend }:
 
       if (isReset) {
         if (NewDate < new Date()) {
-          alert(`${NewDate} ${new Date()}`)
           setError("OTP is already expired");
           return;
         }
 
         if (otpValue !== OtpFromEmail) {
-          alert(`${otpValue} ${OtpFromEmail}`)
           setError("OTP doesn't match");
           return;
         }
@@ -90,19 +88,16 @@ const OTPVerification = ({ email, otpFromEmail, newDate, onVerified, onResend }:
       } else {
         
         if (newDate < new Date()) {
-          alert(`${newDate} ${new Date()}`)
           setError("OTP is already expired");
           return;
         }
         
         if (otpValue !== otpFromEmail) {
-          alert(`${otpValue} ${otpFromEmail}`)
           setError("OTP doesn't match");
           return;
         }
       }
 
-      alert(otpValue)
 
       setIsVerifying(true);
       // Simulate OTP verification
@@ -112,7 +107,11 @@ const OTPVerification = ({ email, otpFromEmail, newDate, onVerified, onResend }:
         onVerified();
       }, 1500);
     } catch (error) {
-      alert(error)
+      toast({
+        title: "Error",
+        description: "Failed to verify OTP",
+        variant: "destructive",
+      });
     }
   };
 
@@ -134,7 +133,11 @@ const OTPVerification = ({ email, otpFromEmail, newDate, onVerified, onResend }:
       setNewDate(res.data.newDate)
       setOtpFromEmail(res.data.otp)
     } catch (error) {
-      alert(error)
+      toast({
+        title: "Error",
+        description: "Failed to Resend OTP.",
+        variant: "destructive",
+      });
     }
 
     setCountdown(60);
