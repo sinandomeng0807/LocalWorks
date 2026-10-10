@@ -132,43 +132,65 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
   /* -------------------------------------------------------------------------- */
   /*                             Submit Job                                     */
   /* -------------------------------------------------------------------------- */
+  let Payload = {};
+
   const postJob = async () => {
     try {
-      const payload = {
-        title: formData.title,
-        company: "Your Company",
-        posted: "EMPLOYER_ID",
-        location: formData.location,
-        type: formData.type,
-        salary: formData.salary,
-        description: formData.description,
-        requirements: formData.requirements
-          .split("\n")
-          .map((r) => r.trim())
-          .filter(Boolean),
-        benefits: formData.benefits
-          .split("\n")
-          .map((b) => b.trim())
-          .filter(Boolean),
-        tags: tags.length > 0 ? tags : ["New Posting"],
-        schedule: formData.schedule,
-        startDate: formData.startDate || undefined,
-        positions: Number(formData.positions),
-        applyBefore: formData.applyBefore,
-        category:
-          formData.category === "others"
-            ? ""
-            : formData.category,
-
-        categoryTitle:
-          formData.category === "others"
-            ? formData.categoryTitle
-            : "", // required
-      };
+      if (formData.category === "others") {
+        Payload = {
+          title: formData.title,
+          company: "Your Company",
+          posted: "EMPLOYER_ID",
+          location: formData.location,
+          type: formData.type,
+          salary: formData.salary,
+          description: formData.description,
+          requirements: formData.requirements
+            .split("\n")
+            .map((r) => r.trim())
+            .filter(Boolean),
+          benefits: formData.benefits
+            .split("\n")
+            .map((b) => b.trim())
+            .filter(Boolean),
+          tags: tags.length > 0 ? tags : ["New Posting"],
+          schedule: formData.schedule,
+          startDate: formData.startDate || undefined,
+          positions: Number(formData.positions),
+          applyBefore: formData.applyBefore,
+          category: formData.categoryTitle,
+          categoryTitle: formData.categoryTitle
+        };
+      } else {
+                Payload = {
+          title: formData.title,
+          company: "Your Company",
+          posted: "EMPLOYER_ID",
+          location: formData.location,
+          type: formData.type,
+          salary: formData.salary,
+          description: formData.description,
+          requirements: formData.requirements
+            .split("\n")
+            .map((r) => r.trim())
+            .filter(Boolean),
+          benefits: formData.benefits
+            .split("\n")
+            .map((b) => b.trim())
+            .filter(Boolean),
+          tags: tags.length > 0 ? tags : ["New Posting"],
+          schedule: formData.schedule,
+          startDate: formData.startDate || undefined,
+          positions: Number(formData.positions),
+          applyBefore: formData.applyBefore,
+          category: formData.category,
+          categoryTitle: formData.category
+        };
+      }
 
       const { data } = await axios.post(
         "http://localhost:8920/api/pro/createJob",
-        payload
+        Payload
       );
 
       toast.success(data.message, {
@@ -200,6 +222,10 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
       );
     }
   };
+
+  const moveMarginAtTop = {
+    marginTop: "-04px"
+  }
 
   /* -------------------------------------------------------------------------- */
   /*                             Form Validation                                */
@@ -282,53 +308,6 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                 </Select>
               </div>
 
-              <div className="space-y-3 mb-25">
-                <Label>Location *</Label>
-
-                <div className="flex flex-col gap-3">
-
-                  {/* Search bar */}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Search place, city, barangay, address..."
-                      value={mapQuery}
-                      onChange={(e) => setMapQuery(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleLocationSearch();
-                        }
-                      }}
-                    />
-
-                    <Button type="button" onClick={handleLocationSearch}>
-                      Search
-                    </Button>
-                  </div>
-
-                  {/* Map */}
-                  <div
-                    className="ratio ratio-4x3"
-                    style={{ maxWidth: "500px", height: "300px" }}
-                  >
-                    <iframe
-                      src={mapUrl}
-                      style={{
-                        border: 0,
-                        borderRadius: "12px",
-                        width: "100%",
-                        height: "100%",
-                      }}
-                      allowFullScreen
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      title="Google Map"
-                    />
-                  </div>
-
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <Label>Category *</Label>
 
@@ -383,6 +362,57 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                 </div>
               )}
 
+              <div className="space-y-3 mb-25" style={moveMarginAtTop}>
+                <Label>Location *</Label>
+
+                <div className="flex flex-col gap-3">
+
+                  {/* Search bar */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Search place, city, barangay, address..."
+                      value={mapQuery}
+                      onChange={(e) => setMapQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleLocationSearch();
+                        }
+                      }}
+                    />
+
+                    <Button type="button" onClick={handleLocationSearch}>
+                      Search
+                    </Button>
+                  </div>
+
+                  {/* Map */}
+                  <div
+                    className="ratio ratio-4x3 mb-12"
+                    style={{ maxWidth: "500px", height: "300px" }}
+                  >
+                    <iframe
+                      src={mapUrl}
+                      style={{
+                        border: 0,
+                        borderRadius: "12px",
+                        width: "100%",
+                        height: "100%",
+                      }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Google Map"
+                                          className="mb-2"
+                    />
+                    <div>
+                                          Location: {formData.location}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label>Salary/Rate *</Label>
                 <Input
@@ -417,6 +447,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
             <div className="space-y-2">
               <Label>Requirements (one per line)</Label>
               <Textarea
+                placeholder="e.g., Must be at least 21 years old."
                 rows={3}
                 value={formData.requirements}
                 onChange={(e) =>
@@ -431,6 +462,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
             <div className="space-y-2">
               <Label>Benefits (one per line)</Label>
               <Textarea
+                placeholder="e.g., Health Insurance, etc."
                 rows={3}
                 value={formData.benefits}
                 onChange={(e) =>

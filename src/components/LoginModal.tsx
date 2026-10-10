@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import axios from "axios";
 import { toast } from "sonner";
+import OTPVerification from "./auth/OTPVerification";
 
 interface LoginModalProps {
   open: boolean;
@@ -28,6 +29,41 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
   const [employerCredentials, setEmployerCredentials] = useState({ email: "", password: "" });
   const [showWorkerPassword, setShowWorkerPassword] = useState(false);
   const [showEmployerPassword, setShowEmployerPassword] = useState(false);
+  const [ForgotPassword, SetForgot] = useState(false);
+  const [OTPEMAIL, SETOTPEMAIL] = useState("");
+  const [step, setStep] = useState("");
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [disabled, setDisabled] = useState(false);
+  const [newDate, setNewDate] = useState();
+  const [otpFromEmail, setOtpFromEmail] = useState();
+  const [userRole, setUserRole] = useState("");
+  const [create_password, setPassword] = useState("");
+  const [confirm_password, setConfirm] = useState("");
+
+  const displayOTP = {
+    display: "none"
+  }
+
+    // Send OTP
+    const handleSendOTP = async (role: string) => {  
+      if (!OTPEMAIL.includes("@")) {
+        toast.success("Please enter a valid email address.")
+        return;
+      }
+
+      await axios.get(`http://localhost:8920/api/auth/otp/${OTPEMAIL}/${role}`)
+        .then(function (response) {
+          setNewDate(response.data.newDate)
+          setOtpFromEmail(response.data.otp)
+
+          setStep("otp")
+          setDisabled(true)
+          toast.success("An OTP has been sent.")
+        })
+        .catch(function (error) {
+          toast.error(error.response.data.info)
+        })
+    };
 
   const logWorker = async () => {
     await axios.post("http://localhost:8920/api/auth/worker/login", {
@@ -63,6 +99,28 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
       })
   }
 
+  const handlePassword = async () => {
+    await axios.put("http://localhost:8920/api/auth/password/update", { email: OTPEMAIL, role: userRole, create_password, confirm_password }, {
+      withCredentials: true
+    })
+      .then(function (response) {
+        toast.success(response.data.info)
+          setStep("")
+          setDisabled(false)
+
+          setPassword("")
+          setConfirm("")
+          
+          setIsEmailVerified(false)
+          SetForgot(false)
+          SETOTPEMAIL("")
+
+      })
+      .catch(function (error) {
+        toast.error(error.response.data.info)
+      })
+  }
+
   const handleWorkerLogin = (e: React.FormEvent) => {
     e.preventDefault();
     logWorker()
@@ -74,7 +132,8 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <div>
+      <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
           <DialogTitle className="text-2xl font-bold">Welcome Back</DialogTitle>
@@ -133,6 +192,13 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
               <Button type="submit" className="w-full" size="lg">
                 Login as Worker
               </Button>
+
+              {/** Source: https://tailwindcss.com/docs/cursor */}
+              {/**         https://tailwindcss.com/docs/text-align */}
+              <div className="text-center cursor-pointer" onClick={() => {
+                SetForgot(true);
+                setUserRole("Worker");
+              }}>Forgot Password?</div>
             </form>
           </TabsContent>
 
@@ -173,7 +239,14 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
               </div>
               <Button type="submit" className="w-full" size="lg">
                 Login as Employer
-              </Button>
+              </Button>           
+
+              {/** Source: https://tailwindcss.com/docs/cursor */}
+              {/**         https://tailwindcss.com/docs/text-align */}
+              <div className="text-center cursor-pointer" onClick={() => {
+                SetForgot(true);
+                setUserRole("Employer");
+              }}>Forgot Password?</div>
             </form>
           </TabsContent>
         </Tabs>
@@ -190,6 +263,92 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
         </p>
       </DialogContent>
     </Dialog>
+      <Dialog
+        open={ForgotPassword}
+        onOpenChange={() => {
+          setStep("")
+          setDisabled(false)
+
+          setPassword("")
+          setConfirm("")
+
+          setIsEmailVerified(false)
+          SetForgot(false)
+          SETOTPEMAIL("")
+
+        }}
+      >
+        <DialogContent>
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-2xl font-bold">Forgot Password?</DialogTitle>
+            <DialogDescription className="text-base">
+              Enter your email account to recover your password
+            </DialogDescription>
+          </DialogHeader>
+          <Input placeholder="john@example.com" type="email" onChange={(Event) => SETOTPEMAIL(Event.target.value)}></Input>
+          <Button onClick={() => {
+            handleSendOTP(userRole)
+          }} disabled={disabled}>
+            Send OTP
+          </Button>
+
+          {step === "otp" && isEmailVerified === false ? (
+            <OTPVerification
+              email={OTPEMAIL}
+              otpFromEmail={otpFromEmail}
+              newDate={newDate}
+              onVerified={() => {
+                setIsEmailVerified(true)
+                setStep("")
+                toast.success("Email Verified", {
+                  description: `Your email has been successfully verified.`
+                })
+              }}
+              onResend={() =>
+                toast.success("OTP Resent", {
+                  description: `A new OTP has been sent to ${OTPEMAIL}.`
+                })
+              }
+            />
+          ) : (
+            <div></div>
+          )}
+
+          {isEmailVerified === true ? (
+            <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="create-password">Create New Password</Label>
+                  <Input
+                    id="create-password"
+                    type="password"
+                    placeholder="Enter new password"
+                    value={create_password}
+                    onChange={(Event) => setPassword(Event.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm New Password</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirm_password}
+                    onChange={(Event) => setConfirm(Event.target.value)}
+                    required
+                  />
+                </div>
+
+                <Button className="w-full" onClick={handlePassword}>Create New Password</Button>
+            </div>
+          ) : (
+            <div></div>
+          )}
+          
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

@@ -427,6 +427,14 @@ const JobListings = () => {
                           Apply
                         </Button>
                       )}
+
+                                            {job.Accepted ? (
+                        <Button disabled size="sm" className="flex-1">
+                          You have been accepted at this job
+                        </Button>
+                      ) : (
+                        <div></div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -514,6 +522,14 @@ const JobListings = () => {
                     <Button disabled className="gap-2">
                       <CheckCircle className="w-4 h-4" />
                       Applied
+                    </Button>
+                  ) : (
+                    <Button onClick={() => handleApplyClick(job)}>Apply Now</Button>
+                  )}
+                                    {job.Accepted ? (
+                    <Button disabled className="gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      You have been accepted at this job
                     </Button>
                   ) : (
                     <Button onClick={() => handleApplyClick(job)}>Apply Now</Button>
