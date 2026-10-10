@@ -136,33 +136,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
 
   const postJob = async () => {
     try {
-      if (formData.category === "others") {
-        Payload = {
-          title: formData.title,
-          company: "Your Company",
-          posted: "EMPLOYER_ID",
-          location: formData.location,
-          type: formData.type,
-          salary: formData.salary,
-          description: formData.description,
-          requirements: formData.requirements
-            .split("\n")
-            .map((r) => r.trim())
-            .filter(Boolean),
-          benefits: formData.benefits
-            .split("\n")
-            .map((b) => b.trim())
-            .filter(Boolean),
-          tags: tags.length > 0 ? tags : ["New Posting"],
-          schedule: formData.schedule,
-          startDate: formData.startDate || undefined,
-          positions: Number(formData.positions),
-          applyBefore: formData.applyBefore,
-          category: formData.categoryTitle,
-          categoryTitle: formData.categoryTitle
-        };
-      } else {
-                Payload = {
+      Payload = {
           title: formData.title,
           company: "Your Company",
           posted: "EMPLOYER_ID",
@@ -186,7 +160,6 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
           category: formData.category,
           categoryTitle: formData.category
         };
-      }
 
       const { data } = await axios.post(
         "http://localhost:8920/api/pro/createJob",
@@ -310,57 +283,18 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
 
               <div className="space-y-2">
                 <Label>Category *</Label>
-
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      category: value,
-                      categoryTitle: "",
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        industryLoading
-                          ? "Loading categories..."
-                          : "Select category"
-                      }
-                    />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {industries.map((industry: any) => (
-                      <SelectItem key={industry._id} value={industry.title}>
-                        {industry.title}
-                      </SelectItem>
-                    ))}
-
-                    <SelectItem value="others">
-                      Others
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {formData.category === "others" && (
-                <div className="space-y-2">
-                  <Label>Category Name *</Label>
-
                   <Input
                     placeholder="Enter category"
-                    value={formData.categoryTitle}
+                    value={formData.category}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
+                        category: e.target.value,
                         categoryTitle: e.target.value,
                       })
                     }
                   />
-                </div>
-              )}
+              </div>
 
               <div className="space-y-3 mb-25" style={moveMarginAtTop}>
                 <Label>Location *</Label>
@@ -405,9 +339,13 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                       title="Google Map"
                                           className="mb-2"
                     />
-                    <div>
-                                          Location: {formData.location}
-                    </div>
+                    {formData.location ? (
+                        <div>
+                          Location: {formData.location}
+                        </div>
+                    ) : (
+                        <div></div>
+                    )}
                   </div>
 
                 </div>
