@@ -341,7 +341,7 @@ const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
                     />
                     {formData.location ? (
                         <div>
-                          Location: {formData.location}
+                          <strong>Location:</strong> {formData.location}
                         </div>
                     ) : (
                         <div></div>

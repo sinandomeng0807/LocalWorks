@@ -40,6 +40,9 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
   const [create_password, setPassword] = useState("");
   const [confirm_password, setConfirm] = useState("");
 
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+  const [showConPassword, setShowConPassword] = useState(false);
+
   const displayOTP = {
     display: "none"
   }
@@ -114,6 +117,9 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
           setIsEmailVerified(false)
           SetForgot(false)
           SETOTPEMAIL("")
+
+          setShowCreatePassword(false)
+          setShowConPassword(false)
 
       })
       .catch(function (error) {
@@ -276,6 +282,8 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
           SetForgot(false)
           SETOTPEMAIL("")
 
+          setShowCreatePassword(false)
+          setShowConPassword(false)
         }}
       >
         <DialogContent>
@@ -318,26 +326,48 @@ const LoginModal = ({ open, onOpenChange, onSwitchToSignUp, onSuccess }: LoginMo
             <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="create-password">Create New Password</Label>
-                  <Input
-                    id="create-password"
-                    type="password"
-                    placeholder="Enter new password"
-                    value={create_password}
-                    onChange={(Event) => setPassword(Event.target.value)}
-                    required
-                  />
+                                  <div className="relative">
+                                  <Input
+                                    id="create-password"
+                                    type={showCreatePassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    value={create_password}
+                                    onChange={(Event) => setPassword(Event.target.value)}
+                                    required
+                                    className="pr-10"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowCreatePassword(!showCreatePassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                  >
+                                    {showCreatePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                  </button>
+                                </div>
                 </div>
+                
 
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">Confirm New Password</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirm_password}
-                    onChange={(Event) => setConfirm(Event.target.value)}
-                    required
-                  />
+                  
+                  <div className="relative">
+                                  <Input
+                                    id="confirm-password"
+                                    type={showConPassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    value={confirm_password}
+                                    onChange={(Event) => setConfirm(Event.target.value)}
+                                    required
+                                    className="pr-10"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowConPassword(!showConPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                  >
+                                    {showConPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                  </button>
+                                </div>
                 </div>
 
                 <Button className="w-full" onClick={handlePassword}>Create New Password</Button>

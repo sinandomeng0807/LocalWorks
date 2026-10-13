@@ -55,6 +55,21 @@ const AdminProfiles = () => {
     return { text: "PENDING", className: "text-yellow-600" };
   };
 
+  const returnLocation = (locName) => {
+    let locationName = ""
+
+    for (let loc = 0; loc < locName.length; loc++) {
+      if (loc < 25) {
+        locationName += locName[loc]
+      } else {
+        locationName += "..."
+        break
+      }
+    }
+
+    return locationName
+  }
+
   return (
     <>
       <main className="flex-1 p-6 space-y-6 overflow-auto">
@@ -174,7 +189,7 @@ const AdminProfiles = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="w-3.5 h-3.5" />
-                        <span>{user.location}</span>
+                        <span>{returnLocation(user.location)}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <FileText className="w-3.5 h-3.5" />
@@ -189,14 +204,6 @@ const AdminProfiles = () => {
                       </span>
 
                       <div className="flex items-center gap-1">
-                        <a
-                          href={`mailto:${user.email}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                        >
-                          <Mail className="w-4 h-4" />
-                        </a>
-
                         <Button
                           variant="ghost"
                           size="icon"

@@ -42,7 +42,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
     name: "John Smith",
     email: "john.smith@email.com",
     phoneNumber: "+1 (555) 123-4567",
-    location: "Metro City, State",
+    location: "",
     jobTitle: "Construction Worker",
     yearsOfExperience: "5 years",
     about_me: "Experienced construction worker with expertise in commercial and residential projects. Skilled in operating heavy machinery, reading blueprints, and working with various materials.",
@@ -429,7 +429,7 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
                 {/* Map */}
                 <div
                   className="ratio ratio-4x3"
-                  style={{ maxWidth: "500px", height: "300px" }}
+                  style={{ maxWidth: "500px", height: "300px", marginBottom: "120px" }}
                 >
                   <iframe
                     src={mapUrl}
@@ -442,8 +442,11 @@ const EditProfileModal = ({ open, onOpenChange }: EditProfileModalProps) => {
                     allowFullScreen
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    title="Google Map"
+                    title="Google Map"                                          className="mb-2"
                   />
+                  <div>
+                    <strong>Location:</strong> {formData.location}
+                  </div>
                 </div>
 
               </div>
