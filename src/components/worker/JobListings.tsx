@@ -532,7 +532,7 @@ const JobListings = () => {
                       You have been accepted at this job
                     </Button>
                   ) : (
-                    <Button onClick={() => handleApplyClick(job)}>Apply Now</Button>
+                    <div></div>
                   )}
                 </div>
               </CardContent>

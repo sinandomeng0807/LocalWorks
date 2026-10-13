@@ -227,8 +227,8 @@ const Register = async () => {
           />
         </div>
         
-        {step === "form" && formData.email.includes("@") && !isEmailVerified && (
-          <Button type="button" variant="secondary" onClick={handleSendOTP} className="w-full">
+        {!isEmailVerified && (
+          <Button disabled={isButtonDisabled} type="button" variant="secondary" onClick={handleSendOTP} className="w-full">
             Send OTP to Email
           </Button>
         )}
@@ -247,7 +247,7 @@ const Register = async () => {
         )}
         
         {isEmailVerified && (
-          <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
+          <div className="text-sm text-green-600 font-medium">
             <span className="text-sm text-primary">✓ Email verified</span>
           </div>
         )}
